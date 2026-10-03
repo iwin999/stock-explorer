@@ -90,13 +90,13 @@ def backtest_chart(result):
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=eq.index, y=eq["Buy and hold"], name="Buy and hold",
                              line=dict(color=GREY, width=3)))
-    fig.add_trace(go.Scatter(x=eq.index, y=eq["Crossover strategy"], name="Moving-average rule",
+    fig.add_trace(go.Scatter(x=eq.index, y=eq["Strategy"], name=result["name"],
                              line=dict(color=AMBER, width=3)))
     # Triangles on the strategy line where it bought (up, green) and sold (down, red).
     for dates, symbol_, colour, label in [(result["buys"], "triangle-up", UP_COLOUR, "Buy signal"),
                                           (result["sells"], "triangle-down", DOWN_COLOUR, "Sell signal")]:
         if len(dates):
-            fig.add_trace(go.Scatter(x=dates, y=eq.loc[dates, "Crossover strategy"], mode="markers",
+            fig.add_trace(go.Scatter(x=dates, y=eq.loc[dates, "Strategy"], mode="markers",
                                      name=label, marker=dict(symbol=symbol_, size=14, color=colour)))
     fig.update_layout(
         height=480, font=dict(size=16), yaxis=dict(title="Portfolio value (Rs)", tickprefix="Rs "),
@@ -149,4 +149,26 @@ def zoom_to_window(fig, hist, days):
     pad = (high - low) * 0.05
     fig.update_xaxes(range=[hist.index[-n], hist.index[-1]])
     fig.update_yaxes(range=[low - pad, high + pad])
+    return fig
+
+
+def outcome_histogram(strategy_values, hold_values, strategy_name, title, x_title="Return over the period"):
+    """Two overlapping histograms: how often each result occurred across all simulations.
+
+    Values are fractions (0.05 = +5%) and are shown as percentages. Navy = the rule,
+    grey = plain buy-and-hold.
+    """
+    fig = go.Figure()
+    fig.add_trace(go.Histogram(x=hold_values * 100, name="Buy and hold", marker_color=GREY,
+                               opacity=0.55, nbinsx=50, histnorm="percent"))
+    fig.add_trace(go.Histogram(x=strategy_values * 100, name=strategy_name, marker_color=NAVY,
+                               opacity=0.65, nbinsx=50, histnorm="percent"))
+    fig.add_vline(x=0, line_width=1.5, line_dash="dash", line_color="#444")
+    fig.update_layout(
+        barmode="overlay", height=380, font=dict(size=15),
+        title=dict(text=title, font=dict(size=18)),
+        xaxis=dict(title=x_title, ticksuffix="%"),
+        yaxis=dict(title="Share of simulations", ticksuffix="%"),
+        legend=dict(orientation="h", y=-0.25), margin=dict(l=10, r=10, t=60, b=10),
+    )
     return fig

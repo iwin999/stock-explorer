@@ -54,3 +54,23 @@ def test_rising_history_tilts_chances_up_but_neutral_does_not():
 def test_flat_prices_give_flat_paths():
     paths = sim.simulate(pd.Series([100.0] * 300), seed=1)
     assert np.allclose(paths, 100)
+
+
+def test_strategy_outcomes_shapes_and_sanity():
+    close = make_prices(0.015, n=600)
+    paths = sim.simulate(close, 30, n_paths=800, seed=3)
+    for key in ["ma_cross", "rsi", "macd", "bollinger"]:
+        out = sim.strategy_outcomes(close, key, paths)
+        assert out["strategy"].shape == (800,) == out["hold"].shape
+        assert 0 <= out["chance_gain"] <= 1 and 0 <= out["invested"] <= 1
+        assert out["poor"] <= out["median"] <= out["good"]
+
+
+def test_always_invested_rule_equals_holding_without_costs(monkeypatch):
+    from core import strategies
+    always = strategies.Strategy("always", "x", "x", lambda p: np.ones(p.shape, dtype=int), 1, "x", "x")
+    monkeypatch.setitem(strategies.STRATEGIES, "always", always)
+    close = make_prices(0.01, n=600)
+    paths = sim.simulate(close, 30, n_paths=300, seed=4)
+    out = sim.strategy_outcomes(close, "always", paths, cost_pct=0)
+    assert np.allclose(out["strategy"], out["hold"])

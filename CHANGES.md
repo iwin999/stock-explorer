@@ -109,5 +109,19 @@ Refresh the backup the evening before the exhibition: `.venv/bin/python scripts/
 
 Known limits: NSE holidays are not in the calendar (the app says "open" but prices stay still); the price chart and strategy tab update when the page is used, not every few seconds.
 
+## New in Step 12 (strategy tests, ratios, explanations)
+| Change | Where |
+|---|---|
+| **Strategy tests** tab now has a sub-tab per rule: Moving-average crossover, RSI rule, MACD rule, Bollinger Bands rule, and a Monte Carlo test. Each shows the verdict, growth chart, rule-vs-buy-and-hold table, then "In plain English" and a **Know how** pop-up with the rules, factors, calculation steps and limits | `app.py`, `core/strategies.py` |
+| **Possible outcomes** tab now has sub-tabs: Price only, and what each rule would do across the same 2,000 simulated futures (chance of a gain, typical/poor/good case, chance of beating holding) | `strategy_outcomes` in `core/simulation.py` |
+| Risk and return ratios under Key signals: yearly return, volatility, max drawdown, VaR; Sharpe, Sortino, Calmar, Treynor; beta, alpha, information ratio, correlation vs the Nifty 50 (3-year default), with a plain-English glossary | `core/ratios.py` |
+| Monte Carlo strategy test: 2,000 reshuffled 5-year histories (10-day block bootstrap) show how much a result depends on luck | `bootstrap_test` in `core/backtest.py` |
+| Trading cost per switch (default 0.10%) is charged in every test and simulation | `core/backtest.py` |
+| Every rule is written once on 2-D arrays and reused for the backtest and the simulation; unit tests check it matches the pandas indicators exactly | `core/strategies.py`, `tests/test_strategies.py` |
+| Nifty 50 index added to the offline backup | `scripts/download_offline_data.py` |
+| Plain-English drop-downs and Know how pop-ups | `core/ui.py` |
+
+**Adding a rule later (e.g. Fusion analysis):** write a function that takes a price array and returns 1/0 positions, add a `Strategy(...)` entry to `STRATEGIES` in `core/strategies.py` with its plain-English and Know-how text, and it appears automatically in the Strategy tests tab, the Monte Carlo test and the Possible outcomes tab.
+
 ## Status
 All 8 features are built.

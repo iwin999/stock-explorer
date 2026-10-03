@@ -85,3 +85,45 @@ def outcome_chances(paths, threshold=0.05):
         "big_down": float((change < -threshold).mean()),
         "flat": float((np.abs(change) <= threshold).mean()),
     }
+
+
+def strategy_outcomes(close, strategy_key, paths, cost_pct=0.10, prefix_days=400):
+    """Apply a trading rule to every simulated future and see how it would have fared.
+
+    For each of the 2,000 simulated price paths we join them onto the last ~400 days of real
+    history (so the rule's averages are already warmed up), run the same rule used in the
+    backtest, and measure the rule's return over the simulated days. We also measure plain
+    buy-and-hold over the same days, so the two can be compared path by path.
+
+    Returns a dict of arrays/numbers (all returns as fractions, 0.05 = +5%).
+    """
+    from core.strategies import STRATEGIES  # imported here to keep this file importable on its own
+
+    rule = STRATEGIES[strategy_key]
+    prefix = close.to_numpy(dtype=float)[-prefix_days:]
+    n_hist = len(prefix)
+    n_paths, width = paths.shape
+    steps = width - 1
+
+    full = np.hstack([np.tile(prefix, (n_paths, 1)), paths[:, 1:]])      # history + simulated days
+    pos = rule.fn(full)
+
+    held = pos[:, n_hist - 1: n_hist - 1 + steps]          # position decided yesterday, held today
+    before = pos[:, n_hist - 2: n_hist - 2 + steps]        # the position held the day before
+    switches = np.abs(held - before)                       # a change in position costs money
+    daily = full[:, n_hist:] / full[:, n_hist - 1:-1] - 1
+
+    strategy_ret = np.prod(1 + held * daily - switches * cost_pct / 100.0, axis=1) - 1
+    hold_ret = full[:, -1] / full[:, n_hist - 1] - 1
+
+    return {
+        "strategy": strategy_ret,
+        "hold": hold_ret,
+        "chance_gain": float((strategy_ret > 0).mean()),
+        "chance_beats_hold": float((strategy_ret > hold_ret).mean()),
+        "median": float(np.median(strategy_ret)),
+        "poor": float(np.percentile(strategy_ret, 5)),
+        "good": float(np.percentile(strategy_ret, 95)),
+        "invested": float(held.mean()),
+        "starts_invested": bool(pos[0, n_hist - 1] == 1),
+    }

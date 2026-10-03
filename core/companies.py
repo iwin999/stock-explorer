@@ -131,6 +131,9 @@ COMPANIES = [
     ("Max Healthcare", "MAXHEALTH.NS", ""),
 ]
 
+# The market index used as the yardstick for beta, alpha and the other market ratios
+BENCHMARK = "^NSEI"   # Nifty 50
+
 # Quick look-up: ticker -> display name
 NAME_BY_SYMBOL = {symbol: name for name, symbol, _ in COMPANIES}
 

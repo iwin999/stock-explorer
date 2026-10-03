@@ -17,7 +17,7 @@ from datetime import datetime
 # Let this script import our project files from the folder above it.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from core.companies import COMPANIES  # noqa: E402
+from core.companies import BENCHMARK, COMPANIES  # noqa: E402
 from core.market_data import OFFLINE_DIR, get_history, save_offline  # noqa: E402
 
 PERIOD = "7y"      # same length the app asks for (5 years to test + 2 to warm up)
@@ -26,8 +26,9 @@ RETRIES = 3        # Yahoo sometimes says "no" once, then "yes"
 
 def main():
     done, failed = [], []
-    total = len(COMPANIES)
-    for i, (name, symbol, _) in enumerate(COMPANIES, start=1):
+    everything = COMPANIES + [("Nifty 50 index (benchmark)", BENCHMARK, "")]
+    total = len(everything)
+    for i, (name, symbol, _) in enumerate(everything, start=1):
         hist = None
         for attempt in range(RETRIES):
             hist = get_history(symbol, PERIOD)

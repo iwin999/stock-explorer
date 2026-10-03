@@ -9,13 +9,23 @@ the past, and lets you practise buying and selling with pretend money."
 
 ## Suggested demo (3 minutes)
 The first screen asks for a starting capital. During market hours (Mon-Fri 9:15-15:30 IST) the price and profit/loss update by themselves; outside those hours it shows the last close.
-The page has four tabs: **Overview, Possible outcomes, Strategy test, Paper trading.**
+The page has four tabs: **Overview, Possible outcomes, Strategy tests, Paper trading.**
 1. Type **"tata motors"** (then a misspelling like "relience") -> search understands names and typos.
 2. **Overview:** the chart (amber/navy lines = 50- and 200-day average price, grey band = usual range), then read one of the four signal cards out loud.
 3. **Possible outcomes:** point at the gauge ("out of 2,000 simulated futures, this many ended higher"), then the fan chart. Press **Re-run simulation** to show it is random.
 4. **Strategy test:** "Would a simple rule have beaten just holding?" - compare the two lines.
 5. **Paper trading:** buy 5 shares, show the profit/loss table. (Online, each visitor has a private account that resets on refresh.)
 6. (Optional) Turn off Wi-Fi on the local version: a notice appears and everything still works.
+
+## New ideas, one line each
+- **Sharpe ratio:** return earned per unit of risk, after the safe rate. Above 1 is generally considered good.
+- **Sortino ratio:** like Sharpe, but only the falls count as risk.
+- **Calmar ratio:** yearly return divided by the worst fall.
+- **Treynor ratio and beta:** how strongly the stock moves with the Nifty 50, and the return per unit of that market risk.
+- **Alpha:** return beyond what the stock's market risk alone would explain.
+- **Max drawdown / VaR:** the worst fall from a peak / the loss on a bad day (1 in 20).
+- **Monte Carlo strategy test:** reshuffle the last 5 years into 2,000 alternative histories to see how much a result depended on luck.
+- Every rule has a **Know how** button with the exact method, so any detail can be shown on request.
 
 ## The ideas in one line each
 - **Moving average:** the average of the last N closing prices; smooths out day-to-day noise.

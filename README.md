@@ -34,7 +34,8 @@ Online, each visitor gets their own private paper-trading account with a capital
 | 2 | Interactive chart with 50/200-day averages and Bollinger Bands | `core/charts.py` |
 | 3 | RSI, MACD, trend, volatility with plain-English meanings | `core/indicators.py` |
 | 4 | Possible outcomes tab: Monte Carlo simulation, fan chart and a gauge of the chance of ending higher or lower | `core/simulation.py` |
-| 5 | Strategy test tab: moving-average rule vs buy-and-hold, 5 years | `core/backtest.py` |
+| 5 | Strategy tests tab: four rules (moving-average, RSI, MACD, Bollinger) vs buy-and-hold over 5 years, plus a Monte Carlo test | `core/strategies.py`, `core/backtest.py` |
+| 3b | Risk and return ratios (Sharpe, Sortino, Calmar, Treynor, beta, alpha, drawdown, VaR) | `core/ratios.py` |
 | 6 | Paper trading with a starting capital the visitor chooses (Rs 1,000 to Rs 10 crore) | `core/trading.py`, `core/trading_ui.py` |
 | 7 | Offline backup + automatic fallback | `scripts/download_offline_data.py`, `core/market_data.py` |
 | 8 | Disclaimer in the footer of the page | `core/ui.py` |
@@ -45,7 +46,7 @@ Online, each visitor gets their own private paper-trading account with a capital
 
 ## Check that everything works
 ```bash
-.venv/bin/python -m pytest -q      # 28 tests
+.venv/bin/python -m pytest -q      # 44 tests
 ```
 
 ## Troubleshooting

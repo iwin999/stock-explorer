@@ -83,8 +83,8 @@ def get_history(symbol, period="5y"):
 
 # ---------------- offline backup (feature 7) ----------------
 def offline_path(symbol, folder=None):
-    """File name for a ticker. '&' is not safe in file names (M&M.NS), so we swap it."""
-    return os.path.join(folder or OFFLINE_DIR, symbol.replace("&", "_and_") + ".csv")
+    """File name for a ticker. '&' and '^' are not safe in file names (M&M.NS, ^NSEI), so we swap them."""
+    return os.path.join(folder or OFFLINE_DIR, symbol.replace("&", "_and_").replace("^", "IDX_") + ".csv")
 
 
 def save_offline(symbol, hist, folder=None):

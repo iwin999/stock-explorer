@@ -68,3 +68,19 @@ def notice(text):
 
 def show_disclaimer():
     st.markdown(f'<div class="disclaimer"><b>Disclaimer.</b> {DISCLAIMER}</div>', unsafe_allow_html=True)
+
+
+def plain_english(markdown, label="In plain English"):
+    """A drop-down with a layman's explanation (for visitors who are not finance people)."""
+    with st.expander(label):
+        st.markdown(markdown)
+
+
+def _show_know_how(markdown):
+    st.markdown(markdown)
+
+
+def know_how_button(key, title, markdown):
+    """A 'Know how' button that opens a pop-up with the full method: rules, factors, calculation."""
+    if st.button("Know how", key=key):
+        st.dialog(f"Know how: {title}", width="large")(_show_know_how)(markdown)
