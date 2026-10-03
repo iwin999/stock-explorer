@@ -8,6 +8,7 @@ indicators say, shows a range of things that *might* happen next, tests a simple
 the past, and lets you practise buying and selling with pretend money."
 
 ## Suggested demo (3 minutes)
+The first screen asks for a starting capital. During market hours (Mon-Fri 9:15-15:30 IST) the price and profit/loss update by themselves; outside those hours it shows the last close.
 The page has four tabs: **Overview, Possible outcomes, Strategy test, Paper trading.**
 1. Type **"tata motors"** (then a misspelling like "relience") -> search understands names and typos.
 2. **Overview:** the chart (amber/navy lines = 50- and 200-day average price, grey band = usual range), then read one of the four signal cards out loud.

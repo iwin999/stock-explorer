@@ -11,10 +11,17 @@ import streamlit as st
 from core import backtest as bt, companies, indicators as ind, simulation as sim, trading_ui
 from core.charts import backtest_chart, fan_chart, outlook_gauge, price_chart, zoom_to_window
 from core.formatting import format_inr
+from core.live import live_quote
 from core.market_data import get_company_name, get_history_with_source
+from core.market_hours import is_market_open, now_ist, status_message
 from core.ui import callout, notice, setup_page, show_disclaimer
 
 setup_page("Stock Explorer")
+
+# ---------- step 1: ask how much virtual money to practise with ----------
+if not trading_ui.has_account():
+    trading_ui.capital_gate()
+    st.stop()
 
 
 # ---------- cached data loaders ----------
@@ -75,11 +82,27 @@ if source == "offline":
            "Prices may be out of date.")
 
 close = hist["Close"]
-latest, previous = float(close.iloc[-1]), float(close.iloc[-2])
-change = latest - previous
+latest, previous = float(close.iloc[-1]), float(close.iloc[-2])  # last two daily closes (saved/cached)
 
-st.metric(f"{name}: last close", format_inr(latest),
-          f"{format_inr(change)} ({change / previous * 100:+.2f}%) vs previous day")
+
+def show_headline():
+    """Big price at the top. While the market is open this block refreshes itself every few seconds."""
+    quote = None if source == "offline" else live_quote(symbol)
+    price = quote["price"] if quote else latest
+    prev_close = (quote or {}).get("previous_close") or previous
+    change = price - prev_close
+    st.metric(f"{name}: {'current price' if quote and is_market_open() else 'last close'}",
+              format_inr(price), f"{format_inr(change)} ({change / prev_close * 100:+.2f}%) vs previous close")
+    if source == "offline":
+        st.caption("Saved data is being shown, so the price is not live.")
+    elif is_market_open():
+        st.caption(f"{status_message()}. Updating automatically. Last updated {now_ist():%H:%M:%S} IST. "
+                   "Prices may be delayed by a few minutes.")
+    else:
+        st.caption(f"{status_message()}. Showing the last closing price.")
+
+
+st.fragment(run_every=15 if (is_market_open() and source != "offline") else None)(show_headline)()
 
 tab_overview, tab_outlook, tab_strategy, tab_trade = st.tabs(
     ["Overview", "Possible outcomes", "Strategy test", "Paper trading"])

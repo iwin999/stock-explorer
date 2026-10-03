@@ -1,29 +1,67 @@
-"""The Paper Trading tab. All maths lives in core/trading.py; this file is only the screen."""
+"""The Paper Trading tab and the opening 'choose your capital' screen.
+
+All the maths lives in core/trading.py; this file is only the screen.
+Parts of the page are st.fragments: Streamlit re-runs just those parts every
+few seconds while the market is open, so prices and profit/loss move live
+without reloading the whole page (and without interrupting typing elsewhere).
+"""
+import os
+
 import streamlit as st
 
 from core.formatting import format_inr
+from core.live import REFRESH_SECONDS, live_quote
 from core.market_data import get_latest_price
-from core.trading import (DEFAULT_BALANCE, MAX_CAPITAL, MIN_CAPITAL, SAVE_TO_DISK, Portfolio,
-                          TradingError, check_capital)
-from core.ui import notice
+from core.market_hours import is_market_open, now_ist
+from core.trading import (DEFAULT_BALANCE, DEFAULT_PATH, MAX_CAPITAL, MIN_CAPITAL, SAVE_TO_DISK,
+                          Portfolio, TradingError, check_capital)
+from core.ui import notice, show_disclaimer
+
+CAPITAL_PRESETS = [50000, 100000, 500000, 1000000]
 
 
-@st.cache_data(ttl=60, show_spinner=False)
-def live_price(symbol):
-    """Latest price, remembered for 60 seconds so clicking around stays fast."""
-    price = get_latest_price(symbol)
-    return round(price, 2) if price else None
+# ---------------- account creation ----------------
+def has_account():
+    """True once the visitor has an account (they chose their capital).
+
+    Local mode (STOCK_APP_SAVE=1): a saved account on disk counts, so the family
+    laptop is not asked again every time.
+    """
+    if "portfolio" in st.session_state:
+        return True
+    if SAVE_TO_DISK and os.path.exists(DEFAULT_PATH):
+        st.session_state.portfolio = Portfolio.load()
+        return True
+    return False
+
+
+def capital_gate():
+    """The first thing a visitor sees: choose how much virtual money to practise with."""
+    st.title("Stock Explorer")
+    st.subheader("How much would you like to practise with?")
+    st.caption("This is virtual money for paper trading. Nothing real is invested. "
+               "You can start over with a different amount at any time.")
+
+    labels = [format_inr(a, 0) for a in CAPITAL_PRESETS] + ["Other amount"]
+    choice = st.radio("Starting capital", labels, index=1, horizontal=True)
+    if choice == "Other amount":
+        amount = st.number_input("Enter your amount (Rs)", min_value=int(MIN_CAPITAL), max_value=int(MAX_CAPITAL),
+                                 value=int(DEFAULT_BALANCE), step=10000)
+        st.caption(f"{format_inr(amount, 0)}  (between {format_inr(MIN_CAPITAL, 0)} and {format_inr(MAX_CAPITAL, 0)})")
+    else:
+        amount = CAPITAL_PRESETS[labels.index(choice)]
+
+    if st.button("Start", type="primary"):
+        try:
+            st.session_state.portfolio = Portfolio(balance=check_capital(amount))
+            _save(st.session_state.portfolio)
+            st.rerun()
+        except TradingError as e:
+            st.error(str(e))
+    show_disclaimer()
 
 
 def _get_portfolio():
-    """One Portfolio per visitor (per browser tab).
-
-    Local mode (STOCK_APP_SAVE=1): loaded from / saved to data/portfolio.json.
-    Cloud mode (default): every visitor gets their own account (they choose the
-    starting capital), kept in memory only, so visitors never see each other's trades.
-    """
-    if "portfolio" not in st.session_state:
-        st.session_state.portfolio = Portfolio.load() if SAVE_TO_DISK else Portfolio()
     return st.session_state.portfolio
 
 
@@ -33,7 +71,7 @@ def _save(pf):
 
 
 def _apply_starting_capital():
-    """Runs when the visitor changes the starting-capital box (only shown before any trade)."""
+    """Runs when the visitor edits the capital box (only shown before the first trade)."""
     try:
         amount = check_capital(st.session_state.start_capital)
         st.session_state.portfolio = Portfolio(balance=amount)
@@ -42,10 +80,29 @@ def _apply_starting_capital():
         st.session_state.flash = ("error", str(e))
 
 
+# ---------------- prices ----------------
+def price_of(symbol, fallback=None):
+    """Latest price (shared 15-second cache), or the fallback if Yahoo can't be reached."""
+    quote = live_quote(symbol)
+    return round(quote["price"], 2) if quote else fallback
+
+
+def _refresh_every():
+    """Seconds between automatic updates: only while the market is open."""
+    return REFRESH_SECONDS if is_market_open() else None
+
+
 def _colour_pnl(value):
-    return "color: #2e9e5b" if value >= 0 else "color: #d64545"
+    return "color: #2a9d6f" if value >= 0 else "color: #c8553d"
 
 
+def _prices_for(pf, symbol, fallback):
+    prices = {s: price_of(s) for s in pf.holdings}
+    prices[symbol] = prices.get(symbol) or price_of(symbol, fallback)
+    return prices
+
+
+# ---------------- the tab ----------------
 def render(symbol, name, fallback_price, offline=False):
     pf = _get_portfolio()
 
@@ -59,38 +116,22 @@ def render(symbol, name, fallback_price, offline=False):
     if offline:
         notice("Prices below come from saved data, not live prices.")
 
-    # ---------- starting capital: free choice until the first trade ----------
+    # ---------- account summary + price (updates live) ----------
+    st.fragment(run_every=None if offline else _refresh_every())(_account_summary)(symbol, name, fallback_price)
+
+    # ---------- capital can be changed until the first trade ----------
     if not pf.order_history:
         st.number_input("Starting capital (Rs)", min_value=int(MIN_CAPITAL), max_value=int(MAX_CAPITAL),
                         value=int(pf.deposited), step=10000, key="start_capital",
                         on_change=_apply_starting_capital,
-                        help="Choose how much virtual money to practise with. You can change it until your first trade.")
-        st.caption(f"You are starting with {format_inr(pf.deposited, 0)}. "
-                   "This can be changed until you place your first trade.")
-
-    # ---------- prices for everything we hold, plus the selected stock ----------
-    with st.spinner("Getting latest prices..."):
-        prices = {s: live_price(s) for s in pf.holdings}
-        price = live_price(symbol) or fallback_price  # fall back to the last daily close
-    prices[symbol] = prices.get(symbol) or price
-
-    # ---------- account summary ----------
-    total = pf.total_value(prices)
-    gain = total - pf.deposited
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Cash available", format_inr(pf.balance))
-    c2.metric("Total value (cash + shares)", format_inr(total))
-    c3.metric("Profit / loss so far", format_inr(gain), f"{gain / pf.deposited * 100:+.2f}%")
+                        help="You can change this until you place your first trade.")
 
     # ---------- trade box ----------
     st.subheader(f"Trade {name}")
-    owned = pf.holdings.get(symbol, {}).get("quantity", 0)
-    st.write(f"Price now: **{format_inr(price)}** per share  |  You own: **{owned}** share(s)")
-    st.caption("Prices come from Yahoo Finance and can be delayed. When the market is closed you see the last close.")
-
+    price = price_of(symbol, fallback_price)
     qty = st.number_input("How many shares?", min_value=1, value=1, step=1, key="qty")
     affordable = int(pf.balance // price) if price else 0
-    st.write(f"Cost of {qty} share(s): **{format_inr(qty * price)}**  (you can afford up to {affordable})")
+    st.write(f"Estimated cost of {qty} share(s): **{format_inr(qty * price)}**  (you can afford up to {affordable})")
 
     buy_col, sell_col = st.columns(2)
     action = None
@@ -100,28 +141,23 @@ def render(symbol, name, fallback_price, offline=False):
         action = "SELL"
 
     if action:
+        # Trades use a FRESH price (not the 15-second cache), so the order is as accurate as possible.
+        exec_price = None if offline else get_latest_price(symbol)
+        exec_price = round(exec_price, 2) if exec_price else price
         try:
-            order = pf.buy(symbol, int(qty), price) if action == "BUY" else pf.sell(symbol, int(qty), price)
+            order = (pf.buy(symbol, int(qty), exec_price) if action == "BUY"
+                     else pf.sell(symbol, int(qty), exec_price))
             _save(pf)  # remembered on disk only in local mode
             verb = "Bought" if action == "BUY" else "Sold"
             extra = f" Profit/loss on this sale: {format_inr(order['pnl'])}." if action == "SELL" else ""
-            st.session_state.flash = ("ok", f"{verb} {qty} share(s) of {name} at {format_inr(price)}.{extra}")
+            st.session_state.flash = ("ok", f"{verb} {qty} share(s) of {name} at {format_inr(exec_price)}.{extra}")
         except TradingError as e:  # a friendly, readable reason (not enough cash, etc.)
             st.session_state.flash = ("error", str(e))
         st.rerun()
 
-    # ---------- holdings ----------
+    # ---------- holdings (updates live) ----------
     st.subheader("Your shares")
-    table = pf.holdings_table(prices)
-    if table.empty:
-        st.info("You don't own any shares yet. Choose a company above and press Buy.")
-    else:
-        styled = (table.style
-                  .format({"Avg Price": format_inr, "Current Price": format_inr, "Value": format_inr,
-                           "P&L": format_inr, "P&L %": "{:+.2f}%"})
-                  .map(_colour_pnl, subset=["P&L", "P&L %"]))
-        st.dataframe(styled, hide_index=True, width="stretch")
-        st.caption("To sell, choose that company in the dropdown at the top, then press Sell.")
+    st.fragment(run_every=None if offline else _refresh_every())(_holdings_table)(symbol, fallback_price)
 
     # ---------- order history ----------
     st.subheader("Order history")
@@ -150,3 +186,32 @@ def render(symbol, name, fallback_price, offline=False):
             st.session_state.portfolio = Portfolio(balance=check_capital(restart))
             _save(st.session_state.portfolio)
             st.rerun()
+
+
+# ---------------- the parts that refresh themselves ----------------
+def _account_summary(symbol, name, fallback_price):
+    pf = _get_portfolio()
+    prices = _prices_for(pf, symbol, fallback_price)
+    total = pf.total_value(prices)
+    gain = total - pf.deposited
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Cash available", format_inr(pf.balance))
+    c2.metric("Total value (cash + shares)", format_inr(total))
+    c3.metric("Profit / loss so far", format_inr(gain), f"{gain / pf.deposited * 100:+.2f}%")
+    owned = pf.holdings.get(symbol, {}).get("quantity", 0)
+    st.write(f"{name}: **{format_inr(prices[symbol])}** per share  |  You own: **{owned}** share(s)")
+    st.caption(f"Updated {now_ist():%H:%M:%S} IST. Prices come from Yahoo Finance and can be delayed by a few minutes.")
+
+
+def _holdings_table(symbol, fallback_price):
+    pf = _get_portfolio()
+    table = pf.holdings_table(_prices_for(pf, symbol, fallback_price))
+    if table.empty:
+        st.info("You don't own any shares yet. Choose a company above and press Buy.")
+        return
+    styled = (table.style
+              .format({"Avg Price": format_inr, "Current Price": format_inr, "Value": format_inr,
+                       "P&L": format_inr, "P&L %": "{:+.2f}%"})
+              .map(_colour_pnl, subset=["P&L", "P&L %"]))
+    st.dataframe(styled, hide_index=True, width="stretch")
+    st.caption("To sell, choose that company in the dropdown at the top, then press Sell.")

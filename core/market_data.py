@@ -18,24 +18,34 @@ log = logging.getLogger(__name__)
 OFFLINE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "offline")
 
 
-def get_latest_price(symbol):
-    """Latest price as a float, or None if unavailable.
+def get_quote(symbol):
+    """Latest price and previous close as {"price": x, "previous_close": y}, or None.
 
-    Senior's version downloaded 2 days of 1-MINUTE candles (thousands of rows)
-    just to read one number. Here we ask for the single latest price first, and
-    only fall back to a few DAILY candles (about 5 rows).
+    Yahoo's quick "fast_info" gives both numbers in one light request (the keys are
+    camelCase: lastPrice, previousClose). If that fails we fall back to the last two
+    DAILY candles. The senior's version downloaded 2 days of 1-MINUTE candles just to
+    read one number.
     """
     try:
         ticker = yf.Ticker(symbol)
-        price = ticker.fast_info.get("last_price")
+        info = ticker.fast_info
+        price, prev = info.get("lastPrice"), info.get("previousClose")
         if price and price > 0:
-            return float(price)
+            return {"price": float(price), "previous_close": float(prev) if prev else None}
         hist = ticker.history(period="5d", interval="1d")
         if not hist.empty:
-            return float(hist["Close"].iloc[-1])
+            closes = hist["Close"]
+            return {"price": float(closes.iloc[-1]),
+                    "previous_close": float(closes.iloc[-2]) if len(closes) > 1 else None}
     except Exception:
-        log.exception("Could not fetch price for %s", symbol)
+        log.exception("Could not fetch quote for %s", symbol)
     return None
+
+
+def get_latest_price(symbol):
+    """Latest price as a float, or None if unavailable."""
+    quote = get_quote(symbol)
+    return quote["price"] if quote else None
 
 
 def get_company_name(symbol):

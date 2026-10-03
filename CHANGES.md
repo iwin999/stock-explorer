@@ -97,5 +97,17 @@ Refresh the backup the evening before the exhibition: `.venv/bin/python scripts/
 | Visitors choose their starting capital (Rs 1,000 to Rs 10 crore, default Rs 1,00,000) until their first trade; profit is measured against the chosen amount | `core/trading_ui.py`, `check_capital` in `core/trading.py` |
 | "Add virtual cash" takes any amount; "Start over" lets you pick a new capital | `core/trading_ui.py` |
 
+## New in Step 11 (capital first, live prices)
+| Change | Where |
+|---|---|
+| The first screen asks how much virtual money to practise with (presets Rs 50,000 / 1,00,000 / 5,00,000 / 10,00,000 or any amount) before anything else | `capital_gate` in `core/trading_ui.py`, `app.py` |
+| Live prices: during NSE hours (Mon-Fri 9:15-15:30 IST) the headline price, account value, profit/loss and holdings refresh themselves every 15 seconds, with a "last updated" time; when the market is closed the last close is shown with a plain note | `core/market_hours.py`, `core/live.py`, `st.fragment(run_every=...)` in `app.py` and `core/trading_ui.py` |
+| One shared 15-second price cache so many visitors do not flood Yahoo | `core/live.py` |
+| Buy/Sell use a fresh price at the moment of the order | `core/trading_ui.py` |
+| Bug fix: Yahoo's quick quote uses camelCase keys (`lastPrice`, `previousClose`); the old code asked for the wrong names and always took the slow route | `get_quote` in `core/market_data.py` |
+| Previous-close change now comes from Yahoo's own previous close | `app.py` |
+
+Known limits: NSE holidays are not in the calendar (the app says "open" but prices stay still); the price chart and strategy tab update when the page is used, not every few seconds.
+
 ## Status
 All 8 features are built.

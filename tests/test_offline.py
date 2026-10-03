@@ -36,3 +36,33 @@ def test_falls_back_to_offline_when_internet_fails(tmp_path, monkeypatch):
 def test_uses_online_when_available(monkeypatch):
     monkeypatch.setattr(md, "get_history", lambda symbol, period="7y": fake_history())
     assert md.get_history_with_source("A.NS")[1] == "online"
+
+
+def test_get_quote_uses_fast_info_then_falls_back(monkeypatch):
+    class Fast(dict):
+        pass
+
+    class T:
+        def __init__(self, symbol):
+            self.fast_info = Fast(lastPrice=110.0, previousClose=100.0)
+
+    monkeypatch.setattr(md.yf, "Ticker", T)
+    assert md.get_quote("A.NS") == {"price": 110.0, "previous_close": 100.0}
+    assert md.get_latest_price("A.NS") == 110.0
+
+    class T2:
+        def __init__(self, symbol):
+            self.fast_info = Fast()      # Yahoo returned nothing quick
+
+        def history(self, **kw):
+            return fake_history(5)
+
+    monkeypatch.setattr(md.yf, "Ticker", T2)
+    q = md.get_quote("A.NS")
+    assert q["price"] == 2.0 and q["previous_close"] < 2.0
+
+    def boom(symbol):
+        raise ConnectionError("no internet")
+
+    monkeypatch.setattr(md.yf, "Ticker", boom)
+    assert md.get_quote("A.NS") is None
