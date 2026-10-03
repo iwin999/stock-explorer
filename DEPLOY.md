@@ -48,6 +48,7 @@ restarts or sleeps**. With it, every portfolio is kept until you delete it.
      updated_at timestamptz not null default now()
    );
    alter table public.accounts enable row level security;
+   grant all on public.accounts to service_role;
    ```
 3. Open **Project Settings -> API Keys** (or **API**). Copy the **Project URL** and the **secret / service_role** key.
    Keep that key private: it must go only into Streamlit's Secrets box, never into GitHub or a chat.
