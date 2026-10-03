@@ -36,7 +36,7 @@ The page has four tabs: **Overview, Possible outcomes, Strategy test, Paper trad
 
 **Are the prices live?** From Yahoo Finance, can be ~15 minutes late; after market hours it shows the last close.
 
-**Is the money real?** No. Rs 1,00,000 of virtual cash. Nothing is connected to a broker.
+**Is the money real?** No. Visitors choose their own virtual starting amount (default Rs 1,00,000). Nothing is connected to a broker.
 
 **What did you change from last year's app?** See `CHANGES.md`: saved portfolio, real company names, no freezing, faster price lookups, friendly errors, offline mode, and the whole analysis side is new.
 

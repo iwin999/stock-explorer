@@ -69,3 +69,15 @@ def test_deposited_tracks_added_funds_and_profit(tmp_path):
     assert Portfolio.load(path).deposited == 105000
     # old save files (without the field) still load
     assert Portfolio.from_dict({"balance": 500}).deposited == 100000
+
+
+def test_custom_starting_capital_is_validated():
+    from core.trading import check_capital
+    assert check_capital(500000) == 500000.0
+    for bad in (0, 999, 1e9, None):
+        with pytest.raises(TradingError):
+            check_capital(bad)
+    p = Portfolio(balance=250000)
+    assert p.balance == 250000 and p.deposited == 250000
+    p.buy("A.NS", 10, 100)
+    assert round(p.total_value({"A.NS": 100}) - p.deposited, 2) == 0   # profit measured against chosen capital

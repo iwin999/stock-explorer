@@ -25,6 +25,18 @@ SAVE_TO_DISK = os.environ.get("STOCK_APP_SAVE") == "1"
 DEFAULT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "portfolio.json")
 
 
+MIN_CAPITAL = 1000.0            # Rs 1,000
+MAX_CAPITAL = 100000000.0       # Rs 10 crore (same limits as the senior's version)
+
+
+def check_capital(amount):
+    """Make sure a chosen starting amount is sensible; returns it as a float."""
+    if amount is None or not (MIN_CAPITAL <= amount <= MAX_CAPITAL):
+        raise TradingError(f"Starting capital must be between {format_inr(MIN_CAPITAL, 0)} "
+                           f"and {format_inr(MAX_CAPITAL, 0)}.")
+    return float(amount)
+
+
 class TradingError(Exception):
     """A trade that is not allowed. The message is written for visitors to read."""
 

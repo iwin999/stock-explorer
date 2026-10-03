@@ -3,7 +3,8 @@ import streamlit as st
 
 from core.formatting import format_inr
 from core.market_data import get_latest_price
-from core.trading import SAVE_TO_DISK, Portfolio, TradingError
+from core.trading import (DEFAULT_BALANCE, MAX_CAPITAL, MIN_CAPITAL, SAVE_TO_DISK, Portfolio,
+                          TradingError, check_capital)
 from core.ui import notice
 
 
@@ -18,8 +19,8 @@ def _get_portfolio():
     """One Portfolio per visitor (per browser tab).
 
     Local mode (STOCK_APP_SAVE=1): loaded from / saved to data/portfolio.json.
-    Cloud mode (default): every visitor starts with their own fresh Rs 1,00,000,
-    kept in memory only, so visitors never see each other's trades.
+    Cloud mode (default): every visitor gets their own account (they choose the
+    starting capital), kept in memory only, so visitors never see each other's trades.
     """
     if "portfolio" not in st.session_state:
         st.session_state.portfolio = Portfolio.load() if SAVE_TO_DISK else Portfolio()
@@ -29,6 +30,16 @@ def _get_portfolio():
 def _save(pf):
     if SAVE_TO_DISK:
         pf.save()
+
+
+def _apply_starting_capital():
+    """Runs when the visitor changes the starting-capital box (only shown before any trade)."""
+    try:
+        amount = check_capital(st.session_state.start_capital)
+        st.session_state.portfolio = Portfolio(balance=amount)
+        _save(st.session_state.portfolio)
+    except TradingError as e:
+        st.session_state.flash = ("error", str(e))
 
 
 def _colour_pnl(value):
@@ -47,6 +58,15 @@ def render(symbol, name, fallback_price, offline=False):
                + ("" if SAVE_TO_DISK else " Your account is private to you and resets when you refresh or close the page."))
     if offline:
         notice("Prices below come from saved data, not live prices.")
+
+    # ---------- starting capital: free choice until the first trade ----------
+    if not pf.order_history:
+        st.number_input("Starting capital (Rs)", min_value=int(MIN_CAPITAL), max_value=int(MAX_CAPITAL),
+                        value=int(pf.deposited), step=10000, key="start_capital",
+                        on_change=_apply_starting_capital,
+                        help="Choose how much virtual money to practise with. You can change it until your first trade.")
+        st.caption(f"You are starting with {format_inr(pf.deposited, 0)}. "
+                   "This can be changed until you place your first trade.")
 
     # ---------- prices for everything we hold, plus the selected stock ----------
     with st.spinner("Getting latest prices..."):
@@ -114,12 +134,19 @@ def render(symbol, name, fallback_price, offline=False):
 
     # ---------- extras ----------
     with st.expander("Account options"):
-        if st.button("Add Rs 10,000 virtual cash"):
-            pf.add_funds(10000)
+        add = st.number_input("Add virtual cash (Rs)", min_value=1000, max_value=10000000, value=10000,
+                              step=1000, key="add_amount")
+        if st.button("Add cash"):
+            pf.add_funds(add)
             _save(pf)
             st.rerun()
-        sure = st.checkbox("I want to start over with a fresh Rs 1,00,000")
+
+        st.divider()
+        restart = st.number_input("Start over with this capital (Rs)", min_value=int(MIN_CAPITAL),
+                                  max_value=int(MAX_CAPITAL), value=int(DEFAULT_BALANCE), step=10000,
+                                  key="restart_amount")
+        sure = st.checkbox(f"I want to erase my trades and start again with {format_inr(restart, 0)}")
         if st.button("Reset account", disabled=not sure):
-            st.session_state.portfolio = Portfolio()
+            st.session_state.portfolio = Portfolio(balance=check_capital(restart))
             _save(st.session_state.portfolio)
             st.rerun()

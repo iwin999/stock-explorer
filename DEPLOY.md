@@ -36,7 +36,7 @@ backup has 119, so use GitHub Desktop or Terminal.
 ## What is different online
 | Topic | Behaviour |
 |---|---|
-| Paper-trading account | Private to each visitor, starts at Rs 1,00,000, resets on refresh/close. (Local mode via `start.command` still saves to disk.) |
+| Paper-trading account | Private to each visitor, starts with a starting capital the visitor chooses (default Rs 1,00,000), resets on refresh/close. (Local mode via `start.command` still saves to disk.) |
 | Live prices | Yahoo Finance sometimes blocks or slows cloud servers. If so, the app switches to the saved backup files and shows a yellow banner. This is why the `data/offline` folder is uploaded too. |
 | Sleep | Free apps "go to sleep" after a few days without visitors; opening the link wakes it in ~30 seconds. Open it a few minutes before the exhibition. |
 | Updating the backup data | Run `scripts/download_offline_data.py` on your Mac, then commit and push the changed `data/offline` files; the app redeploys itself. |

@@ -91,5 +91,11 @@ Refresh the backup the evening before the exhibition: `.venv/bin/python scripts/
 | Disclaimer moved from the top banner to a small footer, with fuller wording | `core/ui.py` |
 | Price chart's vertical axis now fits the period shown | `zoom_to_window` in `core/charts.py` |
 
+## New in Step 10 (choose your own capital)
+| Change | Where |
+|---|---|
+| Visitors choose their starting capital (Rs 1,000 to Rs 10 crore, default Rs 1,00,000) until their first trade; profit is measured against the chosen amount | `core/trading_ui.py`, `check_capital` in `core/trading.py` |
+| "Add virtual cash" takes any amount; "Start over" lets you pick a new capital | `core/trading_ui.py` |
+
 ## Status
 All 8 features are built.
