@@ -57,21 +57,19 @@ def annualised_volatility(close):
 def describe_rsi(close):
     value = float(rsi(close).iloc[-1])
     if value >= 70:
-        meaning = "stock may be overbought (risen fast, could cool off)"
+        meaning = "The stock has risen quickly and may be overextended, so a pause or dip is possible."
     elif value <= 30:
-        meaning = "stock may be oversold (fallen fast, could bounce)"
+        meaning = "The stock has fallen quickly and may be due a rebound, though it can keep falling."
     else:
-        meaning = "neither overbought nor oversold"
-    return f"{value:.0f}", f"RSI {value:.0f}: {meaning}."
+        meaning = "Recent buying and selling are fairly balanced."
+    return f"{value:.0f} / 100", meaning
 
 
 def describe_macd(close):
     line, sig, hist = macd(close)
     if line.iloc[-1] > sig.iloc[-1]:
-        word, meaning = "Bullish", "momentum is pointing upwards"
-    else:
-        word, meaning = "Bearish", "momentum is pointing downwards"
-    return word, f"MACD is {'above' if word == 'Bullish' else 'below'} its signal line: {meaning}."
+        return "Positive", "Short-term price movement is stronger than the longer-term movement: a sign of upward momentum."
+    return "Negative", "Short-term price movement is weaker than the longer-term movement: a sign of downward momentum."
 
 
 def describe_trend(close):
@@ -80,16 +78,16 @@ def describe_trend(close):
     ma50 = sma(close, 50).iloc[-1]
     ma200 = sma(close, 200).iloc[-1]
     if pd.isna(ma50):
-        return "Unknown", "Not enough history to judge the trend."
+        return "Unknown", "There is not enough price history to judge the trend."
     if pd.isna(ma200):  # young stock: judge on the 50-day average only
         up = price > ma50
         return ("Uptrend" if up else "Downtrend",
-                f"Price is {'above' if up else 'below'} its 50-day average.")
+                f"The price is {'above' if up else 'below'} its 50-day average.")
     if price > ma50 > ma200:
-        return "Uptrend", "Price is above both its 50-day and 200-day averages: a steady climb."
+        return "Uptrend", "The price is above both its 50-day and 200-day averages: a steady upward direction."
     if price < ma50 < ma200:
-        return "Downtrend", "Price is below both its 50-day and 200-day averages: a steady slide."
-    return "Sideways", "Signals are mixed: the price is not clearly rising or falling."
+        return "Downtrend", "The price is below both its 50-day and 200-day averages: a steady downward direction."
+    return "Sideways", "Signals are mixed, with no clear direction at the moment."
 
 
 def describe_volatility(close):
@@ -97,8 +95,8 @@ def describe_volatility(close):
     if vol < 20:
         meaning = "fairly calm"
     elif vol < 35:
-        meaning = "moderately bumpy"
+        meaning = "moderately active"
     else:
-        meaning = "very bumpy"
-    return f"{vol:.0f}%", (f"Volatility {vol:.0f}%: in a typical year the price swings about "
-                           f"{vol:.0f}% up or down, so it is {meaning}.")
+        meaning = "highly active"
+    return f"{vol:.0f}%", (f"In a typical year the price moves about {vol:.0f}% up or down. "
+                           f"That makes it {meaning}.")

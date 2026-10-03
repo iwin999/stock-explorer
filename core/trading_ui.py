@@ -4,6 +4,7 @@ import streamlit as st
 from core.formatting import format_inr
 from core.market_data import get_latest_price
 from core.trading import SAVE_TO_DISK, Portfolio, TradingError
+from core.ui import notice
 
 
 @st.cache_data(ttl=60, show_spinner=False)
@@ -45,7 +46,7 @@ def render(symbol, name, fallback_price, offline=False):
     st.caption("Practice with **virtual** money. Nothing here is real."
                + ("" if SAVE_TO_DISK else " Your account is private to you and resets when you refresh or close the page."))
     if offline:
-        st.warning("Prices below come from saved data, not live prices.")
+        notice("Prices below come from saved data, not live prices.")
 
     # ---------- prices for everything we hold, plus the selected stock ----------
     with st.spinner("Getting latest prices..."):
@@ -62,7 +63,7 @@ def render(symbol, name, fallback_price, offline=False):
     c3.metric("Profit / loss so far", format_inr(gain), f"{gain / pf.deposited * 100:+.2f}%")
 
     # ---------- trade box ----------
-    st.subheader(f"Trade: {name}")
+    st.subheader(f"Trade {name}")
     owned = pf.holdings.get(symbol, {}).get("quantity", 0)
     st.write(f"Price now: **{format_inr(price)}** per share  |  You own: **{owned}** share(s)")
     st.caption("Prices come from Yahoo Finance and can be delayed. When the market is closed you see the last close.")
@@ -73,9 +74,9 @@ def render(symbol, name, fallback_price, offline=False):
 
     buy_col, sell_col = st.columns(2)
     action = None
-    if buy_col.button("🟢 BUY", width="stretch"):
+    if buy_col.button("Buy", type="primary", width="stretch"):
         action = "BUY"
-    if sell_col.button("🔴 SELL", width="stretch"):
+    if sell_col.button("Sell", width="stretch"):
         action = "SELL"
 
     if action:
@@ -93,14 +94,14 @@ def render(symbol, name, fallback_price, offline=False):
     st.subheader("Your shares")
     table = pf.holdings_table(prices)
     if table.empty:
-        st.info("You don't own any shares yet. Pick a company above and press BUY.")
+        st.info("You don't own any shares yet. Choose a company above and press Buy.")
     else:
         styled = (table.style
                   .format({"Avg Price": format_inr, "Current Price": format_inr, "Value": format_inr,
                            "P&L": format_inr, "P&L %": "{:+.2f}%"})
                   .map(_colour_pnl, subset=["P&L", "P&L %"]))
         st.dataframe(styled, hide_index=True, width="stretch")
-        st.caption("To sell, choose that company in the dropdown at the top, then press SELL.")
+        st.caption("To sell, choose that company in the dropdown at the top, then press Sell.")
 
     # ---------- order history ----------
     st.subheader("Order history")
@@ -109,7 +110,7 @@ def render(symbol, name, fallback_price, offline=False):
         st.caption("No trades yet.")
     else:
         st.dataframe(orders.iloc[::-1], hide_index=True, width="stretch")  # newest first
-        st.download_button("⬇️ Download orders as CSV", orders.to_csv(index=False), "orders.csv", "text/csv")
+        st.download_button("Download orders (CSV)", orders.to_csv(index=False), "orders.csv", "text/csv")
 
     # ---------- extras ----------
     with st.expander("Account options"):

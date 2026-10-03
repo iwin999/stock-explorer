@@ -36,6 +36,21 @@ def test_range_contains_roughly_70_percent():
     assert 0.68 < inside < 0.72
 
 
+def test_outcome_chances_add_up():
+    paths = sim.simulate(make_prices(0.02), 30, n_paths=5000, seed=2)
+    c = sim.outcome_chances(paths)
+    assert abs(c["up"] + c["down"] - 1) < 1e-9
+    assert abs(c["big_up"] + c["flat"] + c["big_down"] - 1) < 1e-9
+
+
+def test_rising_history_tilts_chances_up_but_neutral_does_not():
+    rising = pd.Series(100 * np.exp(np.cumsum(np.full(300, 0.002))))
+    rising = rising * np.exp(np.random.default_rng(1).normal(0, 0.01, 300))  # add noise
+    with_trend = sim.outcome_chances(sim.simulate(rising, 30, n_paths=5000, seed=1))["up"]
+    neutral = sim.outcome_chances(sim.simulate(rising, 30, n_paths=5000, seed=1, include_trend=False))["up"]
+    assert with_trend > 0.6 and 0.4 < neutral < 0.55
+
+
 def test_flat_prices_give_flat_paths():
     paths = sim.simulate(pd.Series([100.0] * 300), seed=1)
     assert np.allclose(paths, 100)

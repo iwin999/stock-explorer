@@ -1,6 +1,6 @@
 # Presenting Stock Explorer
 
-*Educational project. Not investment advice.* Say this first, every time.
+*This is an educational project, not investment advice, and no real money is involved.* Say this first, every time. The full disclaimer is in the footer.
 
 ## 30-second pitch
 "Pick any big Indian company. The app draws its price history, tells you in plain English what the
@@ -8,13 +8,13 @@ indicators say, shows a range of things that *might* happen next, tests a simple
 the past, and lets you practise buying and selling with pretend money."
 
 ## Suggested demo (3 minutes)
+The page has four tabs: **Overview, Possible outcomes, Strategy test, Paper trading.**
 1. Type **"tata motors"** (then a misspelling like "relience") -> search understands names and typos.
-2. **Chart:** orange = 50-day average, purple = 200-day, grey band = Bollinger Bands (wide = bumpy).
-3. **Indicators:** read one meaning out loud (e.g. "RSI below 30: may be oversold").
-4. **What might happen:** point at the fan; press "Run the simulation again" to show it's random.
-5. **Backtest:** "Would a simple rule have beaten just holding?" - compare the two lines.
-6. **Paper trading:** buy 5 shares, show the profit/loss table. Close and reopen: it's still there.
-7. (Optional wow) Turn off Wi-Fi: the banner appears and everything still works.
+2. **Overview:** the chart (amber/navy lines = 50- and 200-day average price, grey band = usual range), then read one of the four signal cards out loud.
+3. **Possible outcomes:** point at the gauge ("out of 2,000 simulated futures, this many ended higher"), then the fan chart. Press **Re-run simulation** to show it is random.
+4. **Strategy test:** "Would a simple rule have beaten just holding?" - compare the two lines.
+5. **Paper trading:** buy 5 shares, show the profit/loss table. (Online, each visitor has a private account that resets on refresh.)
+6. (Optional) Turn off Wi-Fi on the local version: a notice appears and everything still works.
 
 ## The ideas in one line each
 - **Moving average:** the average of the last N closing prices; smooths out day-to-day noise.
@@ -32,7 +32,7 @@ the past, and lets you practise buying and selling with pretend money."
 
 **The rule beat buy-and-hold, so is it a good strategy?** One stock over 5 years proves little. It tends to lag in steady uptrends. Try a few companies.
 
-**Why does the simulation not say up or down?** We assume no direction on purpose; only the *size* of daily moves comes from history. Otherwise last year's fall would "predict" more falling.
+**What does the gauge mean?** Of 2,000 simulated futures built from the stock's past year (its average direction and its day-to-day swings), it is the share that ended higher than today. A stock that fell last year leans 'lower'. It describes the past year, not the future.
 
 **Are the prices live?** From Yahoo Finance, can be ~15 minutes late; after market hours it shows the last close.
 

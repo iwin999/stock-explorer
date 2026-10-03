@@ -85,7 +85,7 @@ def verdict(result):
     s, b = result["stats"]["Crossover strategy"], result["stats"]["Buy and hold"]
     gap = s["total_return_pct"] - b["total_return_pct"]
     who = "beat" if gap > 0 else "trailed"
-    sentence = (f"Over the last {YEARS} years the crossover rule {who} buy-and-hold by "
+    sentence = (f"Over the last {YEARS} years the moving-average rule {who} buy-and-hold by "
                 f"{abs(gap):.1f} percentage points ({s['total_return_pct']:+.1f}% vs "
                 f"{b['total_return_pct']:+.1f}%).")
     if s["worst_fall_pct"] > b["worst_fall_pct"]:

@@ -32,4 +32,4 @@ def test_trend_labels():
 
 def test_macd_direction():
     rising = pd.Series(np.linspace(100, 200, 100) + np.sin(np.arange(100)))
-    assert ind.describe_macd(rising)[0] in ("Bullish", "Bearish")
+    assert ind.describe_macd(rising)[0] in ("Positive", "Negative")

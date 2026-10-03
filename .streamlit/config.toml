@@ -1,0 +1,14 @@
+# Look and feel: calm, professional, light theme.
+[theme]
+base = "light"
+primaryColor = "#1d3557"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f3f5f8"
+textColor = "#1b2430"
+font = "sans serif"
+
+[client]
+toolbarMode = "viewer"   # hides developer menu items from visitors
+
+[browser]
+gatherUsageStats = false

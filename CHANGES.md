@@ -80,5 +80,16 @@ Refresh the backup the evening before the exhibition: `.venv/bin/python scripts/
 | Banner wording no longer assumes the user's internet is down (cloud servers can be blocked by Yahoo) | `app.py` |
 | Deployment guide for Streamlit Community Cloud | `DEPLOY.md` |
 
+## New in Step 9 (professional redesign)
+| Change | Where |
+|---|---|
+| All emojis removed; calm light theme (navy accent), thin-bordered cards, no developer toolbar for visitors | `core/ui.py`, `.streamlit/config.toml` |
+| Four clear tabs: Overview, Possible outcomes, Strategy test, Paper trading | `app.py` |
+| Plain-English wording: "Recent strength (RSI)", "Momentum (MACD)", "Trend direction", "Price swings (volatility)", "Moving-average rule"; every signal explained in a sentence | `core/indicators.py`, `app.py` |
+| New gauge on the Possible outcomes tab: chance of ending higher/lower, plus up more than 5% / within 5% / down more than 5% | `outlook_gauge` in `core/charts.py`, `outcome_chances` in `core/simulation.py` |
+| Simulation now includes the stock's own past-year direction (previously direction-neutral), so the gauge is informative; pass `include_trend=False` for the neutral version | `core/simulation.py` |
+| Disclaimer moved from the top banner to a small footer, with fuller wording | `core/ui.py` |
+| Price chart's vertical axis now fits the period shown | `zoom_to_window` in `core/charts.py` |
+
 ## Status
 All 8 features are built.

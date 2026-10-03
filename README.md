@@ -33,11 +33,11 @@ Online, each visitor gets their own private paper-trading account (resets on ref
 | 1 | Company search (name/nickname/typos) + dropdown of 119 NSE companies | `core/companies.py` |
 | 2 | Interactive chart with 50/200-day averages and Bollinger Bands | `core/charts.py` |
 | 3 | RSI, MACD, trend, volatility with plain-English meanings | `core/indicators.py` |
-| 4 | "What might happen": Monte Carlo fan chart | `core/simulation.py` |
-| 5 | Backtest: 50/200 crossover vs buy-and-hold, 5 years | `core/backtest.py` |
+| 4 | Possible outcomes tab: Monte Carlo simulation, fan chart and a gauge of the chance of ending higher or lower | `core/simulation.py` |
+| 5 | Strategy test tab: moving-average rule vs buy-and-hold, 5 years | `core/backtest.py` |
 | 6 | Paper trading with virtual Rs 1,00,000 (saved between sessions) | `core/trading.py`, `core/trading_ui.py` |
 | 7 | Offline backup + automatic fallback | `scripts/download_offline_data.py`, `core/market_data.py` |
-| 8 | Disclaimer at the top and bottom of the page | `core/ui.py` |
+| 8 | Disclaimer in the footer of the page | `core/ui.py` |
 
 `app.py` is the page itself; everything in `core/` is a separate, testable piece.
 `CHANGES.md` lists what was kept from last year's `senior_app.py` and what was improved.
@@ -45,7 +45,7 @@ Online, each visitor gets their own private paper-trading account (resets on ref
 
 ## Check that everything works
 ```bash
-.venv/bin/python -m pytest -q      # 26 tests
+.venv/bin/python -m pytest -q      # 28 tests
 ```
 
 ## Troubleshooting
