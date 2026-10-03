@@ -362,7 +362,7 @@ with tab_strategy:
             term_row("Measure", None, rule.name, "Buy and hold", header=True)
             for label, k in ROW_LABELS:
                 if k == "ending_value":
-                    sv, bv = format_inr(s["final_value"]), format_inr(b["final_value"])
+                    sv, bv = format_inr(s["final_value"], 0), format_inr(b["final_value"], 0)   # no paise: keeps phone columns tidy
                 elif k in ("total_return", "cagr", "max_drawdown", "volatility"):
                     signed = k in ("total_return", "cagr")
                     sv, bv = ratios.pct(s[k], sign=signed), ratios.pct(b[k], sign=signed)

@@ -23,7 +23,7 @@ h3 { font-size: 1.35rem !important; font-weight: 600 !important; }
 .stApp a.header-anchor, .stApp [data-testid="stHeaderActionElements"] { display: none !important; }
 
 /* Tabs */
-.stApp button[data-baseweb="tab"] p { font-size: 1.2rem !important; font-weight: 600; }
+.stApp button[data-baseweb="tab"] p, .stApp [data-testid="stTab"], .stApp [data-testid="stTab"] p { font-size: 1.2rem !important; font-weight: 600; }
 
 /* Metric cards */
 .stApp [data-testid="stMetric"] { background: #ffffff; border: 1px solid #e1e5ec; border-radius: 8px; padding: 0.9rem 1.1rem; }
@@ -49,6 +49,22 @@ h3 { font-size: 1.35rem !important; font-weight: 600 !important; }
            border-radius: 4px; font-size: 1.2rem; line-height: 1.5; margin: 0.5rem 0 1rem 0; }
 .notice { border-left: 4px solid #b7791f; background: #fdf6e7; padding: 0.7rem 1.1rem;
           border-radius: 4px; font-size: 1.0rem; margin: 0.5rem 0 1rem 0; color: #5b4a1e; }
+
+/* ---- small screens (phones) ---- */
+@media (max-width: 640px) {
+  /* Tabs wrap onto a second line instead of hiding behind a scroll arrow */
+  .stApp [role="tablist"], .stApp [data-baseweb="tab-list"] { flex-wrap: wrap !important; overflow: visible !important; row-gap: 0.15rem; }
+  .stApp [data-baseweb="tab-highlight"], .stApp [data-baseweb="tab-border"] { display: none !important; }
+  .stApp [data-testid="stTab"], .stApp button[data-baseweb="tab"] { padding: 0.35rem 0.6rem; font-size: 1rem !important; }
+  .stApp [data-testid="stTab"] p { font-size: 1rem !important; }
+  .stApp [data-testid="stTab"][aria-selected="true"], .stApp button[data-baseweb="tab"][aria-selected="true"] { border-bottom: 3px solid #1d3557; }
+  /* Comparison-table rows stay side by side, so each value stays under its heading */
+  .stApp [data-testid="stHorizontalBlock"]:has(.tr-marker) { flex-wrap: nowrap !important; gap: 0.25rem !important; }
+  .stApp [data-testid="stHorizontalBlock"]:has(.tr-marker) > [data-testid="stColumn"] { min-width: 0 !important; width: auto !important; flex: 1 1 0 !important; }
+  .stApp [data-testid="stHorizontalBlock"]:has(.tr-marker) > [data-testid="stColumn"]:nth-child(1) { flex-grow: 2.6 !important; }
+  .stApp [data-testid="stHorizontalBlock"]:has(.tr-marker) > [data-testid="stColumn"]:nth-child(2) { flex-grow: 0.6 !important; }
+  .term-cell { font-size: 0.85rem; line-height: 1.25; word-break: break-word; }
+}
 
 /* Footer disclaimer: small and quiet */
 .disclaimer { font-size: 0.82rem; color: #6b7480; line-height: 1.5; border-top: 1px solid #e1e5ec;
@@ -112,12 +128,13 @@ def metric_with_help(title, value, key, delta=None):
 def term_row(term, key, *cells, header=False):
     """One row of a comparison table: term, "?" bubble, then the values."""
     cols = st.columns([3.2, 0.7] + [2] * len(cells))
+    marker = '<span class="tr-marker"></span>'          # lets the phone CSS recognise table rows
     if header:
-        cols[0].markdown(f"**{term}**")
+        cols[0].markdown(f'<div class="term-cell">{marker}<b>{term}</b></div>', unsafe_allow_html=True)
         for c, text in zip(cols[2:], cells):
-            c.markdown(f"**{text}**")
+            c.markdown(f'<div class="term-cell"><b>{text}</b></div>', unsafe_allow_html=True)
         return
-    cols[0].markdown(f'<div class="term-cell">{term}</div>', unsafe_allow_html=True)
+    cols[0].markdown(f'<div class="term-cell">{marker}{term}</div>', unsafe_allow_html=True)
     if key:
         with cols[1]:
             help_bubble(key)

@@ -14,8 +14,8 @@ from core.formatting import format_inr
 from core.live import spot_price, vol_estimate
 from core.market_hours import now_ist
 from core.trading import Portfolio
-from core.trading_ui import (_get_portfolio, _refresh_every, _save, admin_pin, get_store, positions_table,
-                             snapshot_now, storage_diagnosis)
+from core.trading_ui import (_get_portfolio, _refresh_every, _save, _sign_out, admin_pin, get_store,
+                             positions_table, snapshot_now, storage_diagnosis)
 from core.ui import callout, know_how_button, notice, plain_english
 
 ETF_OPTIONS = [s for s in ins.CASH_INSTRUMENTS if ins.asset_class(s) == ins.ETFS]
@@ -281,7 +281,7 @@ def _organiser_tools():
                 store.delete(acc.make_key(target))
                 _all_accounts.clear()
                 if target.casefold() == _get_portfolio().name.casefold():
-                    st.session_state.pop("portfolio", None)
+                    _sign_out()
                 st.rerun()
         st.divider()
         st.download_button("Download a backup of all portfolios", json.dumps(records, default=str),

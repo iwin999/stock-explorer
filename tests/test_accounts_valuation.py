@@ -35,8 +35,8 @@ def test_file_store_roundtrip_unique_names_and_delete(tmp_path):
 
 
 class FakeResp:
-    def __init__(self, payload=None, fail=False):
-        self.payload, self.fail = payload, fail
+    def __init__(self, payload=None, fail=False, status=200):
+        self.payload, self.fail, self.status_code = payload, fail, status
 
     def raise_for_status(self):
         if self.fail:
@@ -53,9 +53,20 @@ class FakeHttp:
 
     def post(self, url, headers=None, timeout=None, data=None):
         self.calls.append(("post", url, headers))
+        upsert = "on_conflict" in url
         for r in json.loads(data):
+            if not upsert and r["key"] in self.rows:
+                return FakeResp(status=409)                  # a plain insert of an existing key is refused
             self.rows[r["key"]] = r
         return FakeResp()
+
+    def patch(self, url, headers=None, timeout=None, data=None):
+        self.calls.append(("patch", url, headers))
+        key = url.split("key=eq.")[1].split("&")[0]
+        if key not in self.rows:
+            return FakeResp([])                              # nothing matched: nothing is created
+        self.rows[key]["data"] = json.loads(data)["data"]
+        return FakeResp([{"key": key}])
 
     def get(self, url, headers=None, timeout=None):
         self.calls.append(("get", url, headers))
@@ -75,9 +86,12 @@ def test_supabase_store_speaks_the_right_requests():
     store = acc.SupabaseStore("https://x.supabase.co/", "SECRET", session=http)
     pf = acc.create_account(store, "Meera", 100000)
     method, url, headers = http.calls[-1]
-    assert method == "post" and url == "https://x.supabase.co/rest/v1/accounts?on_conflict=key"
-    assert headers["apikey"] == "SECRET" and "merge-duplicates" in headers["Prefer"]
+    assert method == "post" and url == "https://x.supabase.co/rest/v1/accounts"      # plain insert, not an upsert
+    assert headers["apikey"] == "SECRET" and "merge-duplicates" not in headers["Prefer"]
     assert acc.load_account(store, "meera").balance == 100000
+    pf.add_funds(500)
+    acc.save_account(store, pf)
+    assert http.calls[-1][0] == "patch" and acc.load_account(store, "meera").balance == 100500
     assert store.names() == ["Meera"]
     store.delete(acc.make_key("Meera"))
     assert acc.load_account(store, "Meera") is None
@@ -150,3 +164,21 @@ def test_busted_future_is_squared_off_automatically():
     events = val.settle_and_square_off(pf, spots({"A.NS": 800.0}), lambda s: 0.25, lambda u, d: None, NOW)
     assert len(events) == 1 and "automatically" in events[0] and pf.derivatives == []
     assert pf.balance == 100000 - 7500
+
+
+def test_deleted_account_is_not_recreated_by_a_later_save(tmp_path):
+    for store in (acc.FileStore(str(tmp_path)), acc.SupabaseStore("https://x.supabase.co", "k", session=FakeHttp())):
+        pf = acc.create_account(store, "Ghost", 100000)
+        store.delete(acc.make_key("Ghost"))
+        pf.add_funds(1000)
+        with pytest.raises(acc.AccountGone):
+            acc.save_account(store, pf)
+        assert store.names() == []                                   # it stayed deleted
+
+
+def test_two_people_cannot_both_create_the_same_name(tmp_path):
+    for store in (acc.FileStore(str(tmp_path / "f")), acc.SupabaseStore("https://x.supabase.co", "k", session=FakeHttp())):
+        store.create(acc.make_key("Asha"), "Asha", {"balance": 1})
+        with pytest.raises(acc.NameTaken):
+            store.create(acc.make_key("asha"), "asha", {"balance": 2})    # the race: skips the name check
+        assert store.get(acc.make_key("Asha"))["balance"] == 1            # first person's data untouched

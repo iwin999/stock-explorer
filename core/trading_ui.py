@@ -73,7 +73,20 @@ def admin_pin():
 
 
 def has_account():
-    return "portfolio" in st.session_state
+    """True when a user is signed in. A refresh keeps them signed in: their name rides along in the page address."""
+    if "portfolio" in st.session_state:
+        return True
+    name = st.query_params.get("user")
+    if name:
+        try:
+            pf = acc.load_account(get_store(), name)
+        except acc.StorageError:
+            pf = None
+        if pf is not None:
+            st.session_state.portfolio = pf
+            return True
+        del st.query_params["user"]
+    return False
 
 
 def _get_portfolio():
@@ -85,6 +98,10 @@ def _save(pf):
     try:
         acc.save_account(get_store(), pf)
         st.session_state.pop("save_error", None)
+    except acc.AccountGone:
+        _sign_out()
+        st.session_state.gate_notice = ("This portfolio was removed by the organiser, so you have been signed out. "
+                                        "You can create a new one below.")
     except acc.StorageError as e:
         st.session_state.save_error = str(e)
 
@@ -92,6 +109,14 @@ def _save(pf):
 def _sign_in(pf):
     st.session_state.portfolio = pf
     st.session_state.pop("flash", None)
+    st.session_state.pop("gate_notice", None)
+    st.query_params["user"] = pf.name
+
+
+def _sign_out():
+    st.session_state.pop("portfolio", None)
+    if "user" in st.query_params:
+        del st.query_params["user"]
 
 
 # ---------------- first screen ----------------
@@ -103,6 +128,8 @@ def capital_gate():
     st.caption("Practise with virtual money. Nothing real is invested. Your portfolio is saved under your name, "
                "so you can come back and check it later.")
 
+    if st.session_state.get("gate_notice"):
+        notice(st.session_state.pop("gate_notice"))
     mode = st.radio("I am a", ["New user", "Returning user"], horizontal=True, key="gate_mode")
 
     if mode == "New user":
@@ -151,7 +178,7 @@ def user_bar():
     left, right = st.columns([5, 1])
     left.markdown(f"Signed in as **{pf.name}**")
     if right.button("Switch user", key="switch_user"):
-        st.session_state.pop("portfolio", None)
+        _sign_out()
         st.rerun()
     if st.session_state.get("save_error"):
         notice(f"Your latest change could not be saved: {st.session_state.save_error}")
@@ -345,6 +372,8 @@ def _futures_ticket(pf, offline):
     if not spot:
         st.warning("No price is available for this right now.")
         return
+    if not live_quote(under):
+        notice("A live price is not available right now, so the last saved closing price is being used.")
     price = dv.future_price(spot, dv.years_left(expiry))
     lot = dv.lot_size(spot)
     margin = dv.margin_for_future(price, lots)
@@ -404,6 +433,8 @@ def _options_ticket(pf, offline):
     if not spot:
         st.warning("No price is available for this right now.")
         return
+    if not live_quote(under):
+        notice("A live price is not available right now, so the last saved closing price is being used.")
     strikes, atm = dv.strike_grid(spot)
     strike = st.selectbox("Strike price", strikes, index=strikes.index(atm), key="opt_strike",
                           format_func=lambda k: f"{k:g}" + ("  (at the money)" if k == atm else ""))

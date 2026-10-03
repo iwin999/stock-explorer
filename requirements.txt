@@ -1,7 +1,7 @@
-streamlit
-yfinance
-pandas
-plotly
-requests
-pytest
+# Versions this app was built and tested with. '~=' allows small bug-fix updates only.
+streamlit~=1.65.0
+yfinance~=1.7.0
+pandas~=3.0.6
+plotly~=7.1.0
+requests~=2.34.0
 tzdata

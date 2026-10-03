@@ -136,5 +136,18 @@ Known limits: NSE holidays are not in the calendar (the app says "open" but pric
 
 **Not tested against the real Supabase service** (needs your account and keys); the code path is tested against a fake copy of its web interface. Follow DEPLOY.md Step 3 and run the 'Test it' check.
 
+## New in Step 14 (fixes from the flaw review)
+| Problem found | Fix | Where |
+|---|---|---|
+| A deleted portfolio came back when its owner next clicked something | Saving only updates an existing account; if it is gone the user is signed out with a message | `core/accounts.py`, `core/trading_ui.py` |
+| Two people choosing the same new name at the same moment could overwrite each other | New accounts use an insert that the database refuses for an existing name | `core/accounts.py` |
+| Strategy comparison table became an unlabelled list on phones | Rows stay side by side on small screens | `core/ui.py` |
+| Phone tab bar hid "Paper trading" and "Your Portfolio" | Tabs wrap onto extra lines on phones; tab text size now applies on current Streamlit | `core/ui.py` |
+| Library versions were not fixed, so a future update could break the online app | Versions pinned to the ones tested; pytest moved to `requirements-dev.txt` | `requirements.txt` |
+| Refreshing the browser signed the visitor out | Name is kept in the page address (`?user=Name`), so a refresh signs back in | `core/trading_ui.py` |
+| Futures/options silently used the last saved price when no live price was available | A visible note says so | `core/trading_ui.py` |
+| Organiser could not tell why the database was not connecting | Organiser tools explain what is missing | `core/portfolio_ui.py` |
+| Supabase secret keys in the new `sb_secret_` format were sent the old way | Sent in the apikey header only | `core/accounts.py` |
+
 ## Status
 All 8 features are built.
