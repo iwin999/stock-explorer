@@ -223,7 +223,7 @@ def create_account(store, raw_name, capital):
     name = clean_name(raw_name)
     if name_taken(store, name):
         raise StorageError(f"The name “{name}” is already taken. If that is you, use “Returning user”.")
-    pf = Portfolio(balance=check_capital(capital), name=name)
+    pf = Portfolio(balance=check_capital(capital), name=name, created_at=_now())
     try:
         store.create(make_key(name), name, pf.to_dict())
     except NameTaken as e:

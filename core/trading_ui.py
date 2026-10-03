@@ -286,7 +286,7 @@ def render(symbol, name, fallback_price, offline=False):
                                   max_value=int(MAX_CAPITAL), value=100000, step=10000, key="restart_amount")
         sure = st.checkbox(f"I want to erase all my trades and start again with {format_inr(restart, 0)}", key="restart_sure")
         if st.button("Reset my account", disabled=not sure, key="restart_go"):
-            fresh = Portfolio(balance=check_capital(restart), name=pf.name)
+            fresh = Portfolio(balance=check_capital(restart), name=pf.name, created_at=pf.created_at)   # still the same person
             _sign_in(fresh)
             _save(fresh)
             st.rerun()

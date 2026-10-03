@@ -40,8 +40,9 @@ class TradingError(Exception):
 
 
 class Portfolio:
-    def __init__(self, balance=DEFAULT_BALANCE, name=""):
+    def __init__(self, balance=DEFAULT_BALANCE, name="", created_at=None):
         self.name = name
+        self.created_at = created_at      # when the account was first made (UTC text), or None for older accounts
         self.balance = float(balance)
         self.deposited = float(balance)  # total money put in; profit = total value - deposited
         # holdings looks like: {"RELIANCE.NS": {"quantity": 10, "avg_price": 2450.5}}
@@ -209,12 +210,13 @@ class Portfolio:
 
     # ---------------- saving (fixes: "not saved between sessions") ----------------
     def to_dict(self):
-        return {"name": self.name, "balance": self.balance, "deposited": self.deposited, "holdings": self.holdings,
+        return {"name": self.name, "created_at": self.created_at, "balance": self.balance, "deposited": self.deposited, "holdings": self.holdings,
                 "derivatives": self.derivatives, "order_history": self.order_history}
 
     @classmethod
     def from_dict(cls, data):
-        p = cls(balance=data.get("balance", DEFAULT_BALANCE), name=data.get("name", ""))
+        p = cls(balance=data.get("balance", DEFAULT_BALANCE), name=data.get("name", ""),
+                created_at=data.get("created_at"))
         p.deposited = data.get("deposited", DEFAULT_BALANCE)
         p.holdings = data.get("holdings", {})
         p.derivatives = data.get("derivatives", [])

@@ -10,7 +10,7 @@ from core import derivatives as dv
 from core import instruments as ins
 from core import valuation as val
 from core.charts import allocation_donut
-from core.formatting import format_inr
+from core.formatting import format_inr, format_ist
 from core.live import spot_price, vol_estimate
 from core.market_hours import now_ist
 from core.trading import Portfolio
@@ -273,6 +273,15 @@ def _organiser_tools():
         if local:
             st.caption("Note: if this app is running online, portfolios kept in files are lost when the app restarts. "
                        "Set up the online database (see DEPLOY.md) so they are never lost.")
+        if records:
+            when = pd.DataFrame([{
+                "Name": r["name"],
+                "First seen (IST)": format_ist((r.get("data") or {}).get("created_at")),
+                "Last active (IST)": format_ist(r.get("updated_at")),
+            } for r in sorted(records, key=lambda r: str(r.get("updated_at") or ""), reverse=True)])
+            st.dataframe(when, hide_index=True, width="stretch")
+            st.caption("Last active = the most recent time that portfolio was saved. 'Not recorded' means the account was "
+                       "made before first-seen times were tracked.")
         names = sorted((r["name"] for r in records), key=str.casefold)
         if names:
             target = st.selectbox("Delete a portfolio", names, key="admin_target")

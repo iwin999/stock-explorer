@@ -182,3 +182,9 @@ def test_two_people_cannot_both_create_the_same_name(tmp_path):
         with pytest.raises(acc.NameTaken):
             store.create(acc.make_key("asha"), "asha", {"balance": 2})    # the race: skips the name check
         assert store.get(acc.make_key("Asha"))["balance"] == 1            # first person's data untouched
+
+
+def test_new_accounts_record_when_they_were_created(tmp_path):
+    store = acc.FileStore(str(tmp_path))
+    pf = acc.create_account(store, "Timed", 100000)
+    assert pf.created_at and acc.load_account(store, "Timed").created_at == pf.created_at

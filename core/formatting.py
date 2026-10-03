@@ -28,3 +28,23 @@ def format_inr(amount, decimals=2):
 
     result = f"Rs {whole}" + (f".{frac}" if decimals > 0 else "")
     return f"-{result}" if negative else result
+
+
+def format_ist(timestamp):
+    """Turn a stored time such as '2026-10-03T15:32:22+00:00' into Indian time: '03 Oct 2026, 9:02 PM'.
+
+    Times without a time zone are taken to be UTC (what the database stores). Returns 'not recorded' if empty.
+    """
+    from datetime import datetime, timezone
+    from zoneinfo import ZoneInfo
+
+    if not timestamp:
+        return "not recorded"
+    try:
+        moment = datetime.fromisoformat(str(timestamp).replace("Z", "+00:00"))
+    except ValueError:
+        return "not recorded"
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=timezone.utc)
+    ist = moment.astimezone(ZoneInfo("Asia/Kolkata"))
+    return f"{ist:%d %b %Y}, {ist.hour % 12 or 12}:{ist:%M} {ist:%p}"

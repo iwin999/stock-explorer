@@ -128,3 +128,18 @@ def test_derivatives_survive_save_and_load(tmp_path):
     q = Portfolio.from_dict(p.to_dict())
     assert q.name == "Asha" and len(q.derivatives) == 2 and q.balance == p.balance
     assert Portfolio.from_dict({"balance": 5}).derivatives == []                # old saves still load
+
+
+def test_created_at_is_saved_and_old_accounts_still_load():
+    p = Portfolio(balance=1000, name="Asha", created_at="2026-10-03T15:32:22+00:00")
+    assert Portfolio.from_dict(p.to_dict()).created_at == "2026-10-03T15:32:22+00:00"
+    assert Portfolio.from_dict({"balance": 5, "name": "Old"}).created_at is None
+
+
+def test_indian_time_conversion():
+    from core.formatting import format_ist
+    assert format_ist("2026-10-03T15:32:22+00:00") == "03 Oct 2026, 9:02 PM"
+    assert format_ist("2026-10-03T16:37:54+00:00") == "03 Oct 2026, 10:07 PM"
+    assert format_ist("2026-10-03T18:30:00Z") == "04 Oct 2026, 12:00 AM"          # crosses midnight
+    assert format_ist("2026-10-03T06:30:00") == "03 Oct 2026, 12:00 PM"           # no zone: treated as UTC
+    assert format_ist(None) == "not recorded" and format_ist("garbage") == "not recorded"
