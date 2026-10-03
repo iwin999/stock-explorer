@@ -133,12 +133,18 @@ def render(symbol, name, fallback_price, offline=False):
     affordable = int(pf.balance // price) if price else 0
     st.write(f"Estimated cost of {qty} share(s): **{format_inr(qty * price)}**  (you can afford up to {affordable})")
 
+    # As on the real Indian market (for normal delivery trades), you can only sell shares you own.
+    owned = pf.holdings.get(symbol, {}).get("quantity", 0)
     buy_col, sell_col = st.columns(2)
     action = None
     if buy_col.button("Buy", type="primary", width="stretch"):
         action = "BUY"
-    if sell_col.button("Sell", width="stretch"):
+    if sell_col.button("Sell", width="stretch", disabled=owned == 0):
         action = "SELL"
+    if owned == 0:
+        st.caption("Sell is available once you own shares of this company. Shares must be bought before they can be sold.")
+    elif qty > owned:
+        st.caption(f"You own {owned} share(s) of this company, so you can sell up to {owned}.")
 
     if action:
         # Trades use a FRESH price (not the 15-second cache), so the order is as accurate as possible.
