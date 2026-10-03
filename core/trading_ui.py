@@ -1,64 +1,51 @@
-"""The Paper Trading tab and the opening 'choose your capital' screen.
+"""Accounts and the Paper trading tab.
 
-All the maths lives in core/trading.py; this file is only the screen.
-Parts of the page are st.fragments: Streamlit re-runs just those parts every
-few seconds while the market is open, so prices and profit/loss move live
-without reloading the whole page (and without interrupting typing elsewhere).
+  * capital_gate()  - the first screen: choose a name and starting capital (or open an existing account).
+  * render()        - the Paper trading tab: stocks, ETFs and bonds, futures and options.
+
+All the maths lives in core/trading.py, core/derivatives.py and core/valuation.py; this file is only the screen.
+Parts of the page are st.fragments: Streamlit re-runs just those parts every few seconds while the market is
+open, so prices and profit/loss move live without reloading the whole page.
 """
-import os
-
 import streamlit as st
 
+from core import accounts as acc
+from core import derivatives as dv
+from core import instruments as ins
+from core import valuation as val
 from core.formatting import format_inr
-from core.live import REFRESH_SECONDS, live_quote
+from core.live import REFRESH_SECONDS, close_on, live_quote, spot_price, vol_estimate
 from core.market_data import get_latest_price
 from core.market_hours import is_market_open, now_ist
-from core.trading import (DEFAULT_BALANCE, DEFAULT_PATH, MAX_CAPITAL, MIN_CAPITAL, SAVE_TO_DISK,
-                          Portfolio, TradingError, check_capital)
-from core.ui import notice, show_disclaimer
+from core.trading import MAX_CAPITAL, MIN_CAPITAL, Portfolio, TradingError, check_capital
+from core.ui import know_how_button, notice, show_disclaimer
 
 CAPITAL_PRESETS = [50000, 100000, 500000, 1000000]
+DERIVATIVES_NOTE = ("Futures and options prices here are **calculated** from the live share price with standard "
+                    "formulas, because free data for NSE derivatives does not exist. Lot sizes and margins are "
+                    "simplified for learning. They are estimates, not exchange quotes.")
 
 
-# ---------------- account creation ----------------
+# ---------------- where accounts are kept ----------------
+@st.cache_resource
+def get_store():
+    """The online database when its secrets are set, otherwise files on this computer."""
+    try:
+        cfg = st.secrets["supabase"]
+        return acc.SupabaseStore(cfg["url"], cfg["key"])
+    except Exception:
+        return acc.FileStore()
+
+
+def admin_pin():
+    try:
+        return str(st.secrets["admin_pin"])
+    except Exception:
+        return None
+
+
 def has_account():
-    """True once the visitor has an account (they chose their capital).
-
-    Local mode (STOCK_APP_SAVE=1): a saved account on disk counts, so the family
-    laptop is not asked again every time.
-    """
-    if "portfolio" in st.session_state:
-        return True
-    if SAVE_TO_DISK and os.path.exists(DEFAULT_PATH):
-        st.session_state.portfolio = Portfolio.load()
-        return True
-    return False
-
-
-def capital_gate():
-    """The first thing a visitor sees: choose how much virtual money to practise with."""
-    st.title("Stock Explorer")
-    st.subheader("How much would you like to practise with?")
-    st.caption("This is virtual money for paper trading. Nothing real is invested. "
-               "You can start over with a different amount at any time.")
-
-    labels = [format_inr(a, 0) for a in CAPITAL_PRESETS] + ["Other amount"]
-    choice = st.radio("Starting capital", labels, index=1, horizontal=True)
-    if choice == "Other amount":
-        amount = st.number_input("Enter your amount (Rs)", min_value=int(MIN_CAPITAL), max_value=int(MAX_CAPITAL),
-                                 value=int(DEFAULT_BALANCE), step=10000)
-        st.caption(f"{format_inr(amount, 0)}  (between {format_inr(MIN_CAPITAL, 0)} and {format_inr(MAX_CAPITAL, 0)})")
-    else:
-        amount = CAPITAL_PRESETS[labels.index(choice)]
-
-    if st.button("Start", type="primary"):
-        try:
-            st.session_state.portfolio = Portfolio(balance=check_capital(amount))
-            _save(st.session_state.portfolio)
-            st.rerun()
-        except TradingError as e:
-            st.error(str(e))
-    show_disclaimer()
+    return "portfolio" in st.session_state
 
 
 def _get_portfolio():
@@ -66,18 +53,103 @@ def _get_portfolio():
 
 
 def _save(pf):
-    if SAVE_TO_DISK:
-        pf.save()
-
-
-def _apply_starting_capital():
-    """Runs when the visitor edits the capital box (only shown before the first trade)."""
+    """Save the account. A failure is remembered and shown as a banner instead of crashing."""
     try:
-        amount = check_capital(st.session_state.start_capital)
-        st.session_state.portfolio = Portfolio(balance=amount)
-        _save(st.session_state.portfolio)
-    except TradingError as e:
-        st.session_state.flash = ("error", str(e))
+        acc.save_account(get_store(), pf)
+        st.session_state.pop("save_error", None)
+    except acc.StorageError as e:
+        st.session_state.save_error = str(e)
+
+
+def _sign_in(pf):
+    st.session_state.portfolio = pf
+    st.session_state.pop("flash", None)
+
+
+# ---------------- first screen ----------------
+def capital_gate():
+    """Choose a name and starting capital, or open an existing account."""
+    store = get_store()
+    st.title("Stock Explorer")
+    st.subheader("Welcome. Who is investing today?")
+    st.caption("Practise with virtual money. Nothing real is invested. Your portfolio is saved under your name, "
+               "so you can come back and check it later.")
+
+    mode = st.radio("I am a", ["New user", "Returning user"], horizontal=True, key="gate_mode")
+
+    if mode == "New user":
+        name = st.text_input("Choose your name", max_chars=24, key="gate_name", placeholder="e.g. Asha")
+        labels = [format_inr(a, 0) for a in CAPITAL_PRESETS] + ["Other amount"]
+        choice = st.radio("How much would you like to practise with?", labels, index=1, horizontal=True, key="gate_cap")
+        if choice == "Other amount":
+            amount = st.number_input("Enter your amount (Rs)", min_value=int(MIN_CAPITAL), max_value=int(MAX_CAPITAL),
+                                     value=100000, step=10000, key="gate_custom")
+            st.caption(f"{format_inr(amount, 0)}  (between {format_inr(MIN_CAPITAL, 0)} and {format_inr(MAX_CAPITAL, 0)})")
+        else:
+            amount = CAPITAL_PRESETS[labels.index(choice)]
+        if st.button("Start", type="primary", key="gate_start"):
+            try:
+                _sign_in(acc.create_account(store, name, amount))
+                st.rerun()
+            except (acc.StorageError, TradingError) as e:
+                st.error(str(e))
+    else:
+        try:
+            names = store.names()
+        except acc.StorageError as e:
+            st.error(str(e))
+            names = []
+        if not names:
+            st.info("There are no saved portfolios yet. Choose “New user” to create one.")
+        else:
+            pick = st.selectbox("Choose your name (type to search)", names, key="gate_pick")
+            if st.button("Open my portfolio", type="primary", key="gate_open"):
+                try:
+                    pf = acc.load_account(store, pick)
+                    if pf is None:
+                        st.error("That portfolio could not be found.")
+                    else:
+                        _sign_in(pf)
+                        st.rerun()
+                except acc.StorageError as e:
+                    st.error(str(e))
+    st.caption(f"Portfolios are saved in: {store.label}.")
+    show_disclaimer()
+
+
+def user_bar():
+    """'Signed in as ...' with a Switch user button."""
+    pf = _get_portfolio()
+    left, right = st.columns([5, 1])
+    left.markdown(f"Signed in as **{pf.name}**")
+    if right.button("Switch user", key="switch_user"):
+        st.session_state.pop("portfolio", None)
+        st.rerun()
+    if st.session_state.get("save_error"):
+        notice(f"Your latest change could not be saved: {st.session_state.save_error}")
+
+
+def housekeeping():
+    """Settle expired contracts and close busted futures, as a broker would. Messages are shown once."""
+    pf = _get_portfolio()
+    if not pf.derivatives:
+        return
+    events = val.settle_and_square_off(pf, spot_price, vol_estimate, close_on)
+    if events:
+        _save(pf)
+        st.session_state.setdefault("events", []).extend(events)
+
+
+def show_events():
+    for message in st.session_state.pop("events", []):
+        notice(message)
+
+
+def show_flash():
+    """The result of the last click (shown once, at the top of the page, whichever tab it came from)."""
+    flash = st.session_state.pop("flash", None)
+    if flash:
+        (st.success if flash[0] == "ok" else st.error)(flash[1])
 
 
 # ---------------- prices ----------------
@@ -92,80 +164,53 @@ def _refresh_every():
     return REFRESH_SECONDS if is_market_open() else None
 
 
+def snapshot_now(pf):
+    return val.snapshot(pf, spot_price, vol_estimate)
+
+
 def _colour_pnl(value):
     return "color: #2a9d6f" if value >= 0 else "color: #c8553d"
 
 
-def _prices_for(pf, symbol, fallback):
-    prices = {s: price_of(s) for s in pf.holdings}
-    prices[symbol] = prices.get(symbol) or price_of(symbol, fallback)
-    return prices
+def positions_table(snap):
+    """A formatted table of everything the account holds (None if it holds nothing)."""
+    table = snap["positions"]
+    if table.empty:
+        return None
+    show = table.drop(columns=["Symbol"])
+    return (show.style
+            .format({"Bought at": format_inr, "Now": format_inr, "Value": format_inr, "P&L": format_inr,
+                     "P&L %": "{:+.2f}%"})
+            .map(_colour_pnl, subset=["P&L", "P&L %"]))
 
 
 # ---------------- the tab ----------------
 def render(symbol, name, fallback_price, offline=False):
     pf = _get_portfolio()
 
-    # A message left by the previous click (we rerun the page after every trade).
-    flash = st.session_state.pop("flash", None)
-    if flash:
-        (st.success if flash[0] == "ok" else st.error)(flash[1])
-
-    st.caption("Practice with **virtual** money. Nothing here is real."
-               + ("" if SAVE_TO_DISK else " Your account is private to you and resets when you refresh or close the page."))
+    st.caption("Practise with **virtual** money. Nothing here is real.")
     if offline:
         notice("Prices below come from saved data, not live prices.")
 
-    # ---------- account summary + price (updates live) ----------
-    st.fragment(run_every=None if offline else _refresh_every())(_account_summary)(symbol, name, fallback_price)
+    st.fragment(run_every=None if offline else _refresh_every())(_account_summary)()
 
-    # ---------- capital can be changed until the first trade ----------
-    if not pf.order_history:
-        st.number_input("Starting capital (Rs)", min_value=int(MIN_CAPITAL), max_value=int(MAX_CAPITAL),
-                        value=int(pf.deposited), step=10000, key="start_capital",
-                        on_change=_apply_starting_capital,
-                        help="You can change this until you place your first trade.")
+    stocks_tab, etf_tab, fut_tab, opt_tab = st.tabs(["Stocks", "ETFs and bonds", "Futures", "Options"])
+    with stocks_tab:
+        _cash_ticket(pf, symbol, name, fallback_price, offline, key="stk")
+        st.caption("To trade a different company, choose it in the dropdown at the top of the page.")
+    with etf_tab:
+        etfs = [s for s in ins.CASH_INSTRUMENTS if ins.asset_class(s) != ins.STOCKS]
+        pick = st.selectbox("Choose an ETF or bond fund", etfs, format_func=ins.label, key="etf_pick")
+        st.caption(f"Group: {ins.CASH_INSTRUMENTS[pick]['group']}. Prices are live NSE prices.")
+        _cash_ticket(pf, pick, ins.name_of(pick), None, offline, key="etf")
+    with fut_tab:
+        _futures_ticket(pf, offline)
+    with opt_tab:
+        _options_ticket(pf, offline)
 
-    # ---------- trade box ----------
-    st.subheader(f"Trade {name}")
-    price = price_of(symbol, fallback_price)
-    qty = st.number_input("How many shares?", min_value=1, value=1, step=1, key="qty")
-    affordable = int(pf.balance // price) if price else 0
-    st.write(f"Estimated cost of {qty} share(s): **{format_inr(qty * price)}**  (you can afford up to {affordable})")
+    st.subheader("Everything you hold")
+    st.fragment(run_every=None if offline else _refresh_every())(_positions_view)()
 
-    # As on the real Indian market (for normal delivery trades), you can only sell shares you own.
-    owned = pf.holdings.get(symbol, {}).get("quantity", 0)
-    buy_col, sell_col = st.columns(2)
-    action = None
-    if buy_col.button("Buy", type="primary", width="stretch"):
-        action = "BUY"
-    if sell_col.button("Sell", width="stretch", disabled=owned == 0):
-        action = "SELL"
-    if owned == 0:
-        st.caption("Sell is available once you own shares of this company. Shares must be bought before they can be sold.")
-    elif qty > owned:
-        st.caption(f"You own {owned} share(s) of this company, so you can sell up to {owned}.")
-
-    if action:
-        # Trades use a FRESH price (not the 15-second cache), so the order is as accurate as possible.
-        exec_price = None if offline else get_latest_price(symbol)
-        exec_price = round(exec_price, 2) if exec_price else price
-        try:
-            order = (pf.buy(symbol, int(qty), exec_price) if action == "BUY"
-                     else pf.sell(symbol, int(qty), exec_price))
-            _save(pf)  # remembered on disk only in local mode
-            verb = "Bought" if action == "BUY" else "Sold"
-            extra = f" Profit/loss on this sale: {format_inr(order['pnl'])}." if action == "SELL" else ""
-            st.session_state.flash = ("ok", f"{verb} {qty} share(s) of {name} at {format_inr(exec_price)}.{extra}")
-        except TradingError as e:  # a friendly, readable reason (not enough cash, etc.)
-            st.session_state.flash = ("error", str(e))
-        st.rerun()
-
-    # ---------- holdings (updates live) ----------
-    st.subheader("Your shares")
-    st.fragment(run_every=None if offline else _refresh_every())(_holdings_table)(symbol, fallback_price)
-
-    # ---------- order history ----------
     st.subheader("Order history")
     orders = pf.orders_dataframe()
     if orders.empty:
@@ -174,50 +219,251 @@ def render(symbol, name, fallback_price, offline=False):
         st.dataframe(orders.iloc[::-1], hide_index=True, width="stretch")  # newest first
         st.download_button("Download orders (CSV)", orders.to_csv(index=False), "orders.csv", "text/csv")
 
-    # ---------- extras ----------
     with st.expander("Account options"):
         add = st.number_input("Add virtual cash (Rs)", min_value=1000, max_value=10000000, value=10000,
                               step=1000, key="add_amount")
-        if st.button("Add cash"):
+        if st.button("Add cash", key="add_cash"):
             pf.add_funds(add)
             _save(pf)
             st.rerun()
-
         st.divider()
         restart = st.number_input("Start over with this capital (Rs)", min_value=int(MIN_CAPITAL),
-                                  max_value=int(MAX_CAPITAL), value=int(DEFAULT_BALANCE), step=10000,
-                                  key="restart_amount")
-        sure = st.checkbox(f"I want to erase my trades and start again with {format_inr(restart, 0)}")
-        if st.button("Reset account", disabled=not sure):
-            st.session_state.portfolio = Portfolio(balance=check_capital(restart))
-            _save(st.session_state.portfolio)
+                                  max_value=int(MAX_CAPITAL), value=100000, step=10000, key="restart_amount")
+        sure = st.checkbox(f"I want to erase all my trades and start again with {format_inr(restart, 0)}", key="restart_sure")
+        if st.button("Reset my account", disabled=not sure, key="restart_go"):
+            fresh = Portfolio(balance=check_capital(restart), name=pf.name)
+            _sign_in(fresh)
+            _save(fresh)
             st.rerun()
 
 
-# ---------------- the parts that refresh themselves ----------------
-def _account_summary(symbol, name, fallback_price):
+def _account_summary():
     pf = _get_portfolio()
-    prices = _prices_for(pf, symbol, fallback_price)
-    total = pf.total_value(prices)
-    gain = total - pf.deposited
+    snap = snapshot_now(pf)
+    gain = snap["total"] - pf.deposited
     c1, c2, c3 = st.columns(3)
     c1.metric("Cash available", format_inr(pf.balance))
-    c2.metric("Total value (cash + shares)", format_inr(total))
+    c2.metric("Total value of your portfolio", format_inr(snap["total"]))
     c3.metric("Profit / loss so far", format_inr(gain), f"{gain / pf.deposited * 100:+.2f}%")
-    owned = pf.holdings.get(symbol, {}).get("quantity", 0)
-    st.write(f"{name}: **{format_inr(prices[symbol])}** per share  |  You own: **{owned}** share(s)")
     st.caption(f"Updated {now_ist():%H:%M:%S} IST. Prices come from Yahoo Finance and can be delayed by a few minutes.")
 
 
-def _holdings_table(symbol, fallback_price):
+def _positions_view():
     pf = _get_portfolio()
-    table = pf.holdings_table(_prices_for(pf, symbol, fallback_price))
-    if table.empty:
-        st.info("You don't own any shares yet. Choose a company above and press Buy.")
+    styled = positions_table(snapshot_now(pf))
+    if styled is None:
+        st.info("You don't own anything yet. Use the tabs above to buy your first investment.")
+    else:
+        st.dataframe(styled, hide_index=True, width="stretch")
+
+
+# ---------------- stocks, ETFs and bonds ----------------
+def _cash_ticket(pf, symbol, name, fallback_price, offline, key):
+    """Buy/sell ticket for anything bought like a share."""
+    price = price_of(symbol, fallback_price)
+    if not price:
+        st.warning("No price is available for this right now. Please try again in a moment.")
         return
-    styled = (table.style
-              .format({"Avg Price": format_inr, "Current Price": format_inr, "Value": format_inr,
-                       "P&L": format_inr, "P&L %": "{:+.2f}%"})
-              .map(_colour_pnl, subset=["P&L", "P&L %"]))
-    st.dataframe(styled, hide_index=True, width="stretch")
-    st.caption("To sell, choose that company in the dropdown at the top, then press Sell.")
+    owned = pf.holdings.get(symbol, {}).get("quantity", 0)
+    st.write(f"{name}: **{format_inr(price)}** per unit  |  You own: **{owned}**")
+    qty = st.number_input("How many units?", min_value=1, value=1, step=1, key=f"qty_{key}")
+    affordable = int(pf.balance // price)
+    st.write(f"Estimated cost of {qty}: **{format_inr(qty * price)}**  (you can afford up to {affordable})")
+
+    # As on the real Indian market (for normal delivery trades), you can only sell what you own.
+    buy_col, sell_col = st.columns(2)
+    action = None
+    if buy_col.button("Buy", type="primary", width="stretch", key=f"buy_{key}"):
+        action = "BUY"
+    if sell_col.button("Sell", width="stretch", disabled=owned == 0, key=f"sell_{key}"):
+        action = "SELL"
+    if owned == 0:
+        st.caption("Sell is available once you own some. Units must be bought before they can be sold.")
+    elif qty > owned:
+        st.caption(f"You own {owned}, so you can sell up to {owned}.")
+
+    if action:
+        # Trades use a FRESH price (not the 15-second cache), so the order is as accurate as possible.
+        fresh = None if offline else get_latest_price(symbol)
+        exec_price = round(fresh, 2) if fresh else price
+        try:
+            order = (pf.buy(symbol, int(qty), exec_price) if action == "BUY"
+                     else pf.sell(symbol, int(qty), exec_price))
+            _save(pf)
+            verb = "Bought" if action == "BUY" else "Sold"
+            extra = f" Profit/loss on this sale: {format_inr(order['pnl'])}." if action == "SELL" else ""
+            st.session_state.flash = ("ok", f"{verb} {qty} of {name} at {format_inr(exec_price)}.{extra}")
+        except TradingError as e:
+            st.session_state.flash = ("error", str(e))
+        st.rerun()
+
+
+# ---------------- futures ----------------
+def _fmt_expiry(d):
+    return d.strftime("%d %b %Y")
+
+
+def _futures_ticket(pf, offline):
+    st.markdown(DERIVATIVES_NOTE)
+    c1, c2 = st.columns(2)
+    under = c1.selectbox("Underlying", ins.FNO_UNDERLYINGS, format_func=ins.name_of, key="fut_under")
+    expiry = c2.selectbox("Expiry", dv.expiry_dates(), format_func=_fmt_expiry, key="fut_exp")
+    side = st.radio("Direction", ["LONG", "SHORT"], horizontal=True, key="fut_side",
+                    format_func=lambda s: "Long: profit if the price rises" if s == "LONG"
+                    else "Short: profit if the price falls")
+    lots = st.number_input("Number of lots", min_value=1, value=1, step=1, key="fut_lots")
+
+    spot = spot_price(under)
+    if not spot:
+        st.warning("No price is available for this right now.")
+        return
+    price = dv.future_price(spot, dv.years_left(expiry))
+    lot = dv.lot_size(spot)
+    margin = dv.margin_for_future(price, lots)
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Spot price", format_inr(spot))
+    m2.metric("Futures price (calculated)", format_inr(price))
+    m3.metric("One lot", f"{lot} units")
+    m4.metric("Margin to block", format_inr(margin))
+    st.caption(f"Contract value: {format_inr(price * lot * lots)}. Only the margin ({dv.FUTURES_MARGIN * 100:.0f}% of the "
+               "contract value) is set aside. Profit and loss are credited or debited in cash when you close the position.")
+
+    if st.button("Open position", type="primary", key="fut_open"):
+        fresh = None if offline else get_latest_price(under)
+        spot_now = fresh or spot
+        price_now = dv.future_price(spot_now, dv.years_left(expiry))
+        try:
+            pf.open_future(under, expiry, side, int(lots), price_now, dv.lot_size(spot_now), dv.FUTURES_MARGIN)
+            _save(pf)
+            st.session_state.flash = ("ok", f"Opened a {side.lower()} position in {ins.name_of(under)} futures "
+                                      f"({lots} lot(s)) at {format_inr(price_now)}.")
+        except TradingError as e:
+            st.session_state.flash = ("error", str(e))
+        st.rerun()
+
+    st.subheader("Your open futures")
+    st.fragment(run_every=None if offline else _refresh_every())(_open_derivatives)("FUT")
+    know_how_button("kh_futures", "Futures", (
+        "**What a future is.** An agreement to buy (long) or sell (short) something at a set price on a set date. "
+        "You do not pay the full value up front, only a margin.\n\n"
+        "**How the price is calculated here.**\n"
+        "1. Spot price = the live price of the share or index.\n"
+        "2. Futures price = spot x e^(r x time to expiry), with r = 6.5% a year. This 'cost of carry' is why futures "
+        "usually trade slightly above spot.\n"
+        "3. One lot = a number of units chosen so that a lot is worth about Rs 2 lakh (real lot sizes are set by the "
+        "exchange and are larger).\n"
+        "4. Margin = 15% of the contract value, set aside from your cash.\n\n"
+        "**Profit or loss.** Long: (current futures price - entry price) x units. Short: the reverse. It is added to or "
+        "taken from your cash when you close.\n\n"
+        "**Expiry.** Monthly contracts expire on the last Tuesday of the month at 3:30 PM. Open positions are settled "
+        "automatically at that day's closing price.\n\n"
+        "**Automatic closing.** If losses use up the whole margin, the position is closed for you. In this learning "
+        "version, losses beyond the margin are not charged.\n\n"
+        "**Risks.** Futures are leveraged: small price moves cause large gains or losses compared with the margin "
+        "paid. Real futures can lose more than the margin."))
+
+
+# ---------------- options ----------------
+def _options_ticket(pf, offline):
+    st.markdown(DERIVATIVES_NOTE)
+    c1, c2, c3 = st.columns(3)
+    under = c1.selectbox("Underlying", ins.FNO_UNDERLYINGS, format_func=ins.name_of, key="opt_under")
+    expiry = c2.selectbox("Expiry", dv.expiry_dates(), format_func=_fmt_expiry, key="opt_exp")
+    kind = c3.radio("Type", ["CALL", "PUT"], horizontal=True, key="opt_kind",
+                    format_func=lambda k: "Call: gains if the price rises" if k == "CALL" else "Put: gains if the price falls")
+
+    spot = spot_price(under)
+    if not spot:
+        st.warning("No price is available for this right now.")
+        return
+    strikes, atm = dv.strike_grid(spot)
+    strike = st.selectbox("Strike price", strikes, index=strikes.index(atm), key="opt_strike",
+                          format_func=lambda k: f"{k:g}" + ("  (at the money)" if k == atm else ""))
+    lots = st.number_input("Number of lots", min_value=1, value=1, step=1, key="opt_lots")
+
+    sigma = vol_estimate(under) or 0.25
+    years = dv.years_left(expiry)
+    premium = dv.option_price(spot, strike, years, sigma, kind)
+    lot = dv.lot_size(spot)
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Spot price", format_inr(spot))
+    m2.metric("Premium per unit (calculated)", format_inr(premium))
+    m3.metric("One lot", f"{lot} units")
+    m4.metric("Total cost", format_inr(premium * lot * lots))
+    breakeven = strike + premium if kind == "CALL" else strike - premium
+    st.caption(f"The most you can lose is the premium paid. Break-even at expiry: {breakeven:,.2f}.")
+
+    if st.button("Buy option", type="primary", key="opt_buy"):
+        fresh = None if offline else get_latest_price(under)
+        spot_now = fresh or spot
+        prem_now = dv.option_price(spot_now, strike, dv.years_left(expiry), sigma, kind)
+        try:
+            pf.buy_option(under, expiry, strike, kind, int(lots), prem_now, dv.lot_size(spot_now))
+            _save(pf)
+            st.session_state.flash = ("ok", f"Bought {lots} lot(s) of the {ins.name_of(under)} {strike:g} {kind.lower()} "
+                                      f"at {format_inr(prem_now)} per unit.")
+        except TradingError as e:
+            st.session_state.flash = ("error", str(e))
+        st.rerun()
+    st.caption("Only buying options is available. Selling (writing) options carries much larger risk and is not included.")
+
+    st.subheader("Your open options")
+    st.fragment(run_every=None if offline else _refresh_every())(_open_derivatives)("OPT")
+    know_how_button("kh_options", "Options", (
+        "**What an option is.** The right, but not the obligation, to buy (call) or sell (put) at a fixed price (the "
+        "strike) on or before a date. You pay a price for that right: the premium.\n\n"
+        "**How the premium is calculated here.** The Black-Scholes formula, which uses: the live price (spot), the "
+        "strike, the time left, the safe interest rate (6.5%), and the stock's volatility over the last year. "
+        "More time, higher volatility, or a strike closer to the price all make an option dearer. "
+        "A real market price also reflects demand and traders' views, so it will differ.\n\n"
+        "**Lot size.** Chosen so one lot is worth about Rs 2 lakh (the exchange fixes real lot sizes).\n\n"
+        "**Profit or loss.** You can sell the option at any time at its current calculated premium. At expiry a call is "
+        "worth max(price - strike, 0) per unit and a put is worth max(strike - price, 0). If that is zero, the option "
+        "expires worthless and the premium is lost.\n\n"
+        "**Expiry.** The last Tuesday of the month at 3:30 PM. Open options are settled automatically at that day's "
+        "closing price.\n\n"
+        "**Risks.** Options can lose all of the premium quickly, especially close to expiry."))
+
+
+def _open_derivatives(kind):
+    """List open futures ('FUT') or options ('OPT') with a Close/Sell button for each."""
+    pf = _get_portfolio()
+    mine = [p for p in pf.derivatives if p["type"] == kind]
+    if not mine:
+        st.caption("None open.")
+        return
+    for pos in mine:
+        spot = spot_price(pos["underlying"])
+        under = ins.name_of(pos["underlying"])
+        if kind == "FUT":
+            mark = val.mark_future(pos, spot) if spot else {"price": pos["entry"], "pnl": 0.0, "value": pos["margin"]}
+            text = f"{under} future, {pos['side'].lower()}, {pos['lots']} lot(s), expires {pos['expiry']}"
+            detail = f"Entry {format_inr(pos['entry'])}  |  Now {format_inr(mark['price'])}"
+            label = "Close position"
+        else:
+            sigma = vol_estimate(pos["underlying"])
+            mark = (val.mark_option(pos, spot, sigma) if spot and sigma else
+                    {"price": pos["premium"], "pnl": 0.0, "value": pos["premium"] * pos["lot_size"] * pos["lots"]})
+            text = f"{under} {pos['strike']:g} {pos['kind'].lower()}, {pos['lots']} lot(s), expires {pos['expiry']}"
+            detail = f"Paid {format_inr(pos['premium'])}  |  Now {format_inr(mark['price'])} per unit"
+            label = "Sell"
+        c1, c2, c3 = st.columns([4, 2, 1.3])
+        c1.markdown(f"**{text}**  \n{detail}")
+        colour = "#2a9d6f" if mark["pnl"] >= 0 else "#c8553d"
+        c2.markdown(f'Value {format_inr(mark["value"])}  \n<span style="color:{colour}">Profit/loss {format_inr(mark["pnl"])}</span>',
+                    unsafe_allow_html=True)
+        if c3.button(label, key=f"close_{pos['id']}"):
+            try:
+                fresh = get_latest_price(pos["underlying"]) or spot
+                if kind == "FUT":
+                    price_now = val.mark_future(pos, fresh)["price"] if fresh else pos["entry"]
+                    pnl = pf.close_future(pos["id"], price_now)
+                else:
+                    sigma = vol_estimate(pos["underlying"]) or 0.25
+                    prem_now = val.mark_option(pos, fresh, sigma)["price"] if fresh else pos["premium"]
+                    pnl = pf.sell_option(pos["id"], prem_now)
+                _save(pf)
+                st.session_state.flash = ("ok", f"Closed {text}. Profit/loss: {format_inr(pnl)}.")
+            except TradingError as e:
+                st.session_state.flash = ("error", str(e))
+            st.rerun()

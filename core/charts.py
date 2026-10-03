@@ -172,3 +172,17 @@ def outcome_histogram(strategy_values, hold_values, strategy_name, title, x_titl
         legend=dict(orientation="h", y=-0.25), margin=dict(l=10, r=10, t=60, b=10),
     )
     return fig
+
+
+def allocation_donut(by_class):
+    """Doughnut chart of where the money is: cash, stocks, ETFs, bonds, futures, options."""
+    labels = [k for k, v in by_class.items() if v > 0.5]
+    values = [by_class[k] for k in labels]
+    palette = {"Stocks": "#1d3557", "ETFs (equity, gold, silver)": "#457b9d", "Bonds": "#2a9d8f",
+               "Futures": "#d98e04", "Options": "#c8553d", "Cash": "#b8c0cc"}
+    fig = go.Figure(go.Pie(labels=labels, values=values, hole=0.55, sort=False,
+                           marker=dict(colors=[palette.get(k, GREY) for k in labels]),
+                           textinfo="percent", hovertemplate="%{label}: Rs %{value:,.0f}<extra></extra>"))
+    fig.update_layout(height=340, font=dict(size=15), margin=dict(l=10, r=10, t=10, b=10),
+                      legend=dict(orientation="h", y=-0.1))
+    return fig

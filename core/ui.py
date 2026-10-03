@@ -36,6 +36,12 @@ h3 { font-size: 1.35rem !important; font-weight: 600 !important; }
 .stApp .stButton button, .stApp .stDownloadButton button { border-radius: 6px; }
 
 /* Plain-English sentence under each signal */
+/* Small "?" bubble next to a financial term */
+.stApp [data-testid="stPopover"] button { min-height: 1.7rem; padding: 0 0.55rem; border-radius: 50%;
+        border: 1px solid #b8c0cc; color: #1d3557; background: #fff; }
+.stApp [data-testid="stPopover"] button p { font-size: 0.9rem !important; font-weight: 700; }
+.metric-title { font-size: 1.02rem; color: #5b6573; padding-top: 0.25rem; }
+.term-cell { font-size: 1.05rem; padding-top: 0.3rem; }
 .meaning { font-size: 1.02rem; color: #4a5461; min-height: 5.2em; line-height: 1.45; padding: 0 0.2rem; }
 
 /* Key sentence on a page */
@@ -84,3 +90,36 @@ def know_how_button(key, title, markdown):
     """A 'Know how' button that opens a pop-up with the full method: rules, factors, calculation."""
     if st.button("Know how", key=key):
         st.dialog(f"Know how: {title}", width="large")(_show_know_how)(markdown)
+
+
+# ---------------- "?" bubbles for financial terms ----------------
+def help_bubble(key):
+    """A small "?" button. Clicking it opens a bubble with the term's use, formula and how to read it."""
+    from core.glossary import as_markdown
+    with st.popover("?"):
+        st.markdown(as_markdown(key))
+
+
+def metric_with_help(title, value, key, delta=None):
+    """A metric card with its name and a "?" bubble above it."""
+    name_col, help_col = st.columns([5, 1])
+    name_col.markdown(f'<div class="metric-title">{title}</div>', unsafe_allow_html=True)
+    with help_col:
+        help_bubble(key)
+    st.metric(title, value, delta, label_visibility="collapsed")
+
+
+def term_row(term, key, *cells, header=False):
+    """One row of a comparison table: term, "?" bubble, then the values."""
+    cols = st.columns([3.2, 0.7] + [2] * len(cells))
+    if header:
+        cols[0].markdown(f"**{term}**")
+        for c, text in zip(cols[2:], cells):
+            c.markdown(f"**{text}**")
+        return
+    cols[0].markdown(f'<div class="term-cell">{term}</div>', unsafe_allow_html=True)
+    if key:
+        with cols[1]:
+            help_bubble(key)
+    for c, text in zip(cols[2:], cells):
+        c.markdown(f'<div class="term-cell">{text}</div>', unsafe_allow_html=True)

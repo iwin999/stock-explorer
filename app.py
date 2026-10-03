@@ -9,7 +9,7 @@ import zlib
 import numpy as np
 import streamlit as st
 
-from core import backtest as bt, companies, indicators as ind, ratios, simulation as sim, trading_ui
+from core import backtest as bt, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
 from core.charts import (backtest_chart, fan_chart, outlook_gauge, outcome_histogram, price_chart,
                          zoom_to_window)
 from core.formatting import format_inr
@@ -17,7 +17,8 @@ from core.live import live_quote
 from core.market_data import get_company_name, get_history_with_source
 from core.market_hours import is_market_open, now_ist, status_message
 from core.strategies import STRATEGIES
-from core.ui import callout, know_how_button, notice, plain_english, setup_page, show_disclaimer
+from core.ui import (callout, know_how_button, metric_with_help, notice, plain_english, setup_page,
+                     show_disclaimer, term_row)
 
 setup_page("Stock Explorer")
 
@@ -54,6 +55,10 @@ def run_search(query):
 # ---------- header ----------
 st.title("Stock Explorer")
 st.caption("Price history, key signals and a range of possible outcomes for Indian (NSE) companies.")
+trading_ui.user_bar()
+trading_ui.housekeeping()      # settle expired futures/options, close busted futures
+trading_ui.show_flash()        # result of the last click, wherever it came from
+trading_ui.show_events()       # e.g. 'your future expired and was settled'
 
 # ---------- company search + dropdown ----------
 col_search, col_pick = st.columns(2)
@@ -121,8 +126,8 @@ bench_close = _bench["Close"] if _bench is not None else None
 PERIODS = {"6 months": 126, "1 year": 252, "2 years": 504, "5 years": 1260}
 STRATEGY_KEYS = list(STRATEGIES)
 
-tab_overview, tab_outcomes, tab_strategy, tab_trade = st.tabs(
-    ["Overview", "Possible outcomes", "Strategy tests", "Paper trading"])
+tab_overview, tab_outcomes, tab_strategy, tab_trade, tab_portfolio = st.tabs(
+    ["Overview", "Possible outcomes", "Strategy tests", "Paper trading", "Your Portfolio"])
 
 # =====================================================================
 # TAB 1: OVERVIEW - price chart, key signals, risk and return ratios
@@ -141,14 +146,14 @@ with tab_overview:
     st.header("Key signals")
     st.caption("Four commonly used measures. They describe the past; they do not predict.")
     panel = [
-        ("Recent strength (RSI)", *ind.describe_rsi(close)),
-        ("Momentum (MACD)", *ind.describe_macd(close)),
-        ("Trend direction", *ind.describe_trend(close)),
-        ("Price swings (volatility)", *ind.describe_volatility(close.iloc[-252:])),  # last year, same window as the simulation
+        ("Recent strength (RSI)", "rsi", *ind.describe_rsi(close)),
+        ("Momentum (MACD)", "macd", *ind.describe_macd(close)),
+        ("Trend direction", "trend", *ind.describe_trend(close)),
+        ("Price swings (volatility)", "volatility", *ind.describe_volatility(close.iloc[-252:])),  # last year, same window as the simulation
     ]
-    for column, (title, value, meaning) in zip(st.columns(4), panel):
+    for column, (title, term, value, meaning) in zip(st.columns(4), panel):
         with column:
-            st.metric(title, value)
+            metric_with_help(title, value, term)
             st.markdown(f'<div class="meaning">{meaning}</div>', unsafe_allow_html=True)
     plain_english(
         "**Recent strength (RSI)** is a score from 0 to 100 of how fast the price has been rising or falling lately. "
@@ -183,7 +188,7 @@ with tab_overview:
             for column, key in zip(st.columns(4), keys):
                 value, meaning = ratios.describe(key, r)
                 with column:
-                    st.metric(titles[key], value)
+                    metric_with_help(titles[key], value, key)
                     st.markdown(f'<div class="meaning">{meaning}</div>', unsafe_allow_html=True)
         if bench_returns is None:
             st.caption("Nifty 50 data could not be loaded, so the comparison ratios are not available.")
@@ -283,12 +288,14 @@ with tab_outcomes:
             if out["invested"] < 0.02:
                 notice("The rule is currently in cash: it is not signalling a purchase, and it would only buy if the "
                        "price moved enough to trigger it. Results close to zero reflect that.")
-            cols = st.columns(5)
-            cols[0].metric("Chance of a gain", f"{out['chance_gain'] * 100:.0f}%")
-            cols[1].metric("Typical result", f"{out['median'] * 100:+.1f}%")
-            cols[2].metric("Poor case (1 in 20)", f"{out['poor'] * 100:+.1f}%")
-            cols[3].metric("Good case (1 in 20)", f"{out['good'] * 100:+.1f}%")
-            cols[4].metric("Beats holding", f"{out['chance_beats_hold'] * 100:.0f}%")
+            for col, (title, term, value) in zip(st.columns(5), [
+                    ("Chance of a gain", "chance_gain", f"{out['chance_gain'] * 100:.0f}%"),
+                    ("Typical result", "typical", f"{out['median'] * 100:+.1f}%"),
+                    ("Poor case (1 in 20)", "poor_case", f"{out['poor'] * 100:+.1f}%"),
+                    ("Good case (1 in 20)", "good_case", f"{out['good'] * 100:+.1f}%"),
+                    ("Beats holding", "beats_holding", f"{out['chance_beats_hold'] * 100:.0f}%")]):
+                with col:
+                    metric_with_help(title, value, term)
             st.plotly_chart(outcome_histogram(out["strategy"], out["hold"], rule.name,
                                               f"How the {rule.name.lower()} would fare across 2,000 simulated futures"),
                             width="stretch")
@@ -326,7 +333,7 @@ with tab_strategy:
 
     test_tabs = st.tabs([f"{STRATEGIES[k].name}" for k in STRATEGY_KEYS] + ["Monte Carlo test"])
 
-    ROW_LABELS = [("Ending value of Rs 1,00,000", None), ("Total return", "total_return"),
+    ROW_LABELS = [("Ending value of Rs 1,00,000", "ending_value"), ("Total return", "total_return"),
                   ("Average yearly return", "cagr"), ("Worst fall (max drawdown)", "max_drawdown"),
                   ("Volatility", "volatility"), ("Sharpe ratio", "sharpe"), ("Sortino ratio", "sortino"),
                   ("Calmar ratio", "calmar"), ("Treynor ratio", "treynor"), ("Beta", "beta")]
@@ -352,17 +359,16 @@ with tab_strategy:
             c2.metric("Buy and hold: Rs 1,00,000 became", format_inr(b["final_value"]),
                       f"{b['total_return'] * 100:+.1f}% in total")
 
-            rows = []
+            term_row("Measure", None, rule.name, "Buy and hold", header=True)
             for label, k in ROW_LABELS:
-                if k is None:
-                    rows.append((label, format_inr(s["final_value"]), format_inr(b["final_value"])))
+                if k == "ending_value":
+                    sv, bv = format_inr(s["final_value"]), format_inr(b["final_value"])
                 elif k in ("total_return", "cagr", "max_drawdown", "volatility"):
-                    rows.append((label, ratios.pct(s[k], sign=k in ("total_return", "cagr")),
-                                 ratios.pct(b[k], sign=k in ("total_return", "cagr"))))
+                    signed = k in ("total_return", "cagr")
+                    sv, bv = ratios.pct(s[k], sign=signed), ratios.pct(b[k], sign=signed)
                 else:
-                    rows.append((label, ratios.describe(k, s)[0], ratios.describe(k, b)[0]))
-            st.table({"Measure": [r_[0] for r_ in rows], rule.name: [r_[1] for r_ in rows],
-                      "Buy and hold": [r_[2] for r_ in rows]})
+                    sv, bv = ratios.describe(k, s)[0], ratios.describe(k, b)[0]
+                term_row(label, k, sv, bv)
             st.caption(f"Costs of {cost_pct:.2f}% are charged on every switch. Cash earns nothing. Signals are acted on the "
                        "next day. A good result in the past does not mean a good result in the future.")
 
@@ -406,12 +412,14 @@ with tab_strategy:
                     f"in <b>{(sf < 0).mean() * 100:.0f}%</b> of them, with a typical result of "
                     f"<b>{float(np.median(sf)) * 100:+.0f}%</b>. It beat buy-and-hold in "
                     f"<b>{(sf > hf).mean() * 100:.0f}%</b> of them.")
-            cols = st.columns(5)
-            cols[0].metric("Chance of a loss", f"{(sf < 0).mean() * 100:.0f}%")
-            cols[1].metric("Typical result", f"{np.median(sf) * 100:+.0f}%")
-            cols[2].metric("Poor case (1 in 20)", f"{np.percentile(sf, 5) * 100:+.0f}%")
-            cols[3].metric("Good case (1 in 20)", f"{np.percentile(sf, 95) * 100:+.0f}%")
-            cols[4].metric("Beats holding", f"{(sf > hf).mean() * 100:.0f}%")
+            for col, (title, term, value) in zip(st.columns(5), [
+                    ("Chance of a loss", "chance_loss", f"{(sf < 0).mean() * 100:.0f}%"),
+                    ("Typical result", "typical", f"{np.median(sf) * 100:+.0f}%"),
+                    ("Poor case (1 in 20)", "poor_case", f"{np.percentile(sf, 5) * 100:+.0f}%"),
+                    ("Good case (1 in 20)", "good_case", f"{np.percentile(sf, 95) * 100:+.0f}%"),
+                    ("Beats holding", "beats_holding", f"{(sf > hf).mean() * 100:.0f}%")]):
+                with col:
+                    metric_with_help(title, value, term)
             st.plotly_chart(outcome_histogram(sf, hf, STRATEGIES[pick].name,
                                               "5-year results across 2,000 reshuffled histories", "5-year return"),
                             width="stretch")
@@ -437,10 +445,16 @@ with tab_strategy:
                 "cannot show events that never occurred in these 5 years. It tests luck, not whether the rule will work in future."))
 
 # =====================================================================
-# TAB 4: PAPER TRADING
+# TAB 4: PAPER TRADING (stocks, ETFs, bonds, futures, options)
 # =====================================================================
 with tab_trade:
     trading_ui.render(symbol, name, latest, offline=(source == "offline"))
+
+# =====================================================================
+# TAB 5: YOUR PORTFOLIO - build, track and compare portfolios
+# =====================================================================
+with tab_portfolio:
+    portfolio_ui.render()
 
 # ---------- footer disclaimer ----------
 show_disclaimer()

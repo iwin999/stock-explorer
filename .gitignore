@@ -5,3 +5,5 @@ __pycache__/
 data/portfolio.json
 *.log
 *.tmp
+data/accounts/
+.streamlit/secrets.toml

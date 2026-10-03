@@ -123,5 +123,18 @@ Known limits: NSE holidays are not in the calendar (the app says "open" but pric
 
 **Adding a rule later (e.g. Fusion analysis):** write a function that takes a price array and returns 1/0 positions, add a `Strategy(...)` entry to `STRATEGIES` in `core/strategies.py` with its plain-English and Know-how text, and it appears automatically in the Strategy tests tab, the Monte Carlo test and the Possible outcomes tab.
 
+## New in Step 13 (multi-asset paper trading and Your Portfolio)
+| Change | Where |
+|---|---|
+| "?" bubble next to every financial term (use, formula, how to read it): signals, ratios, strategy tables, simulation results | `core/glossary.py`, `core/ui.py` |
+| First screen: choose a name and starting capital (new user) or reopen a saved portfolio (returning user); Switch user button | `core/trading_ui.py` |
+| Paper trading now has Stocks, ETFs and bonds, Futures and Options. Bonds are real NSE bond ETFs (Bharat Bond, G-Sec, liquid) with live prices | `core/instruments.py`, `core/trading_ui.py` |
+| Futures and options are **modelled** (Yahoo has no NSE derivatives data): futures = spot x e^(r t), options = Black-Scholes with last-year volatility, lots about Rs 2 lakh, 15% margin, monthly expiry on the last Tuesday. Option buying only; futures long or short. Expired contracts settle automatically; futures that lose all their margin are closed | `core/derivatives.py`, `core/valuation.py` |
+| Your Portfolio tab: live value, ring chart of allocation, holdings table, portfolio builder (percentages and picks become orders), leaderboard, look-up of any user, organiser tools (PIN-protected delete, backup, restore) | `core/portfolio_ui.py`, `core/builder.py` |
+| Portfolios saved per name: Supabase online database (never lost until deleted) or files on this computer | `core/accounts.py` |
+| 27 new tests, including put-call parity for the option formula and a fake Supabase server | `tests/` |
+
+**Not tested against the real Supabase service** (needs your account and keys); the code path is tested against a fake copy of its web interface. Follow DEPLOY.md Step 3 and run the 'Test it' check.
+
 ## Status
 All 8 features are built.

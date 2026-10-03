@@ -1,5 +1,5 @@
 {
-  "downloaded_at": "2026-10-03T19:47:28",
+  "downloaded_at": "2026-10-03T20:06:58",
   "period": "7y",
   "saved": [
     "RELIANCE.NS",
@@ -121,7 +121,27 @@
     "BHARATFORG.NS",
     "INDHOTEL.NS",
     "MAXHEALTH.NS",
-    "^NSEI"
+    "NIFTYBEES.NS",
+    "BANKBEES.NS",
+    "JUNIORBEES.NS",
+    "ITBEES.NS",
+    "PSUBNKBEES.NS",
+    "CPSEETF.NS",
+    "MON100.NS",
+    "MAFANG.NS",
+    "GOLDBEES.NS",
+    "HDFCGOLD.NS",
+    "BSLGOLDETF.NS",
+    "SILVERBEES.NS",
+    "EBBETF0430.NS",
+    "EBBETF0431.NS",
+    "BBETF0432.NS",
+    "GILT5YBEES.NS",
+    "LICNETFGSC.NS",
+    "LIQUIDBEES.NS",
+    "LIQUIDCASE.NS",
+    "^NSEI",
+    "^NSEBANK"
   ],
   "failed": []
 }

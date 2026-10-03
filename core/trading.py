@@ -12,6 +12,7 @@ Rules kept from the senior's version:
 import json
 import os
 import tempfile
+import uuid
 from datetime import datetime
 
 import pandas as pd
@@ -19,9 +20,6 @@ import pandas as pd
 from core.formatting import format_inr
 
 DEFAULT_BALANCE = 100000.0  # virtual Rs 1,00,000
-# Saving to a file only makes sense on ONE computer (local use). On a cloud server the
-# file would be shared by every visitor, so saving is OFF unless STOCK_APP_SAVE=1.
-SAVE_TO_DISK = os.environ.get("STOCK_APP_SAVE") == "1"
 DEFAULT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "portfolio.json")
 
 
@@ -42,11 +40,15 @@ class TradingError(Exception):
 
 
 class Portfolio:
-    def __init__(self, balance=DEFAULT_BALANCE):
+    def __init__(self, balance=DEFAULT_BALANCE, name=""):
+        self.name = name
         self.balance = float(balance)
         self.deposited = float(balance)  # total money put in; profit = total value - deposited
         # holdings looks like: {"RELIANCE.NS": {"quantity": 10, "avg_price": 2450.5}}
         self.holdings = {}
+        # Open futures and options. Each is a dict with an "id", "type" ("FUT"/"OPT"), the underlying,
+        # expiry date (text), lots, lot size and the prices it was opened at.
+        self.derivatives = []
         self.order_history = []
 
     # ---------------- money ----------------
@@ -95,6 +97,74 @@ class Portfolio:
 
         return self._record("SELL", symbol, quantity, price, pnl=pnl)
 
+
+    # ---------------- futures ----------------
+    def open_future(self, underlying, expiry, side, lots, price, lot_size, margin_pct):
+        """Open a futures position. `side` is "LONG" (profit if the price rises) or "SHORT" (profit if it falls).
+
+        Only a margin (a deposit) is blocked, not the full contract value. Profit and loss are
+        settled in cash when the position is closed or expires.
+        """
+        self._check_order(lots, price, what="contract")
+        margin = margin_pct * price * lot_size * lots
+        if margin > self.balance:
+            raise TradingError(f"Not enough cash for the margin: {format_inr(margin)} is needed "
+                               f"but you have {format_inr(self.balance)}.")
+        self.balance -= margin
+        pos = {"id": uuid.uuid4().hex[:8], "type": "FUT", "underlying": underlying, "expiry": str(expiry),
+               "side": side, "lots": lots, "lot_size": lot_size, "entry": price, "margin": margin}
+        self.derivatives.append(pos)
+        self._record(f"FUT {side} OPEN", self._describe(pos), lots, price, pnl=0.0)
+        return pos
+
+    def close_future(self, pos_id, price, reason="CLOSE"):
+        """Close a futures position at `price`. Returns the profit or loss."""
+        pos = self._find(pos_id, "FUT")
+        direction = 1 if pos["side"] == "LONG" else -1
+        pnl = direction * (price - pos["entry"]) * pos["lot_size"] * pos["lots"]
+        self.balance += max(pos["margin"] + pnl, 0.0)       # a loss beyond the margin is not charged (simplified)
+        self.derivatives.remove(pos)
+        self._record(f"FUT {reason}", self._describe(pos), pos["lots"], price, pnl=pnl)
+        return pnl
+
+    # ---------------- options (buying only) ----------------
+    def buy_option(self, underlying, expiry, strike, kind, lots, premium, lot_size):
+        """Buy a call or put. The most you can lose is the premium paid."""
+        self._check_order(lots, premium, what="option")
+        cost = premium * lot_size * lots
+        if cost > self.balance:
+            raise TradingError(f"Not enough cash: this costs {format_inr(cost)} but you have {format_inr(self.balance)}.")
+        self.balance -= cost
+        pos = {"id": uuid.uuid4().hex[:8], "type": "OPT", "underlying": underlying, "expiry": str(expiry),
+               "strike": strike, "kind": kind, "lots": lots, "lot_size": lot_size, "premium": premium}
+        self.derivatives.append(pos)
+        self._record(f"OPT BUY {kind}", self._describe(pos), lots, premium, pnl=0.0)
+        return pos
+
+    def sell_option(self, pos_id, premium_now, reason="SELL"):
+        """Sell an option you hold (or let it expire, with reason "EXPIRED"). Returns the profit or loss."""
+        pos = self._find(pos_id, "OPT")
+        units = pos["lot_size"] * pos["lots"]
+        self.balance += premium_now * units
+        pnl = (premium_now - pos["premium"]) * units
+        self.derivatives.remove(pos)
+        self._record(f"OPT {reason}", self._describe(pos), pos["lots"], premium_now, pnl=pnl)
+        return pnl
+
+    # ---------------- helpers for derivatives ----------------
+    def _find(self, pos_id, kind):
+        for pos in self.derivatives:
+            if pos["id"] == pos_id and pos["type"] == kind:
+                return pos
+        raise TradingError("That position is no longer open.")
+
+    @staticmethod
+    def _describe(pos):
+        name = pos["underlying"].replace(".NS", "")
+        if pos["type"] == "FUT":
+            return f"{name} FUTURE {pos['expiry']} {pos['side']}"
+        return f"{name} {pos['strike']:g} {pos['kind']} {pos['expiry']}"
+
     # ---------------- reporting ----------------
     def holdings_table(self, latest_prices):
         """One row per holding with current value and unrealised profit/loss.
@@ -139,13 +209,15 @@ class Portfolio:
 
     # ---------------- saving (fixes: "not saved between sessions") ----------------
     def to_dict(self):
-        return {"balance": self.balance, "deposited": self.deposited, "holdings": self.holdings, "order_history": self.order_history}
+        return {"name": self.name, "balance": self.balance, "deposited": self.deposited, "holdings": self.holdings,
+                "derivatives": self.derivatives, "order_history": self.order_history}
 
     @classmethod
     def from_dict(cls, data):
-        p = cls(balance=data.get("balance", DEFAULT_BALANCE))
+        p = cls(balance=data.get("balance", DEFAULT_BALANCE), name=data.get("name", ""))
         p.deposited = data.get("deposited", DEFAULT_BALANCE)
         p.holdings = data.get("holdings", {})
+        p.derivatives = data.get("derivatives", [])
         p.order_history = data.get("order_history", [])
         return p
 
@@ -169,11 +241,11 @@ class Portfolio:
 
     # ---------------- helpers ----------------
     @staticmethod
-    def _check_order(quantity, price):
+    def _check_order(quantity, price, what="stock"):
         if not isinstance(quantity, int) or quantity <= 0:
             raise TradingError("Quantity must be a whole number greater than zero.")
         if not price or price <= 0:
-            raise TradingError("Could not get a valid price for this stock right now.")
+            raise TradingError(f"Could not get a valid price for this {what} right now.")
 
     def _record(self, order_type, symbol, quantity, price, pnl):
         order = {

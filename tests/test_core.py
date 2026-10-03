@@ -81,3 +81,50 @@ def test_custom_starting_capital_is_validated():
     assert p.balance == 250000 and p.deposited == 250000
     p.buy("A.NS", 10, 100)
     assert round(p.total_value({"A.NS": 100}) - p.deposited, 2) == 0   # profit measured against chosen capital
+
+
+# ---------------- futures and options ----------------
+def test_future_long_profit_and_margin_roundtrip():
+    p = Portfolio(balance=100000)
+    pos = p.open_future("A.NS", "2026-10-27", "LONG", 2, 1000.0, 50, 0.15)
+    assert p.balance == 100000 - 0.15 * 1000 * 50 * 2            # margin blocked
+    pnl = p.close_future(pos["id"], 1010.0)
+    assert pnl == (1010 - 1000) * 50 * 2
+    assert p.balance == 100000 + pnl and p.derivatives == []
+
+
+def test_future_short_profits_when_price_falls():
+    p = Portfolio(balance=100000)
+    pos = p.open_future("A.NS", "2026-10-27", "SHORT", 1, 1000.0, 50, 0.15)
+    assert p.close_future(pos["id"], 980.0) == 20 * 50
+
+
+def test_future_loss_beyond_margin_is_capped_and_cash_checked():
+    p = Portfolio(balance=100000)
+    pos = p.open_future("A.NS", "2026-10-27", "LONG", 1, 1000.0, 50, 0.15)     # margin 7,500
+    p.close_future(pos["id"], 500.0, reason="LIQUIDATED")                      # pnl = -25,000
+    assert p.balance == 100000 - 7500                                           # only the margin is lost
+    with pytest.raises(TradingError):
+        Portfolio(balance=1000).open_future("A.NS", "2026-10-27", "LONG", 1, 1000.0, 50, 0.15)
+
+
+def test_option_buy_sell_and_expiry_payoff():
+    p = Portfolio(balance=100000)
+    pos = p.buy_option("A.NS", "2026-10-27", 1000.0, "CALL", 2, 30.0, 50)
+    assert p.balance == 100000 - 30 * 50 * 2
+    pnl = p.sell_option(pos["id"], 45.0)
+    assert pnl == 15 * 50 * 2 and p.derivatives == []
+    pos2 = p.buy_option("A.NS", "2026-10-27", 1000.0, "PUT", 1, 20.0, 50)
+    p.sell_option(pos2["id"], 0.0, reason="EXPIRED")                            # expires worthless
+    assert round(p.balance, 2) == round(100000 + pnl - 20 * 50, 2)
+    with pytest.raises(TradingError):
+        p.sell_option("nope", 1.0)
+
+
+def test_derivatives_survive_save_and_load(tmp_path):
+    p = Portfolio(balance=100000, name="Asha")
+    p.open_future("A.NS", "2026-10-27", "LONG", 1, 1000.0, 50, 0.15)
+    p.buy_option("B.NS", "2026-10-27", 500.0, "PUT", 1, 10.0, 100)
+    q = Portfolio.from_dict(p.to_dict())
+    assert q.name == "Asha" and len(q.derivatives) == 2 and q.balance == p.balance
+    assert Portfolio.from_dict({"balance": 5}).derivatives == []                # old saves still load

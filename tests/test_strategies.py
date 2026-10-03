@@ -35,3 +35,18 @@ def test_rules_return_zero_one_arrays_for_many_paths_at_once():
 def test_every_strategy_has_explanations():
     for rule in st.STRATEGIES.values():
         assert rule.plain.strip() and rule.know_how.strip() and rule.headline.strip()
+
+
+def test_every_term_has_a_complete_glossary_entry():
+    from core import glossary
+    for key, entry in glossary.TERMS.items():
+        assert all(entry[f].strip() for f in ("title", "use", "formula", "read")), key
+        assert entry["title"] in glossary.as_markdown(key)
+
+
+def test_all_ratio_keys_used_on_screen_have_help():
+    from core import glossary
+    for key in ["cagr", "volatility", "max_drawdown", "var95", "sharpe", "sortino", "calmar", "treynor",
+                "beta", "alpha", "information", "correlation", "rsi", "macd", "trend", "total_return",
+                "ending_value", "chance_gain", "typical", "poor_case", "good_case", "beats_holding", "chance_loss"]:
+        assert key in glossary.TERMS, key

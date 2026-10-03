@@ -17,13 +17,12 @@ Your browser opens at http://localhost:8501. Press `Ctrl+C` in Terminal to stop.
 
 ## Put it online
 See **`DEPLOY.md`** to host it on Streamlit Community Cloud so it opens on any computer.
-Online, each visitor gets their own private paper-trading account with a capital of their choice (resets on refresh); running locally with `start.command` saves it to disk.
+Online, visitors choose a name and capital and their portfolio is saved under that name (set up the free Supabase database in DEPLOY.md so portfolios are never lost). Locally, portfolios are saved as files in `data/accounts/`.
 
 ## Before the exhibition
 1. **Refresh the offline backup** (needs internet, ~30 seconds):
    `.venv/bin/python scripts/download_offline_data.py`
-2. **Start with a fresh account** if you want: open the Paper trading tab -> Account options -> Reset
-   (or delete `data/portfolio.json`).
+2. **Clear test portfolios** before the exhibition: Your Portfolio tab -> Organiser tools -> Delete (or delete the files in `data/accounts/` when running locally).
 3. **Test offline mode once:** turn off Wi-Fi, restart the app. A yellow "saved data" banner should appear.
 4. Press `F11` / full-screen the browser; use `Cmd` `+` to zoom if the room is big.
 
@@ -36,7 +35,8 @@ Online, each visitor gets their own private paper-trading account with a capital
 | 4 | Possible outcomes tab: Monte Carlo simulation, fan chart and a gauge of the chance of ending higher or lower | `core/simulation.py` |
 | 5 | Strategy tests tab: four rules (moving-average, RSI, MACD, Bollinger) vs buy-and-hold over 5 years, plus a Monte Carlo test | `core/strategies.py`, `core/backtest.py` |
 | 3b | Risk and return ratios (Sharpe, Sortino, Calmar, Treynor, beta, alpha, drawdown, VaR) | `core/ratios.py` |
-| 6 | Paper trading with a starting capital the visitor chooses (Rs 1,000 to Rs 10 crore) | `core/trading.py`, `core/trading_ui.py` |
+| 6 | Paper trading: stocks, ETFs, bond funds, futures and options, with a starting capital the visitor chooses | `core/trading.py`, `core/trading_ui.py`, `core/derivatives.py` |
+| 9 | Your Portfolio tab: many named users, a portfolio builder, live value, leaderboard, look-up, organiser tools | `core/portfolio_ui.py`, `core/accounts.py`, `core/builder.py`, `core/valuation.py` |
 | 7 | Offline backup + automatic fallback | `scripts/download_offline_data.py`, `core/market_data.py` |
 | 8 | Disclaimer in the footer of the page | `core/ui.py` |
 
@@ -46,7 +46,7 @@ Online, each visitor gets their own private paper-trading account with a capital
 
 ## Check that everything works
 ```bash
-.venv/bin/python -m pytest -q      # 44 tests
+.venv/bin/python -m pytest -q      # 71 tests
 ```
 
 ## Troubleshooting

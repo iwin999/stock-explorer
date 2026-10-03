@@ -14,8 +14,9 @@ The page has four tabs: **Overview, Possible outcomes, Strategy tests, Paper tra
 2. **Overview:** the chart (amber/navy lines = 50- and 200-day average price, grey band = usual range), then read one of the four signal cards out loud.
 3. **Possible outcomes:** point at the gauge ("out of 2,000 simulated futures, this many ended higher"), then the fan chart. Press **Re-run simulation** to show it is random.
 4. **Strategy test:** "Would a simple rule have beaten just holding?" - compare the two lines.
-5. **Paper trading:** buy 5 shares, show the profit/loss table. (Online, each visitor has a private account that resets on refresh.)
-6. (Optional) Turn off Wi-Fi on the local version: a notice appears and everything still works.
+5. **Paper trading:** buy shares, an ETF or bond fund; try a future and an option. Futures and options prices are calculated, not exchange quotes: say so.
+6. **Your Portfolio:** a visitor creates a name, builds a portfolio with the sliders, and later comes back to check its value. Show the leaderboard.
+7. (Optional) Turn off Wi-Fi on the local version: a notice appears and everything still works.
 
 ## New ideas, one line each
 - **Sharpe ratio:** return earned per unit of risk, after the safe rate. Above 1 is generally considered good.
@@ -35,6 +36,12 @@ The page has four tabs: **Overview, Possible outcomes, Strategy tests, Paper tra
 - **Volatility:** how much the price swings in a year, as a percentage.
 - **Monte Carlo:** make 2,000 imaginary futures using the stock's past bumpiness; the middle 70% of end prices is the "likely range".
 - **Backtest:** replay history with a fixed rule. Acts on *tomorrow's* price after a signal (no peeking).
+
+## Futures, options and bonds in one line each
+- **Future:** an agreement to buy or sell at a set price on a set date. Only a margin (15% here) is paid up front, so gains and losses are magnified.
+- **Option:** the right (not obligation) to buy (call) or sell (put) at a set price. The most you can lose is the premium paid.
+- **Bond fund (ETF):** a fund holding government or company bonds that pays interest; usually steadier than shares.
+- **Why are futures and options "calculated"?** No free source has real NSE derivative prices, so we use the standard formulas from the live share price.
 
 ## Questions people may ask
 **Is this a prediction?** No. It only shows how bumpy the price *has been*. It cannot know news, results or crashes.
