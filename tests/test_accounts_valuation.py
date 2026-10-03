@@ -83,6 +83,13 @@ def test_supabase_store_speaks_the_right_requests():
     assert acc.load_account(store, "Meera") is None
 
 
+def test_new_style_secret_keys_are_sent_only_as_apikey():
+    new = acc.SupabaseStore("https://x.supabase.co", "sb_secret_abc123", session=FakeHttp())
+    assert new.headers["apikey"] == "sb_secret_abc123" and "Authorization" not in new.headers
+    old = acc.SupabaseStore("https://x.supabase.co", "eyJhbGciOi.payload.sig", session=FakeHttp())
+    assert old.headers["Authorization"] == "Bearer eyJhbGciOi.payload.sig"
+
+
 def test_supabase_failure_becomes_a_friendly_error():
     class Down:
         def get(self, *a, **k):

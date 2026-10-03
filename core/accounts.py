@@ -107,7 +107,11 @@ class SupabaseStore:
 
     def __init__(self, url, key, table="accounts", session=None):
         self.base = f"{url.rstrip('/')}/rest/v1/{table}"
-        self.headers = {"apikey": key, "Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+        self.headers = {"apikey": key, "Content-Type": "application/json"}
+        # Older keys are JWTs (they start with "eyJ") and are also sent as a Bearer token. The newer
+        # "sb_secret_..." keys are not JWTs and must be sent in the apikey header only.
+        if key.startswith("eyJ"):
+            self.headers["Authorization"] = f"Bearer {key}"
         self.http = session or requests
 
     def _call(self, method, params="", **kw):
