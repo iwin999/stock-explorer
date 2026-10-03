@@ -15,7 +15,7 @@ from core.live import spot_price, vol_estimate
 from core.market_hours import now_ist
 from core.trading import Portfolio
 from core.trading_ui import (_get_portfolio, _refresh_every, _save, admin_pin, get_store, positions_table,
-                             snapshot_now)
+                             snapshot_now, storage_diagnosis)
 from core.ui import callout, know_how_button, notice, plain_english
 
 ETF_OPTIONS = [s for s in ins.CASH_INSTRUMENTS if ins.asset_class(s) == ins.ETFS]
@@ -250,6 +250,10 @@ def _organiser_tools():
     pin = admin_pin()
     local = isinstance(store, acc.FileStore)
     with st.expander("Organiser tools"):
+        problem = storage_diagnosis() if local else None
+        if problem:
+            st.warning(f"The online database is not connected. {problem} Until it is, portfolios are kept in "
+                       "files on the server and will be lost when the app restarts.")
         if pin is None and not local:
             st.info("Organiser tools are switched off. Add an organiser PIN to the app's secrets to use them "
                     "(see DEPLOY.md).")

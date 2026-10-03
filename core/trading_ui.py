@@ -28,13 +28,41 @@ DERIVATIVES_NOTE = ("Futures and options prices here are **calculated** from the
 
 # ---------------- where accounts are kept ----------------
 @st.cache_resource
+def _file_store():
+    return acc.FileStore()
+
+
+@st.cache_resource
+def _supabase_store(url, key):
+    return acc.SupabaseStore(url, key)
+
+
 def get_store():
-    """The online database when its secrets are set, otherwise files on this computer."""
+    """The online database when its secrets are set, otherwise files on this computer.
+
+    The secrets are checked on every run (it is cheap), so if they are added or changed while the app is
+    already running, the app notices straight away instead of staying on the old storage.
+    """
     try:
         cfg = st.secrets["supabase"]
-        return acc.SupabaseStore(cfg["url"], cfg["key"])
+        return _supabase_store(str(cfg["url"]).strip(), str(cfg["key"]).strip())
     except Exception:
-        return acc.FileStore()
+        return _file_store()
+
+
+def storage_diagnosis():
+    """Why the online database is not being used (None if it is configured)."""
+    try:
+        keys = list(st.secrets.keys())
+    except Exception:
+        keys = []
+    if "supabase" not in keys:
+        return "No [supabase] section was found in the app's secrets."
+    cfg = st.secrets["supabase"]
+    missing = [k for k in ("url", "key") if k not in cfg]
+    if missing:
+        return f"The [supabase] section of the secrets is missing: {', '.join(missing)}."
+    return None
 
 
 def admin_pin():
