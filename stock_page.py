@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from core import about, assistant_ui, backtest as bt, fusion_ui, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
+from core import about, assistant_ui, market_strip, backtest as bt, fusion_ui, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
 from core.charts import (backtest_chart, fan_chart, outlook_gauge, outcome_histogram, price_chart,
                          zoom_to_window)
 from core.formatting import format_inr
@@ -57,6 +57,7 @@ def run_search(query):
 # ---------- header ----------
 about.title_row("Stock Explorer")
 st.caption("Price history, key signals and a range of possible outcomes for Indian (NSE) companies.")
+market_strip.render(lambda: trading_ui.snapshot_now(trading_ui._get_portfolio()))
 trading_ui.user_bar()
 trading_ui.housekeeping()      # settle expired futures/options, close busted futures
 trading_ui.show_flash()        # result of the last click, wherever it came from

@@ -114,6 +114,9 @@ h3 { font-size: 1.35rem !important; font-weight: 600 !important; }
 .stApp::before { content: ""; position: fixed; top: 0; left: 0; right: 0; height: 6px; z-index: 999999;
   background: linear-gradient(90deg, #C0392B 0 25%, #C8962E 25% 50%, #4FB0DD 50% 75%, #2E7D4F 75% 100%); }
 
+/* less empty space above the title */
+.stApp [data-testid="stMainBlockContainer"], .stApp .block-container { padding-top: 2.2rem !important; }
+
 /* Footer disclaimer: small and quiet */
 .disclaimer { font-size: 0.82rem; color: #6b7480; line-height: 1.5; border-top: 1px solid #e1e5ec;
               padding-top: 0.9rem; margin-top: 2rem; }
