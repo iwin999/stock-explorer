@@ -82,3 +82,27 @@ def test_gratitude_gives_mr_prashant_a_special_mention():
     g = about.gratitude_markdown()
     assert "special mention" in g.lower() and "Mr. Prashant Kulshrestha" in g and "guidance" in g
     assert g.index("IT department") < g.index("Mr. Prashant Kulshrestha") < g.index("visitor")      # school first, then him, then the visitor
+
+
+def test_exit_all_button_sells_everything_without_errors_and_keeps_the_capital():
+    from core.trading import Portfolio
+    store = acc.FileStore(tempfile.mkdtemp())
+    acc.create_account(store, "Exiter", 200000)
+    pf = acc.load_account(store, "Exiter")
+    pf.buy("TCS.NS", 10, 100.0)
+    pf.buy("INFY.NS", 5, 100.0)
+    acc.save_account(store, pf)
+    with mock.patch("core.trading_ui.get_store", lambda: store), mock.patch("core.portfolio_ui.get_store", lambda: store), \
+            mock.patch("core.trading_ui.spot_price", lambda s: 120.0):
+        app = AppTest.from_file(APP, default_timeout=240)
+        app.query_params["user"] = "Exiter"
+        app.run()
+        assert not app.exception and _error_cards(app) == []
+        assert app.button(key="exit_all_go").disabled                      # nothing happens until the box is ticked
+        app.checkbox(key="exit_all_sure").check().run()
+        app.button(key="exit_all_go").click().run()
+        assert not app.exception and _error_cards(app) == [], _error_cards(app)
+    after = acc.load_account(store, "Exiter")
+    assert not after.holdings and not after.derivatives
+    assert after.deposited == 200000                                     # the starting capital is not reset
+    assert abs(after.balance - (200000 - 10 * 100 - 5 * 100 + 15 * 120)) < 1e-6      # cash plus the sale proceeds

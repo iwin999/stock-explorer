@@ -111,3 +111,32 @@ def settle_and_square_off(pf, spot_fn, sigma_fn, settle_fn, now=None):
                 pf.close_future(pos["id"], price, reason="LIQUIDATED")
                 events.append(f"{name} future was closed automatically: losses used up the whole margin.")
     return events
+
+
+def exit_all(pf, spot_fn, sigma_fn, now=None):
+    """Sell every share, ETF and bond fund and close every future and option, all at current prices.
+
+    The cash from the sales stays in the account as cash. `pf.deposited` (the money the account started with, plus any
+    cash added later) is NOT touched, so profit or loss so far is kept and the capital is not put back to what it was.
+    A price that cannot be found falls back to the price paid (no profit or loss on that line).
+
+    Returns {"count", "realised" (total profit or loss of these exits), "lines": [(description, profit or loss), ...]}.
+    """
+    now = now or datetime.now(dv.IST)
+    lines = []
+    for sym, h in list(pf.holdings.items()):
+        price = spot_fn(sym) or h["avg_price"]
+        order = pf.sell(sym, h["quantity"], round(price, 2))
+        lines.append((f"{h['quantity']} x {ins.name_of(sym)}", order["pnl"]))
+    for pos in list(pf.derivatives):
+        spot = spot_fn(pos["underlying"])
+        name = ins.name_of(pos["underlying"])
+        if pos["type"] == "FUT":
+            price = mark_future(pos, spot, now)["price"] if spot else pos["entry"]
+            lines.append((f"{name} future ({pos['side'].lower()})", pf.close_future(pos["id"], price)))
+        else:
+            sigma = sigma_fn(pos["underlying"]) or 0.25
+            price = mark_option(pos, spot, sigma, now)["price"] if spot else pos["premium"]
+            lines.append((f"{name} {pos['strike']:g} {pos['kind'].lower()}", pf.sell_option(pos["id"], price)))
+    return {"count": len(lines), "realised": sum(pnl for _, pnl in lines), "lines": lines}
+

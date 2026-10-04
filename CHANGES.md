@@ -266,5 +266,8 @@ Limits: the Fusion screen and model-portfolio test still use the 119 saved compa
 ## New in Step 27 (gratitude)
 The About page Gratitude note now gives Mr. Prashant Kulshrestha a special mention for his guidance, between the thanks to the school and the thanks to the visitor. `core/about.py`.
 
+## New in Step 28 (exit all positions)
+Paper trading has an **Exit all positions** option (under Everything you hold): after a tick-box confirmation it sells every share, ETF and bond fund and closes every future and option at current prices. The money stays as cash with profit or loss included; the starting capital is never reset. `core/valuation.py` (`exit_all`), `core/trading_ui.py`.
+
 ## Status
 All 8 features are built.

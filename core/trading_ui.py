@@ -266,6 +266,7 @@ def render(symbol, name, fallback_price, offline=False):
 
     st.header("Everything you hold")
     st.fragment(run_every=None if offline else _refresh_every())(_holdings_view)()
+    _exit_all_section(pf)
 
     st.subheader("Order history")
     orders = pf.orders_dataframe()
@@ -320,6 +321,42 @@ def _holdings_view():
     from core import holdings_ui
     pf = _get_portfolio()
     holdings_ui.render(pf, snapshot_now(pf), key="trade")
+
+
+def _exit_all_section(pf):
+    """One button to sell everything and close every contract. Cash stays as cash; the starting capital is never reset."""
+    last = st.session_state.get("exit_report")
+    if last:
+        with st.expander(f"Last exit: what was sold ({last['count']} positions)", expanded=False):
+            rows = [{"Position": d, "Profit / loss": format_inr(p)} for d, p in last["lines"]]
+            st.dataframe(rows, hide_index=True, width="stretch")
+            st.caption(f"Total profit or loss from this exit: {format_inr(last['realised'])}.")
+    if not pf.holdings and not pf.derivatives:
+        return
+    with st.expander("Exit all positions", expanded=False):
+        st.markdown(
+            "Sells **every** share, ETF and bond fund, and closes **every** future and option, in one go, at the current "
+            "prices (the last closing prices when the market is closed).\n\n"
+            "- The money from the sales stays in your account as **cash**, with your profit or loss included.\n"
+            "- It does **not** put your capital back to what you started with. Your starting capital is unchanged, so your "
+            "profit or loss so far is kept.\n"
+            "- It cannot be undone.")
+        sure = st.checkbox("I understand and want to exit everything", key="exit_all_sure")
+        st.button("Exit all positions", type="primary", disabled=not sure, key="exit_all_go", on_click=_do_exit_all)
+
+
+def _do_exit_all():
+    """Runs when the button is pressed (before the page redraws, which is also why the tick box can be cleared here)."""
+    pf = _get_portfolio()
+    try:
+        report = val.exit_all(pf, spot_price, vol_estimate)
+        _save(pf)
+        st.session_state["exit_report"] = report
+        st.session_state.flash = ("ok", f"Exited {report['count']} position(s). Profit or loss from these exits: "
+                                        f"{format_inr(report['realised'])}. Cash is now {format_inr(pf.balance)}.")
+    except TradingError as e:
+        st.session_state.flash = ("error", str(e))
+    st.session_state["exit_all_sure"] = False
 
 
 # ---------------- stocks, ETFs and bonds ----------------

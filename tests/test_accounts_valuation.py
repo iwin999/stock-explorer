@@ -195,3 +195,30 @@ def test_pin_check_ignores_quotes_and_spaces():
         return entered.strip().strip("\"'“”‘’").strip() == pin.strip()
     assert matches('4827', '4827') and matches(' 4827 ', '4827') and matches('"4827"', '4827') and matches("“4827”", "4827")
     assert not matches('4828', '4827') and not matches('', '4827')
+
+
+def test_exit_all_sells_everything_but_never_restores_the_starting_capital():
+    from datetime import datetime
+    from core import derivatives as dv
+    from core import valuation as val
+    from core.trading import Portfolio
+    prices = {"AAA.NS": 120.0, "BBB.NS": 45.0, "^NSEI": 22000.0}
+    spot = lambda s: prices.get(s)
+    now = datetime(2026, 10, 5, 12, 0, tzinfo=dv.IST)
+    pf = Portfolio(balance=500000, name="T")
+    pf.buy("AAA.NS", 100, 100.0)                      # now 120: +2,000
+    pf.buy("BBB.NS", 200, 50.0)                       # now 45: -1,000
+    expiry = dv.expiry_dates(now)[0]
+    pf.open_future("^NSEI", expiry, "LONG", 1, 21900.0, dv.lot_size(21900.0), dv.FUTURES_MARGIN)
+    pf.buy_option("^NSEI", expiry, 22000.0, "CALL", 1, 150.0, dv.lot_size(22000.0))
+    before = val.snapshot(pf, spot, lambda s: 0.2, now)["total"]
+    deposited = pf.deposited
+
+    result = val.exit_all(pf, spot, lambda s: 0.2, now)
+
+    assert result["count"] == 4 and not pf.holdings and not pf.derivatives
+    assert pf.deposited == deposited == 500000                       # the starting capital is never reset
+    assert abs(pf.balance - before) < 1e-6                            # everything became cash, nothing appeared or vanished
+    assert abs(pf.balance - deposited - sum(p for _, p in result["lines"])) < 1e-6
+    assert pf.balance != deposited                                    # profit and loss stay in the cash
+    assert val.exit_all(pf, spot, lambda s: 0.2, now)["count"] == 0   # nothing left to exit
