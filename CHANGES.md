@@ -167,8 +167,28 @@ Limit: while Streamlit is actually rebuilding the app after a push, its own "upd
 | Finds the closest note by comparing the question with every way each note can be asked (rarer words count more), fixes small spelling slips, and judges whether the question is on-topic. If unsure it asks "did you mean...?"; if it has no note it says so instead of guessing | `core/assistant.py` |
 | Live answers from the page: the signals for the selected company, the user's own cash and holdings, whether the market is open | `core/assistant.py` |
 | "Should I buy...?", "will it go up?" and similar always get the same careful answer: it cannot advise or predict | `core/knowledge.py` |
-| Measured on 113 real questions (including misspellings) and 28 off-topic ones: 112/113 answered with the right note, 28/28 off-topic refused | `tests/bot_eval_data.py`, `tests/test_assistant.py` |
+| Measured on 112 real questions (including misspellings) and 28 off-topic ones: 112/112 answered with the right note, 28/28 off-topic refused | `tests/bot_eval_data.py`, `tests/test_assistant.py` |
 | Follow-up buttons, starter questions, a "Browse all topics" menu and a Clear chat button | `core/assistant_ui.py` |
+
+## New in Step 17 (Fusion analysis, CMT Level III Chapter 8)
+Based on the user's own course file (Chapter 8: 8.1 Lundgren, "Bridging the Fundamental Gap"; 8.5 Letizia, "Technicians and Fundamentalists Working Together"). Explanations are paraphrased, not copied, and credit the authors.
+
+| Chapter idea | In the app | Where |
+|---|---|---|
+| P = (F x V)^S and "the market is the best fundamental analyst" | Explained in the Fusion tab, Know how, and the bot | `core/fusion_ui.py`, `core/knowledge.py` |
+| The Winner's Circle (Figure 8.1.2): trend and momentum non-negotiable; groups 1-4 | Group for every company, three circle cards with the numbers, and a screen of all 119 | `core/fusion.py` (`group_of`, `classify`) |
+| Four trend stages (Figure 8.1.6) | Counted per company; bar of all companies by stage | `technical_table`, `stage_bar` |
+| Technical overlay: confirm / delay / reject, and the divergence rule (8.5) | Verdict and a divergence warning on each company | `verdict_for` |
+| Expectancy = win rate x average win - loss rate x average loss | New rows (trades, win rate, average win, average loss, expectancy) in every strategy test | `core/ratios.py`, `core/backtest.py` |
+| Trend following vs swing trading | Each rule is labelled; moving-average and MACD = trend following, RSI and Bollinger = swing | `core/strategies.py` |
+| 50/50 "never works", top-down approach | Bot notes only | `core/knowledge.py` |
+| Model-portfolio test | Monthly-rebuilt equal-weight portfolios of group 1 and groups 1+2, compared with all companies equally and the Nifty 50, about 3 years, trades the day after the rating, with costs | `run_fusion_backtest` |
+
+How it is scored (the chapter's own scores are its authors' proprietary models, so these are open stand-ins): each company is ranked 0-100 against the other companies in our list. Quality = average of growth (revenue and profit growth), returns (ROE and operating margin) and low debt (skipped for banks and lenders). Valuation = low P/E and low price-to-book. 50 or more passes. "In the trend circle" = clear uptrend (price above 200-day average, 50-day above 200-day, 200-day rising) AND positive 6-month return AND 6-month return ahead of the Nifty 50. (RSI was tried and dropped: it left almost no companies in the circle in the current market.)
+
+Data: Yahoo Finance yearly statements (about 4 years) saved in `data/offline/fundamentals.json` by `scripts/download_fundamentals.py`. A year's results are used only 75 days after the year ended. NSE was not scraped because its Terms of Use forbid automated collection. The test starts about mid-2023 because that is how far free published results reach. It is short, covers only today's listed companies (survivorship bias), and uses results as currently reported; the page says so.
+
+Result on the saved data (3 Jul 2023 to 1 Oct 2026, 0.10% cost): group 1 +72.3%, groups 1 and 2 +54.1%, all companies equally +59.3%, Nifty 50 +15.6%.
 
 ## Status
 All 8 features are built.

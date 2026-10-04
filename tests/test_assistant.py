@@ -76,3 +76,23 @@ def test_question_validation_and_topics_menu():
     assert a.clean_question("")[1] and a.clean_question("x" * 400)[1]
     menu = a.topics()
     assert all(menu[c] for c in kb.CATEGORY_ORDER) and sum(len(v) for v in menu.values()) == len(kb.ENTRIES)
+
+
+def test_bot_reports_the_fusion_group_of_the_selected_company():
+    ctx = {"company": "Zydus Lifesciences", "symbol": "ZYDUSLIFE.NS", "last_close": 1000.0, "signals": [],
+           "portfolio": None, "fusion": {"group": 1, "stage_name": "Clear uptrend", "verdict": "Confirm"}}
+    for q in ["what group is this stock in", "which group is this company in", "is this stock in the winner's circle"]:
+        r = a.answer(q, ctx)
+        assert r["kind"] == "live" and "fusion group 1" in r["text"] and "not advice" in r["text"], q
+    assert a.answer("what is the winners circle", ctx)["kind"] == "notes"          # a general question still uses the notes
+
+
+def test_fusion_notes_answer_the_chapter_questions():
+    asks = {"what is fusion analysis": "fusion_what", "what does P = (F * V)^S mean": "fusion_formula",
+            "what is the winners circle": "winners_circle", "why is trend non negotiable": "why_trend_first",
+            "what does delay mean": "overlay", "what if technicals and fundamentals disagree": "divergence",
+            "what are the trend stages": "trend_stages", "why is the fusion test only 3 years": "fusion_window",
+            "what is survivorship bias": "fusion_limits", "trend following vs swing trading": "trend_vs_swing",
+            "why does expectancy matter": "expectancy_why", "what is the top down approach": "top_down"}
+    for q, want in asks.items():
+        assert a.answer(q).get("source") == want, q

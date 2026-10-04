@@ -115,6 +115,7 @@ class Strategy:
     warmup: int          # days of history the rule needs before it can give a signal
     plain: str           # "In plain English"
     know_how: str        # the in-depth details
+    style: str = ""      # "Trend following" or "Swing / mean reversion" (see CMT Level III, 8.1)
 
 
 STRATEGIES = {
@@ -139,7 +140,8 @@ STRATEGIES = {
             "4. Subtract the trading cost (set above) every time the position changes, including the first purchase.\n"
             "5. Compound the daily results into a growth curve starting at Rs 1,00,000 and compare it with buying on day one and holding.\n\n"
             "**Typical strengths and weaknesses.** Works best in long, steady trends. Whipsaws (many small losses) in "
-            "sideways markets, and exits late after a fall begins.")),
+            "sideways markets, and exits late after a fall begins."),
+        style="Trend following"),
     "rsi": Strategy(
         "rsi", "RSI rule",
         "Buy after the stock has fallen hard (RSI below 30) and sell once it recovers (RSI above 55).",
@@ -158,7 +160,8 @@ STRATEGIES = {
             "**How the test is done.** Same engine as every rule here: decide at the close, earn the next day's move, "
             "subtract costs on each switch, compound from Rs 1,00,000 and compare with buy-and-hold over 5 years.\n\n"
             "**Typical strengths and weaknesses.** A mean-reversion rule: it is invested only part of the time, so it often "
-            "trails buy-and-hold in strong bull markets. In a steady downtrend it keeps buying dips that keep dipping.")),
+            "trails buy-and-hold in strong bull markets. In a steady downtrend it keeps buying dips that keep dipping."),
+        style="Swing / mean reversion"),
     "macd": Strategy(
         "macd", "MACD rule",
         "Hold the stock while momentum (MACD) is above its signal line, otherwise stay in cash.",
@@ -175,7 +178,8 @@ STRATEGIES = {
             "**How the test is done.** Decide at the close, earn the next day's move, subtract costs on each switch, "
             "compound from Rs 1,00,000, compare with buy-and-hold over 5 years.\n\n"
             "**Typical strengths and weaknesses.** Quicker than a 50/200 crossover and catches turns earlier, but produces "
-            "many more trades, so costs and false signals matter more.")),
+            "many more trades, so costs and false signals matter more."),
+        style="Trend following"),
     "bollinger": Strategy(
         "bollinger", "Bollinger Bands rule",
         "Buy when the price drops below its usual range (lower band) and sell when it returns to the middle.",
@@ -194,5 +198,6 @@ STRATEGIES = {
             "**How the test is done.** Decide at the close, earn the next day's move, subtract costs on each switch, "
             "compound from Rs 1,00,000, compare with buy-and-hold over 5 years.\n\n"
             "**Typical strengths and weaknesses.** Suits calm, range-bound stocks. A stock in a real breakdown keeps "
-            "closing below the band, and the rule keeps buying into the fall.")),
+            "closing below the band, and the rule keeps buying into the fall."),
+        style="Swing / mean reversion"),
 }

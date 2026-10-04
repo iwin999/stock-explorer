@@ -62,15 +62,21 @@ def run_backtest(close, strategy="ma_cross", years=YEARS, cost_pct=DEFAULT_COST_
         bench_ret = benchmark.pct_change().reindex(px.index).dropna()
 
     flips = position.diff().fillna(0)
+    # each stretch of holding the stock is one trade; its return is the strategy's compounded daily results over it
+    spell = (held.diff().fillna(held.iloc[0]) == 1).cumsum().where(held == 1)
+    trade_returns = [float((1 + g).prod() - 1) for _, g in strategy_ret[held == 1].groupby(spell[held == 1])]
     stats = {}
     for label, ret in (("Strategy", strategy_ret), ("Buy and hold", hold_ret)):
         s = ratios.summary(ret, bench_ret)
         s["final_value"] = float(equity[label].iloc[-1])
+        s["expectancy"] = ratios.expectancy(trade_returns) if label == "Strategy" else None
         stats[label] = s
 
     return {
         "name": rule.name,
         "key": strategy,
+        "style": rule.style,
+        "trade_returns": trade_returns,
         "equity": equity,
         "buys": px.index[flips == 1],
         "sells": px.index[flips == -1],

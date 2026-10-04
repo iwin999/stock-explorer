@@ -186,3 +186,31 @@ def allocation_donut(by_class):
     fig.update_layout(height=340, font=dict(size=15), margin=dict(l=10, r=10, t=10, b=10),
                       legend=dict(orientation="h", y=-0.1))
     return fig
+
+
+def fusion_chart(curves):
+    """What Rs 1,00,000 would have become under each fusion model portfolio, against the Nifty 50."""
+    styles = {"Group 1 only": dict(color=NAVY, width=3.5), "Groups 1 and 2": dict(color=AMBER, width=2.5),
+              "All companies (equal weight)": dict(color=GREY, width=2.5),
+              "Nifty 50": dict(color="#444444", width=2, dash="dash")}
+    fig = go.Figure()
+    for col in curves.columns:
+        fig.add_trace(go.Scatter(x=curves.index, y=curves[col], name=col, line=styles.get(col, dict(width=2))))
+    fig.update_layout(height=470, font=dict(size=16), yaxis=dict(title="Portfolio value (Rs)", tickprefix="Rs "),
+                      legend=dict(orientation="h", y=-0.18), margin=dict(l=10, r=10, t=30, b=10), hovermode="x unified")
+    return fig
+
+
+def stage_bar(counts):
+    """One bar showing how many companies are in each of the four trend stages."""
+    order = ["Clear uptrend", "Base of an uptrend", "Base of a downtrend", "Clear downtrend"]
+    colours = ["#2a9d6f", "#8ccbb0", "#e3a99b", "#c8553d"]
+    total = sum(counts.get(k, 0) for k in order) or 1
+    fig = go.Figure()
+    for name, colour in zip(order, colours):
+        n = counts.get(name, 0)
+        fig.add_trace(go.Bar(y=[""], x=[n / total * 100], name=f"{name} ({n})", orientation="h", marker_color=colour,
+                             text=f"{n / total * 100:.0f}%", textposition="inside", hovertemplate=f"{name}: {n} companies<extra></extra>"))
+    fig.update_layout(barmode="stack", height=170, font=dict(size=15), margin=dict(l=0, r=0, t=0, b=0),
+                      xaxis=dict(visible=False), legend=dict(orientation="h", y=-0.5), showlegend=True)
+    return fig

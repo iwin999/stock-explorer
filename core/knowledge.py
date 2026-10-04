@@ -10,10 +10,10 @@ the "?" bubbles and the bot always agree.
 from core import glossary
 
 # ---- categories shown to visitors ----
-USING, SIGNALS, RISK, SIMS, TRADING, DERIV, PORTFOLIO = (
+USING, SIGNALS, RISK, SIMS, TRADING, DERIV, PORTFOLIO, FUSION = (
     "Using the app", "Charts and signals", "Risk and return numbers", "Simulations and strategy tests",
-    "Trading basics", "Futures and options", "Your portfolio")
-CATEGORY_ORDER = [USING, SIGNALS, RISK, SIMS, TRADING, DERIV, PORTFOLIO]
+    "Trading basics", "Futures and options", "Your portfolio", "Fusion analysis")
+CATEGORY_ORDER = [USING, SIGNALS, RISK, SIMS, TRADING, DERIV, PORTFOLIO, FUSION]
 
 
 def E(key, category, title, questions, answer):
@@ -375,12 +375,122 @@ MANUAL = [
        "why can't i sell options", "what is option writing"],
       "Selling (writing) options can lose far more than you receive, sometimes without limit. To keep practice safe, "
       "the site allows only buying options, where the most you can lose is the premium you paid."),
+    # ------------------------------------------------------------------ fusion analysis (CMT Level III, Chapter 8)
+    E("fusion_what", FUSION, "What is fusion analysis?",
+      ["what is fusion analysis", "explain fusion analysis", "what does fusion mean", "what is the fusion tab",
+       "technical and fundamental together", "combining technical and fundamental analysis", "how does fusion analysis work",
+       "what is cmt fusion", "what is the fusion method"],
+      "Fusion analysis combines the different ways of studying a stock: its price trend (technical), its business results "
+      "(fundamental), its price against its earnings (valuation) and the wider economy. The idea from the CMT Level III "
+      "curriculum is that the price trend is the market's own opinion of all the rest, so a view on a company only pays "
+      "off once the market agrees. The Fusion analysis tab rates each company this way."),
+    E("fusion_formula", FUSION, "What does P = (F x V)^S mean?",
+      ["what does p equals f times v to the s mean", "what is the p f v s formula", "explain the price formula",
+       "what is the elegant formula", "what is sentiment in the formula", "p = (f * v)s", "what is f v and s",
+       "how is a stock price built"],
+      "A price (P) is built from fundamentals (F: growth, returns, leverage), valuation (V: what investors pay for them) and "
+      "sentiment (S: how confident or fearful the crowd is). In bull markets S is above 1 and pushes the price up faster; in "
+      "bear markets S is below 1. The market's price therefore reflects everything people know, and a lot they do not."),
+    E("winners_circle", FUSION, "What is the Winner's Circle?",
+      ["what is the winners circle", "what are the four groups", "explain groups 1 2 3 and 4", "what does group 1 mean",
+       "what is the venn diagram", "what do the circles mean", "what is a group 4 stock", "what is a group 1 stock",
+       "what is the fusion group", "how are companies grouped"],
+      "Three circles: quality of fundamentals, valuation, and price trend and momentum. The trend circle is not negotiable. "
+      "Group 1 = trending and outperforming with both fundamental quality and valuation. Group 2 = trending with at least "
+      "one of them. Group 3 = trending with neither. Group 4 = not trending: a watchlist. Aim for many 1s, some 2s, few 3s, "
+      "and avoid 4s."),
+    E("why_trend_first", FUSION, "Why is the price trend 'non-negotiable'?",
+      ["why is the trend not negotiable", "why must a stock be trending", "why not buy cheap stocks that are falling",
+       "why does the trend matter", "why avoid group 4", "why listen to the market", "why not just trust fundamentals",
+       "is the market the best analyst"],
+      "No stock becomes a big winner without first getting back into an uptrend, and a view on fundamentals earns nothing "
+      "until the market agrees with it. The chapter calls the market the best fundamental analyst on the planet, because "
+      "the price already holds everything investors know. Buying cheap stocks that are still falling is the contrarian "
+      "route, which the chapter warns about."),
+    E("overlay", FUSION, "What does confirm, delay or reject mean?",
+      ["what is the technical overlay", "what does confirm mean", "what does delay mean", "what does reject mean",
+       "what is the overlay verdict", "how do technicals confirm fundamentals", "what is the verdict on the fusion tab"],
+      "This is the technical overlay from Chapter 8.5. A view formed on fundamentals is checked against the price trend "
+      "before acting. Confirm: the trend agrees. Delay: the fundamentals look good but the trend has not confirmed yet, so "
+      "wait. Reject: neither supports it. The verdict is a way to organise thinking, not an instruction to trade."),
+    E("divergence", FUSION, "What if the technicals and fundamentals disagree?",
+      ["what if technicals and fundamentals disagree", "what is divergence", "what does divergence mean",
+       "what to do when signals conflict", "why is there a divergence warning", "technicals and fundamentals diverge",
+       "what is the divergence message"],
+      "The chapter's advice is to pay more attention to risk: smaller positions, tighter stops, and a fresh look at the "
+      "evidence. Disagreements usually appear near the end of a move, and eventually the two come back into line. The page "
+      "shows a divergence warning when a company is trending without strong fundamentals, or has strong fundamentals but no trend."),
+    E("trend_stages", FUSION, "What are the four trend stages?",
+      ["what are the trend stages", "what is a clear uptrend", "what is a base of an uptrend", "what is a base of a downtrend",
+       "what is a clear downtrend", "how is the trend stage decided", "what are the four stages"],
+      "Three tests are counted: price above its 200-day average, the 50-day average above the 200-day, and the 200-day "
+      "average rising. All three = clear uptrend. Two = base of an uptrend. One = base of a downtrend. None = clear "
+      "downtrend. Only a clear uptrend can be inside the Winner's Circle."),
+    E("fusion_scores", FUSION, "How are the 0-100 scores worked out?",
+      ["how are the fusion scores calculated", "what is the quality score", "what is the valuation score",
+       "how is quality of fundamentals measured", "how is valuation scored", "what are percentile scores", "what does 60 out of 100 mean",
+       "what is the passing score", "how are companies ranked against each other"],
+      "Each company is ranked 0 to 100 against the other companies in our list of 119. Quality averages growth (revenue and "
+      "profit growth), returns (return on equity and margin) and low debt. Valuation averages low P/E and low price-to-book. "
+      "50 or more passes a circle. These are open, simple versions; the chapter's own scores come from its authors' models, "
+      "whose formulas are not published."),
+    E("fusion_test", FUSION, "How does the fusion model-portfolio test work?",
+      ["how does the fusion backtest work", "what is the model portfolio", "how is the fusion test done",
+       "how was the fusion portfolio tested", "what does group 1 only mean", "what is the fusion portfolio",
+       "does the fusion method beat the market", "how did group 1 perform"],
+      "On the first trading day of each month the companies are rated using only information public by then, and an "
+      "equal-weight portfolio of group 1 (or groups 1 and 2) is bought at the next day's close. It is compared with owning "
+      "all the companies equally and with the Nifty 50, after trading costs. A company's yearly results are used only 75 days "
+      "after the year ended."),
+    E("fusion_window", FUSION, "Why is the fusion test only about 3 years?",
+      ["why is the fusion test only 3 years", "why not 5 years for fusion", "how far back does fusion go",
+       "why is the fusion window short", "where does the fundamental data come from", "why not use older fundamentals",
+       "how much history does fusion use"],
+      "Free yearly company results go back only about four years, and each year counts only once it was published. So the "
+      "fundamental part can be tested from about mid-2023. The chapter itself does not require a particular test length: "
+      "fusion analysis is a way to choose and rate stocks at a moment in time."),
+    E("fusion_limits", FUSION, "How reliable is the fusion test?",
+      ["is the fusion test reliable", "what are the limits of the fusion test", "what is survivorship bias",
+       "can i trust the fusion results", "is the fusion backtest accurate", "what are the caveats of fusion",
+       "does fusion guarantee returns"],
+      "Treat it as an illustration. It covers about 3 years, tests only today's 119 listed companies (firms that "
+      "disappeared are missing, called survivorship bias), uses results as Yahoo reports them now, and the period was "
+      "mostly a rising market. It does not predict the future, and it is not investment advice."),
+    E("trend_vs_swing", FUSION, "What is the difference between trend following and swing trading?",
+      ["trend following vs swing trading", "what is trend following", "what is swing trading",
+       "difference between trend following and swing trading", "which is better trend following or swing trading",
+       "why do trend followers have bigger drawdowns", "what is a swing trader", "mean reversion vs trend following"],
+      "Trend following is opportunity management: you accept bigger falls to stay in for the big winners, so the average win "
+      "must be large. Swing trading is risk management: you keep losses small and take smaller gains, often with a higher "
+      "win rate. Mixing the two (wanting huge gains with tiny stops) tends to fail because the trend has no room to breathe. "
+      "In the Strategy tests, the moving-average and MACD rules are trend following; the RSI and Bollinger rules are swing-style."),
+    E("expectancy_why", FUSION, "Why does expectancy matter?",
+      ["why does expectancy matter", "what is the expectancy formula", "what does negative expectancy mean",
+       "what is expectancy", "how do i know if a strategy works", "what is win rate times average win",
+       "what is the most important number for a trader"],
+      "Expectancy is (win rate x average win) minus (loss rate x average loss): what a typical trade earns. If it is "
+      "negative, the process loses money over time and should be fixed before anything else, by changing the win rate, the "
+      "average win or the average loss. The Strategy tests show it for every rule."),
+    E("fifty_fifty", FUSION, "Should fundamentals and technicals each get 50%?",
+      ["should it be 50 50 technical and fundamental", "how much weight for technical vs fundamental",
+       "who wins when analysts disagree", "what is the tiebreak", "should fundamentals and technicals be equally weighted"],
+      "The chapter says a strict 50-50 split never works. Each team weighs the two differently, disagreements will happen, "
+      "and a tiebreaking process is needed that respects both views. In the Winner's Circle the price trend is the one "
+      "condition that is not negotiable."),
+    E("top_down", FUSION, "What is the top-down approach?",
+      ["what is the top down approach", "what is top down analysis", "how do you find ideas top down",
+       "what is a relative rotation graph", "what is sector rotation", "start with sectors then stocks"],
+      "A top-down approach starts wide and narrows: first which asset classes and sectors the market is favouring, then "
+      "the strongest companies inside the strongest sectors. The chapter uses relative rotation graphs for this. This site "
+      "does not include those graphs; its fusion screen goes straight to the company level."),
 ]
 
 
 def _glossary_entries():
     """One entry per financial term, built from the same text as the '?' bubbles."""
-    category = {"rsi": SIGNALS, "macd": SIGNALS, "trend": SIGNALS, "volatility": SIGNALS}
+    category = {"rsi": SIGNALS, "macd": SIGNALS, "trend": SIGNALS, "volatility": SIGNALS,
+                "fusion_group": FUSION, "trend_stage": FUSION, "outperformance": FUSION, "quality_score": FUSION,
+                "valuation_score": FUSION, "overlay_verdict": FUSION, "expectancy": FUSION}
     asks = {
         "rsi": ["rsi", "relative strength index", "what does the rsi number mean", "what is the strength score"],
         "macd": ["macd", "moving average convergence divergence", "what is momentum", "what is the macd signal line"],
@@ -405,6 +515,16 @@ def _glossary_entries():
         "good_case": ["good case", "what is the good case"],
         "beats_holding": ["beats holding", "what does beats holding mean", "how often does the rule beat holding"],
         "chance_loss": ["chance of a loss", "what does chance of a loss mean"],
+        "win_rate": ["win rate", "what is win rate", "win rate per trade", "what is a good win rate"],
+        "avg_win": ["average win", "what is the average win", "average winning trade"],
+        "avg_loss": ["average loss", "what is the average loss", "average losing trade"],
+        "expectancy": ["expectancy", "expectancy per trade", "what is the expectancy of a strategy"],
+        "fusion_group": ["fusion group", "what is a fusion group", "which group is this company in"],
+        "trend_stage": ["trend stage", "what is the trend stage"],
+        "outperformance": ["outperformance", "6 month outperformance", "what does outperforming the market mean", "relative strength"],
+        "quality_score": ["quality score", "fundamental quality", "what is fundamental quality"],
+        "valuation_score": ["valuation score", "what is valuation", "what is the valuation circle"],
+        "overlay_verdict": ["technical overlay verdict", "overlay verdict"],
     }
     entries = []
     for key, term in glossary.TERMS.items():

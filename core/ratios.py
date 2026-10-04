@@ -62,6 +62,23 @@ def summary(returns, benchmark=None, risk_free=RISK_FREE):
     return out
 
 
+def expectancy(trade_returns):
+    """Expectancy per trade (CMT Level III, 8.1): (win rate x average win) - (loss rate x average loss).
+
+    trade_returns: one return per completed trade (0.05 = +5%). Returns None if there were no trades.
+    A positive expectancy means that, on average, each trade added money; a negative one means the process needs fixing.
+    """
+    r = np.asarray(trade_returns, dtype=float)
+    if len(r) == 0:
+        return None
+    wins, losses = r[r > 0], r[r <= 0]
+    win_rate = len(wins) / len(r)
+    avg_win = float(wins.mean()) if len(wins) else 0.0
+    avg_loss = float(-losses.mean()) if len(losses) else 0.0
+    return {"trades": len(r), "win_rate": float(win_rate), "avg_win": avg_win, "avg_loss": avg_loss,
+            "expectancy": float(win_rate * avg_win - (1 - win_rate) * avg_loss)}
+
+
 # ---------------- text for the screen ----------------
 def pct(x, digits=1, sign=False):
     return "n/a" if x is None else f"{x * 100:{'+' if sign else ''}.{digits}f}%"

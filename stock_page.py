@@ -9,7 +9,7 @@ import zlib
 import numpy as np
 import streamlit as st
 
-from core import assistant_ui, backtest as bt, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
+from core import assistant_ui, backtest as bt, fusion_ui, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
 from core.charts import (backtest_chart, fan_chart, outlook_gauge, outcome_histogram, price_chart,
                          zoom_to_window)
 from core.formatting import format_inr
@@ -128,8 +128,8 @@ bench_close = _bench["Close"] if _bench is not None else None
 PERIODS = {"6 months": 126, "1 year": 252, "2 years": 504, "5 years": 1260}
 STRATEGY_KEYS = list(STRATEGIES)
 
-tab_overview, tab_outcomes, tab_strategy, tab_trade, tab_portfolio, tab_bot = st.tabs(
-    ["Overview", "Possible outcomes", "Strategy tests", "Paper trading", "Your Portfolio", "Ask the bot"])
+tab_overview, tab_outcomes, tab_strategy, tab_fusion, tab_trade, tab_portfolio, tab_bot = st.tabs(
+    ["Overview", "Possible outcomes", "Strategy tests", "Fusion analysis", "Paper trading", "Your Portfolio", "Ask the bot"])
 
 # =====================================================================
 # TAB 1: OVERVIEW - price chart, key signals, risk and return ratios
@@ -346,7 +346,7 @@ with tab_strategy:
         results[key] = bt.run_backtest(close, key, cost_pct=cost_pct, benchmark=bench_close)
         result = results[key]
         with tab:
-            st.caption(rule.headline)
+            st.caption(rule.headline + (f"  Style: {rule.style}." if rule.style else ""))
             if result is None:
                 st.info("This company does not have enough price history (about 6 years) for this test.")
                 continue
@@ -371,6 +371,14 @@ with tab_strategy:
                 else:
                     sv, bv = ratios.describe(k, s)[0], ratios.describe(k, b)[0]
                 term_row(label, k, sv, bv)
+            # trade-by-trade results and the expectancy formula (CMT Level III, 8.1)
+            e = s.get("expectancy")
+            if e:
+                term_row("Number of trades", None, str(e["trades"]), "1 (held throughout)")
+                term_row("Win rate (per trade)", "win_rate", ratios.pct(e["win_rate"], 0), "n/a")
+                term_row("Average win", "avg_win", ratios.pct(e["avg_win"], sign=True), "n/a")
+                term_row("Average loss", "avg_loss", ratios.pct(-e["avg_loss"]), "n/a")
+                term_row("Expectancy per trade", "expectancy", ratios.pct(e["expectancy"], sign=True), "n/a")
             st.caption(f"Costs of {cost_pct:.2f}% are charged on every switch. Cash earns nothing. Signals are acted on the "
                        "next day. A good result in the past does not mean a good result in the future.")
 
@@ -378,7 +386,10 @@ with tab_strategy:
                 "- Imagine you had Rs 1,00,000 five years ago and followed this rule every day, versus buying once and never selling.\n"
                 "- The chart shows how each would have grown. Green triangles are the days the rule bought; red ones are the days it sold.\n"
                 "- The table below the chart shows more than just the final amount: the **worst fall** and the **Sharpe, Sortino and "
-                "Calmar** ratios tell you how bumpy the ride was for the return earned.\n\n" + rule.plain +
+                "Calmar** ratios tell you how bumpy the ride was for the return earned.\n"
+                "- **Expectancy** is what a typical trade earned: (win rate x average win) minus (loss rate x average loss). "
+                "A rule can lose most of its trades and still win overall if the wins are big (trend following), or win most trades "
+                "with small gains (swing trading).\n\n" + rule.plain +
                 "\n\nSee *What do these ratios mean?* on the Overview tab for the plain-English meaning of every ratio.")
             know_how_button(f"kh_bt_{key}", rule.name, (
                 "**What it is.** A backtest: replaying the past to see what a rule would have done.\n\n"
@@ -447,19 +458,25 @@ with tab_strategy:
                 "cannot show events that never occurred in these 5 years. It tests luck, not whether the rule will work in future."))
 
 # =====================================================================
-# TAB 4: PAPER TRADING (stocks, ETFs, bonds, futures, options)
+# TAB 4: FUSION ANALYSIS (CMT Level III, Chapter 8)
+# =====================================================================
+with tab_fusion:
+    fusion_ui.render(symbol, name)
+
+# =====================================================================
+# TAB 5: PAPER TRADING (stocks, ETFs, bonds, futures, options)
 # =====================================================================
 with tab_trade:
     trading_ui.render(symbol, name, latest, offline=(source == "offline"))
 
 # =====================================================================
-# TAB 5: YOUR PORTFOLIO - build, track and compare portfolios
+# TAB 6: YOUR PORTFOLIO - build, track and compare portfolios
 # =====================================================================
 with tab_portfolio:
     portfolio_ui.render()
 
 # =====================================================================
-# TAB 6: ASK THE BOT - answers from the site's own notes (free, no outside service)
+# TAB 7: ASK THE BOT - answers from the site's own notes (free, no outside service)
 # =====================================================================
 with tab_bot:
     _pf = trading_ui._get_portfolio()
@@ -468,6 +485,7 @@ with tab_bot:
         "signals": [(title, value, meaning) for title, _term, value, meaning in panel],
         "portfolio": {"cash": _pf.balance, "holdings": {s_: h["quantity"] for s_, h in _pf.holdings.items()},
                       "derivatives": len(_pf.derivatives)},
+        "fusion": fusion_ui.company_row(symbol),
     })
 
 # ---------- footer disclaimer ----------

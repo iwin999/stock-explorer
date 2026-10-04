@@ -22,6 +22,7 @@ Online, visitors choose a name and capital and their portfolio is saved under th
 ## Before the exhibition
 1. **Refresh the offline backup** (needs internet, ~30 seconds):
    `.venv/bin/python scripts/download_offline_data.py`
+   and, for the Fusion analysis tab (3-5 minutes): `.venv/bin/python scripts/download_fundamentals.py`
 2. **Clear test portfolios** before the exhibition: Your Portfolio tab -> Organiser tools -> Delete (or delete the files in `data/accounts/` when running locally).
 3. **Test offline mode once:** turn off Wi-Fi, restart the app. A yellow "saved data" banner should appear.
 4. Press `F11` / full-screen the browser; use `Cmd` `+` to zoom if the room is big.
@@ -36,6 +37,7 @@ Online, visitors choose a name and capital and their portfolio is saved under th
 | 5 | Strategy tests tab: four rules (moving-average, RSI, MACD, Bollinger) vs buy-and-hold over 5 years, plus a Monte Carlo test | `core/strategies.py`, `core/backtest.py` |
 | 3b | Risk and return ratios (Sharpe, Sortino, Calmar, Treynor, beta, alpha, drawdown, VaR) | `core/ratios.py` |
 | 6 | Paper trading: stocks, ETFs, bond funds, futures and options, with a starting capital the visitor chooses | `core/trading.py`, `core/trading_ui.py`, `core/derivatives.py` |
+| 11 | Fusion analysis tab (CMT Level III, Chapter 8): Winner's Circle groups, screen of all companies, model-portfolio test | `core/fusion.py`, `core/fusion_ui.py`, `core/fundamentals.py` |
 | 10 | Ask the bot: a free helper that answers from the site's own notes | `core/knowledge.py`, `core/assistant.py` |
 | 9 | Your Portfolio tab: many named users, a portfolio builder, live value, leaderboard, look-up, organiser tools | `core/portfolio_ui.py`, `core/accounts.py`, `core/builder.py`, `core/valuation.py` |
 | 7 | Offline backup + automatic fallback | `scripts/download_offline_data.py`, `core/market_data.py` |

@@ -37,6 +37,14 @@ The page has four tabs: **Overview, Possible outcomes, Strategy tests, Paper tra
 - **Monte Carlo:** make 2,000 imaginary futures using the stock's past bumpiness; the middle 70% of end prices is the "likely range".
 - **Backtest:** replay history with a fixed rule. Acts on *tomorrow's* price after a signal (no peeking).
 
+## Fusion analysis (CMT Level III, Chapter 8) in one line each
+- **P = (F x V)^S:** a price is built from fundamentals, valuation and sentiment; the price trend is the market's own opinion of all of it.
+- **Winner's Circle:** three circles (trend and momentum, quality of fundamentals, valuation). Trend is non-negotiable. Group 1 = all three, 2 = trend plus one, 3 = trend only, 4 = watchlist.
+- **Confirm, delay or reject:** let the price trend check a fundamental view; when they disagree, take more care with risk.
+- **Expectancy:** (win rate x average win) - (loss rate x average loss). Shown for every strategy test.
+- **Trend following vs swing trading:** big winners and bigger falls vs small losses and smaller gains.
+- **Be upfront:** the chapter's scores are its authors' own models, so ours are simple open versions; the test covers only about 3 years of published results and today's listed companies.
+
 ## Futures, options and bonds in one line each
 - **Future:** an agreement to buy or sell at a set price on a set date. Only a margin (15% here) is paid up front, so gains and losses are magnified.
 - **Option:** the right (not obligation) to buy (call) or sell (put) at a set price. The most you can lose is the premium paid.

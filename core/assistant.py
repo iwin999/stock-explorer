@@ -116,6 +116,11 @@ def unknown_share(question):
     return sum(_idf(t) for t in unknown) / total
 
 
+def has_finance_word(question):
+    """True if the question contains at least one finance or app word (not just everyday words that happen to appear in notes)."""
+    return any(t in _TECH or t in _DOMAIN for t in _correct(tokens(question)))
+
+
 def rank(question, limit=4):
     """Best matching notes as [(score, entry), ...], highest first."""
     q = _correct(tokens(question))
@@ -133,6 +138,9 @@ _PAT_COMPANY = re.compile(r"\b(this|current|selected|chosen)\s+(stock|company|sh
                           r"\b(now|today|currently)\b.*\b(signals?)\b|summar(y|ise|ize)\b.*\b(page|stock|company)\b")
 _PAT_PORTFOLIO = re.compile(r"how am i doing|what do i (own|hold)|\bdo i (own|hold)\b|\bmy (current )?(holdings|cash|balance|"
                             r"portfolio value|positions)\b|how much (cash|money) do i have|\bmy portfolio (now|today)\b")
+_PAT_FUSION = re.compile(r"\b(which|what)\b.*\b(group|winner'?s circle)\b.*\b(this|current|selected|it)\b|"
+                         r"\b(is|in)\b.*\b(this|the selected|current)\b.*\b(winner'?s circle|group 1|group one)\b|"
+                         r"\bfusion\b.*\b(this|current|selected)\b.*\b(stock|company|verdict|group)\b")
 _PAT_MARKET = re.compile(r"\bis the (stock )?market (open|closed)\b|\bmarket (open|closed) (now|today)\b|"
                          r"\b(open|closed) right now\b")
 
@@ -142,6 +150,10 @@ def live_answer(question, ctx):
     q = question.lower()
     if _PAT_MARKET.search(q):
         return f"{status_message()}. The NSE trades Monday to Friday, 9:15 AM to 3:30 PM Indian time."
+    if ctx and _PAT_FUSION.search(q) and ctx.get("fusion"):
+        f = ctx["fusion"]
+        return (f"{ctx['company']} is in fusion group {f['group']} ({f['stage_name'].lower()}). {f['verdict']}. "
+                "Open the Fusion analysis tab for the three circles and the scores. This is a way to organise ideas, not advice.")
     if ctx and _PAT_COMPANY.search(q) and ctx.get("company"):
         lines = [f"You are looking at {ctx['company']}. Its last close was Rs {ctx['last_close']:,.2f}."]
         for title, value, meaning in ctx.get("signals", []):
@@ -223,6 +235,8 @@ def answer(question, ctx=None):
     best_score, best = ranked[0]
     related = [e["title"] for s, e in ranked[1:] if s >= MAYBE][:3]
     verdict = _verdict(best_score, unknown_share(question))
+    if verdict == "maybe" and best_score < 0.45 and not has_finance_word(question):
+        verdict = "unknown"                      # a weak guess on everyday words alone is not worth showing
     if verdict == "notes":
         return {"kind": "notes", "text": best["answer"], "related": related, "source": best["id"]}
     if verdict == "maybe":

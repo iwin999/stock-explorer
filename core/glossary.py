@@ -123,6 +123,65 @@ TERMS = {
         use="How often the rule did better than simply buying and holding the stock.",
         formula="(Number of paths where the rule's return > buy-and-hold's return) / total paths.",
         read="Above 50% means the rule was usually ahead. The size of the gap matters too, not just how often."),
+    # ---------------- trade-by-trade results (CMT Level III, 8.1) ----------------
+    "win_rate": dict(
+        title="Win rate (per trade)",
+        use="Of the completed trades, the share that made money.",
+        formula="Winning trades / all trades. A trade is one stretch of holding the stock, from buying to selling.",
+        read="A low win rate can still work if the wins are much bigger than the losses (typical of trend following). "
+             "A high win rate can still lose money if the losses are large."),
+    "avg_win": dict(
+        title="Average win",
+        use="The average gain on the trades that made money.",
+        formula="Sum of the returns of winning trades / number of winning trades.",
+        read="Compare it with the average loss. Trend followers need big winners to pay for many small losses."),
+    "avg_loss": dict(
+        title="Average loss",
+        use="The average loss on the trades that lost money.",
+        formula="Sum of the losses of losing trades / number of losing trades (shown as a positive number).",
+        read="Smaller is better. Swing traders try to keep this small; trend followers accept bigger ones."),
+    "expectancy": dict(
+        title="Expectancy per trade",
+        use="What a typical trade earns on average. The chapter calls it the most important test of any trading process.",
+        formula="(win rate x average win) - (loss rate x average loss).",
+        read="Positive: on average each trade added money. Zero or negative: the process loses money over time, so stop and "
+             "fix the win rate, the average win or the average loss."),
+    # ---------------- fusion analysis (CMT Level III, Chapter 8) ----------------
+    "fusion_group": dict(
+        title="Fusion group (1 to 4)",
+        use="Sorts a company by how many of the Winner's Circle conditions it meets. Price trend and momentum are non-negotiable.",
+        formula="1 = trending and outperforming with BOTH fundamental quality and valuation; 2 = with at least one; 3 = with neither; "
+                "4 = not trending (watchlist).",
+        read="Aim for many 1s, some 2s, few 3s, and avoid 4s. It is a way to organise ideas, not a buy or sell instruction."),
+    "trend_stage": dict(
+        title="Trend stage",
+        use="Where the price is in its long-term cycle.",
+        formula="Three tests: price above its 200-day average; 50-day average above the 200-day; 200-day average rising. "
+                "All three = clear uptrend, two = base of an uptrend, one = base of a downtrend, none = clear downtrend.",
+        read="Clear uptrend is the only stage inside the Winner's Circle."),
+    "outperformance": dict(
+        title="6-month outperformance",
+        use="Shows whether the stock has beaten the market lately, which the chapter treats as part of the market's own opinion.",
+        formula="The stock's 6-month return minus the Nifty 50's 6-month return.",
+        read="Positive means the stock has led the market. It must be positive for the company to be inside the Winner's Circle."),
+    "quality_score": dict(
+        title="Fundamental quality score (0-100)",
+        use="Ranks the company against the others in our list on growth, returns and leverage.",
+        formula="Average of three parts, each a 0-100 rank: growth (revenue and profit growth), returns (return on equity "
+                "and operating margin), and leverage (low debt to equity; skipped for banks).",
+        read="50 or more passes the 'quality' circle. 100 would be the best in the list, 0 the worst."),
+    "valuation_score": dict(
+        title="Valuation score (0-100)",
+        use="Ranks how cheaply the company is priced against the others in our list.",
+        formula="Average of two 0-100 ranks: low price-to-earnings (P/E) and low price-to-book (P/B). Loss-making companies "
+                "rank worst on P/E.",
+        read="50 or more passes the 'valuation' circle. A high score means cheaper than most, not necessarily a bargain."),
+    "overlay_verdict": dict(
+        title="Technical overlay verdict",
+        use="Chapter 8.5's idea: let the price trend confirm, delay or reject a fundamental view.",
+        formula="Confirm when trend and momentum agree with the fundamentals; delay when the fundamentals look good but the "
+                "trend has not confirmed; reject when neither supports it.",
+        read="When the two disagree, give risk management more weight: smaller positions, tighter stops, and reassess."),
     "chance_loss": dict(
         title="Chance of a loss",
         use="Of the reshuffled histories, the share where the rule lost money.",
