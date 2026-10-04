@@ -133,10 +133,15 @@ def creator_story():
             f"[{er.admin_email()}](mailto:{er.admin_email()}).")
 
 
+MENTOR = "Mr. Prashant Kulshrestha"
+
+
 def gratitude_markdown():
     extra = _secret("thanks_extra", "")
-    return (f"**Thank you, {CREATOR_SCHOOL} and the IT department,** for giving me this opportunity. And thank you, the "
-            "visitor, for taking the time to use it." + (f" {extra}" if extra else ""))
+    return (f"**Thank you, {CREATOR_SCHOOL} and the IT department,** for giving me this opportunity.\n\n"
+            f"**A special mention to {MENTOR}.** Thank you, sir, for your guidance. It shaped this project, and I am "
+            "grateful for the time and trust you gave me.\n\n"
+            "And thank you, the visitor, for taking the time to use it." + (f" {extra}" if extra else ""))
 
 
 def _creator_section():

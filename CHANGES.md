@@ -263,5 +263,8 @@ Every feature that worked for an NSE company now works for the same company's BS
 
 Limits: the Fusion screen and model-portfolio test still use the 119 saved companies (NSE listings); futures and options use the same simplified expiry rule for the Sensex.
 
+## New in Step 27 (gratitude)
+The About page Gratitude note now gives Mr. Prashant Kulshrestha a special mention for his guidance, between the thanks to the school and the thanks to the visitor. `core/about.py`.
+
 ## Status
 All 8 features are built.

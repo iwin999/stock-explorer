@@ -76,3 +76,9 @@ def test_the_signed_in_page_shows_no_error_screens_in_any_tab():
         main.run()
         assert not main.exception
         assert _error_cards(main) == [], _error_cards(main)
+
+
+def test_gratitude_gives_mr_prashant_a_special_mention():
+    g = about.gratitude_markdown()
+    assert "special mention" in g.lower() and "Mr. Prashant Kulshrestha" in g and "guidance" in g
+    assert g.index("IT department") < g.index("Mr. Prashant Kulshrestha") < g.index("visitor")      # school first, then him, then the visitor
