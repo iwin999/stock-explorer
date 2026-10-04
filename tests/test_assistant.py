@@ -126,7 +126,7 @@ def test_age_changes_the_explanation():
     adult = a.answer("what is beta, I am 40 years old")["text"]
     assert len({kid, teen, adult}) == 3 and "boat" in kid and "covariance" in adult
     assert a.answer("what is beta", level="adult")["text"] == adult        # the selected level is used when no age is typed
-    assert a.split_level("explain rsi eli5")[1] == "age_10" and a.split_level("rsi", "adult")[1] == "adult"
+    assert a.split_level("explain rsi eli5")[1] == "age_5" and a.split_level("rsi", "adult")[1] == "adult"
     assert a.split_level("what is rsi, I'm 8")[0] == "what is rsi"
 
 
@@ -147,7 +147,7 @@ def test_new_notes_are_reachable_and_creator_is_filled_in():
 
 def test_follow_ups_reexplain_the_last_topic_at_the_new_level():
     simple = a.answer("explain like I am 5", None, "age_15", "n_rsi")
-    assert simple["source"] == "n_rsi" and "speedometer" in simple["text"]
+    assert simple["source"] == "n_rsi" and "sprinting" in simple["text"]
     assert "covariance" not in a.answer("even simpler", None, "adult", "n_beta")["text"]
     assert "covariance" in a.answer("more detail", None, "age_15", "n_beta")["text"]
     assert a.answer("explain like I am 5")["kind"] == "chat"            # nothing to re-explain yet: asks which term
@@ -156,3 +156,20 @@ def test_follow_ups_reexplain_the_last_topic_at_the_new_level():
 def test_answers_are_longer_and_link_connected_ideas():
     text = a.answer("what is the sharpe ratio")["text"]
     assert "**In this app:**" in text and "**Connected ideas**" in text and len(text) > 500
+
+
+def test_even_simpler_uses_a_new_everyday_story_not_the_same_example():
+    first = a.answer("what is beta", None, "age_15")
+    second = a.answer("simpler", None, "age_15", first["source"], first["level"])
+    third = a.answer("even simpler", None, "age_15", second["source"], second["level"])
+    assert (first["level"], second["level"], third["level"]) == ("age_15", "age_10", "age_5")
+    assert "paper boat" in third["text"] and "boat" in second["text"] and third["text"] != second["text"]
+    assert "forget about money" in third["text"] and "Now back to the market" in third["text"]
+    assert a.answer("explain rsi like I'm 5")["text"].count("sprinting") == 1
+
+
+def test_every_simple_story_matches_a_note_and_has_a_link():
+    import json
+    simple = json.load(open(kb.SIMPLE_PATH))
+    for key, v in simple.items():
+        assert "n_" + key in kb.BY_ID and len(v["story"]) > 40 and len(v["link"]) > 30, key

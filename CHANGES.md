@@ -207,6 +207,10 @@ Result on the saved data (3 Jul 2023 to 1 Oct 2026, 0.10% cost): group 1 +72.3%,
 
 The bot remembers the last topic: "explain like I'm 5", "even simpler" or "more detail" re-explain it at the new level. Answers are longer: a lead-in, the explanation, what it means in the app, one line on each connected idea, and a next step.
 
+**Even simpler.** There is now a fourth level for ages 7 and under (`data/bot_simple.json`, about 60 terms). It tells a short everyday story with no finance in it (a cake for a share, a bent coin for the gauge), then says "Now back to the market" and links it. Saying "simpler" steps down one level from the last answer, so teen, then simple, then tiny.
+
+**Colour scales in Risk and return.** The grey sentence under each ratio is replaced by a red-to-green bar with a pointer and a verdict (Poor, Weak, Fair, Good, Excellent). Volatility, worst fall and bad-day loss are flipped, so low is green. Beta and correlation use a blue bar and a description, because they are not good or bad. Ranges are in `SCALES` in `core/ratios.py`.
+
 To change what the bot says, edit `data/bot_notes.json` only. Entries marked "verify" in the original notes were checked against the app.
 
 ## Status

@@ -42,6 +42,13 @@ h3 { font-size: 1.35rem !important; font-weight: 600 !important; }
 .stApp [data-testid="stPopover"] button p { font-size: 0.9rem !important; font-weight: 700; }
 .metric-title { font-size: 1.02rem; color: #5b6573; padding-top: 0.25rem; }
 .term-cell { font-size: 1.05rem; padding-top: 0.3rem; }
+.scale { margin: 0.2rem 0 0.9rem 0; }
+.scale-bar { position: relative; height: 0.7rem; border-radius: 999px; background: linear-gradient(90deg, #d9534f 0%, #f0ad4e 50%, #4fae6a 100%); }
+.scale-bar.neutral { background: linear-gradient(90deg, #cfe0f1 0%, #8fb4d9 50%, #3f78b0 100%); }
+.scale-pin { position: absolute; top: -0.3rem; width: 0.28rem; height: 1.3rem; margin-left: -0.14rem; border-radius: 3px;
+             background: #1b2a3a; box-shadow: 0 0 0 2px #ffffff; }
+.scale-ends { display: flex; justify-content: space-between; font-size: 0.78rem; color: #6b7785; margin-top: 0.25rem; }
+.scale-verdict { font-weight: 700; font-size: 1rem; margin-top: 0.15rem; }
 .meaning { font-size: 1.02rem; color: #4a5461; min-height: 5.2em; line-height: 1.45; padding: 0 0.2rem; }
 
 /* Key sentence on a page */
@@ -153,6 +160,23 @@ def metric_with_help(title, value, key, delta=None):
     with help_col:
         help_bubble(key)
     st.metric(title, value, delta, label_visibility="collapsed")
+
+
+def ratio_scale(key, value):
+    """A colour scale (red to green) with a pointer showing how good or bad this ratio is. Empty if there is no scale."""
+    from core import ratios
+    rating = ratios.rate(key, value)
+    if rating is None:
+        return ""
+    pos = rating["pos"]
+    if rating["better"] == "neutral":
+        colour, bar = "#2f6496", "scale-bar neutral"
+    else:
+        colour, bar = f"hsl({int(pos * 125)}, 60%, 33%)", "scale-bar"
+    left, right = rating["ends"]
+    return (f'<div class="scale"><div class="{bar}"><span class="scale-pin" style="left:{pos * 100:.1f}%"></span></div>'
+            f'<div class="scale-ends"><span>{left}</span><span>{right}</span></div>'
+            f'<div class="scale-verdict" style="color:{colour}">{rating["label"]}</div></div>')
 
 
 def term_row(term, key, *cells, header=False):

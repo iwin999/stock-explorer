@@ -194,7 +194,7 @@ STARTERS = ["What does the RSI number mean?", "Explain the Sharpe ratio like I'm
 _AGE_PATTERNS = [re.compile(p, re.I) for p in (
     r"\b(?:like\s+)?(?:i\s*am|i'm|im)\s+(\d{1,3})(?:\s*(?:years?|yrs?)(?:\s*old)?)?\b",
     r"\b(\d{1,3})[\s-]*(?:years?|yrs?)[\s-]*old\b", r"\bage[d]?\s+(\d{1,3})\b", r"\beli\s*(\d{1,3})\b")]
-LEVEL_NAMES = {"age_10": "Simple (age 10 and under)", "age_15": "Teen (11 to 15)", "adult": "Adult (16 and over)"}
+LEVEL_NAMES = {"age_5": "Tiny (age 7 and under)", "age_10": "Simple (8 to 10)", "age_15": "Teen (11 to 15)", "adult": "Adult (16 and over)"}
 
 
 def level_for_age(age):
@@ -226,10 +226,12 @@ def split_level(question, selected="age_15"):
     return stripped, level
 
 
-LEAD = {"age_10": "Okay, here is the simple version, with an everyday picture:",
+LEAD = {"age_5": "Let's forget about money for a moment.",
+        "age_10": "Okay, here is the simple version, with an everyday picture:",
         "age_15": "Here is how it works:",
         "adult": "Here is the fuller explanation:"}
-NEXT = {"age_10": "Still tricky? Say \"even simpler\", or tap one of the connected ideas below. For the grown-up version, pick Adult above the chat.",
+NEXT = {"age_5": "That is the simplest I can make it. Want a bit more? Say \"more detail\", or tap a connected idea below.",
+        "age_10": "Still tricky? Say \"even simpler\", or tap one of the connected ideas below. For the grown-up version, pick Adult above the chat.",
         "age_15": "Want it simpler or more detailed? Say \"simpler\" or \"more detail\", or tap a connected idea below.",
         "adult": "For a plainer picture, say \"simpler\" or \"like I'm 10\". Tap a connected idea below to go further."}
 _ORDER = list(kb.LEVELS)
@@ -245,6 +247,15 @@ def render(entry, level):
     means in this app, a line on each connected idea (same level) and a next step."""
     if "levels" not in entry:
         return entry["answer"]
+    if level == "age_5":
+        simple = entry.get("simple")
+        if simple:
+            parts = [LEAD[level], simple["story"], f"**Now back to the market:** {simple['link']}",
+                     f"**In this app:** {entry['in_app']}", f"_{NEXT[level]}_"]
+            return "\n\n".join(parts)
+        parts = ["I do not have a story for this one, so here is my simplest version:", entry["levels"]["age_10"],
+                 f"**In this app:** {entry['in_app']}", f"_{NEXT[level]}_"]
+        return "\n\n".join(parts)
     parts = [LEAD[level], entry["levels"][level], f"**In this app:** {entry['in_app']}"]
     links = [kb.BY_ID[r] for r in entry.get("related_ids", []) if r in kb.BY_ID and "levels" in kb.BY_ID[r]][:3]
     if links:
@@ -258,7 +269,7 @@ _GENERIC = {"simpl", "simple", "simpler", "simplest", "simply", "easier", "again
             "kid", "child", "little", "baby", "adult", "expert", "teen", "even", "plain", "plainer", "technical", "advanced"}
 
 
-def follow_up(question, level_before, level, last):
+def follow_up(question, level_before, level, last, last_level=None):
     """If the visitor only asked for a different level or amount of detail ("like I'm 5", "simpler", "more detail"),
     return the reply re-explaining the previous topic. Otherwise None."""
     stripped, _ = split_level(question, level_before)
@@ -271,12 +282,15 @@ def follow_up(question, level_before, level, last):
         return {"kind": "chat", "related": STARTERS, "text":
                 "Happy to! Which term should I explain? Try \"explain RSI like I'm 5\" or \"explain beta simply\"."}
     i = _ORDER.index(level)
+    if level == level_before and last_level in _ORDER:
+        i = _ORDER.index(last_level)                 # "simpler" / "more detail" step from the level I last answered at
     if re.search(r"simpl|easier|plain", low) and level == level_before:
         i = max(0, i - 1)
     elif re.search(r"detail|deeper|technical|advanced", low) and level == level_before:
-        i = min(2, i + 1)
+        i = min(len(_ORDER) - 1, i + 1)
     entry = kb.BY_ID[last]
-    return {"kind": "notes", "text": render(entry, _ORDER[i]), "related": related_titles(entry, []), "source": last}
+    return {"kind": "notes", "text": render(entry, _ORDER[i]), "related": related_titles(entry, []), "source": last,
+            "level": _ORDER[i]}
 
 
 def related_titles(entry, ranked, limit=4):
@@ -311,7 +325,7 @@ IDENTITY = re.compile(r"\b(your name|who are you|what are you|are you (a )?(bot|
                       r"what do you do|what can i ask)\b", re.I)
 
 
-def answer(question, ctx=None, level="age_15", last=None):
+def answer(question, ctx=None, level="age_15", last=None, last_level=None):
     """The reply to a question: {"text", "related" (list of note titles), "kind"}.
 
     kind is "notes" (found in the notes), "live" (numbers from the page), "maybe" (a guess at what was meant),
@@ -331,7 +345,7 @@ def answer(question, ctx=None, level="age_15", last=None):
                         "futures and options, and how to use the site. If something is not in my notes, I will say so."}
     original, level_before = question, level
     question, level = split_level(question, level)
-    follow = follow_up(original, level_before, level, last)
+    follow = follow_up(original, level_before, level, last, last_level)
     if follow:
         return follow
     question = question or original
@@ -347,7 +361,7 @@ def answer(question, ctx=None, level="age_15", last=None):
         verdict = "unknown"                      # a weak guess on everyday words alone is not worth showing
     if verdict == "notes":
         return {"kind": "notes", "text": render(best, level), "related": related_titles(best, ranked) or related,
-                "source": best["id"]}
+                "source": best["id"], "level": level}
     if verdict == "maybe":
         guesses = [best["title"]] + related
         return {"kind": "maybe", "related": guesses[:3],

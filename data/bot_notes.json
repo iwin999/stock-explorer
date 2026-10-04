@@ -2,12 +2,14 @@
   "meta": {
     "title": "Stock Explorer - Help Bot Notes",
     "age_bands": [
-      {"min_age": 1, "max_age": 10, "level": "age_10"},
+      {"min_age": 1, "max_age": 7, "level": "age_5"},
+      {"min_age": 8, "max_age": 10, "level": "age_10"},
       {"min_age": 11, "max_age": 15, "level": "age_15"},
       {"min_age": 16, "max_age": 120, "level": "adult"}
     ],
     "word_hints": {
-      "age_10": ["kid", "child", "children", "little", "simplest", "very simple", "baby", "eli5"],
+      "age_5": ["baby", "eli5", "very simple", "simplest", "tiny"],
+      "age_10": ["kid", "child", "children", "little"],
       "age_15": ["teen", "teenager"],
       "adult": ["adult", "expert", "detailed", "in detail", "technical", "professional", "advanced", "grown-up"]
     }

@@ -18,7 +18,7 @@ from core.live import live_quote
 from core.market_data import get_company_name, get_history_with_source
 from core.market_hours import is_market_open, now_ist, status_message
 from core.strategies import STRATEGIES
-from core.ui import (callout, know_how_button, metric_with_help, notice, plain_english, setup_page,
+from core.ui import (ratio_scale, callout, know_how_button, metric_with_help, notice, plain_english, setup_page,
                      show_disclaimer, term_row)
 
 setup_page("Stock Explorer")
@@ -169,6 +169,8 @@ with tab_overview:
     # ---------- risk and return ratios ----------
     st.header("Risk and return")
     st.caption("How much this stock earned, and how much risk it took to earn it, measured against the Nifty 50.")
+    st.caption("Each bar runs from red (poor) to green (excellent); the dark pointer shows where this stock sits. "
+               "Blue bars (beta, correlation) describe behaviour rather than grade it. Tap the ? for the formula.")
     ratio_period = st.radio("Measured over", ["1 year", "3 years", "5 years"], index=1, horizontal=True, key="ratio_period")
     n_days = {"1 year": 252, "3 years": 756, "5 years": 1260}[ratio_period]
     stock_returns = close.pct_change().dropna().iloc[-n_days:]
@@ -191,7 +193,8 @@ with tab_overview:
                 value, meaning = ratios.describe(key, r)
                 with column:
                     metric_with_help(titles[key], value, key)
-                    st.markdown(f'<div class="meaning">{meaning}</div>', unsafe_allow_html=True)
+                    scale = ratio_scale(key, r.get(key))
+                    st.markdown(scale or f'<div class="meaning">{meaning}</div>', unsafe_allow_html=True)
         if bench_returns is None:
             st.caption("Nifty 50 data could not be loaded, so the comparison ratios are not available.")
         st.caption(f"A safe return of {ratios.RISK_FREE * 100:.1f}% a year (about a government bond) is assumed where a "

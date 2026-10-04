@@ -36,3 +36,14 @@ def test_describe_never_crashes_and_handles_missing():
         value, text = R.describe(key, s)
         assert isinstance(value, str) and isinstance(text, str)
     assert R.describe("beta", s)[0] == "n/a"     # no benchmark given
+
+
+def test_colour_scales_put_good_and_bad_in_the_right_place():
+    from core import ratios
+    assert ratios.rate("sharpe", 2.5)["label"] == "Excellent" and ratios.rate("sharpe", -1)["label"] == "Poor"
+    assert ratios.rate("volatility", 0.12)["pos"] > ratios.rate("volatility", 0.45)["pos"]      # low volatility is the green end
+    assert ratios.rate("max_drawdown", -0.05)["label"] == "Excellent" and ratios.rate("max_drawdown", -0.55)["label"] == "Poor"
+    assert ratios.rate("beta", 1.4)["label"] == "Swings more than the market" and ratios.rate("beta", 1.4)["better"] == "neutral"
+    assert ratios.rate("sharpe", None) is None and ratios.rate("nonsense", 1) is None
+    for key in ratios.SCALES:
+        assert 0 <= ratios.rate(key, 99)["pos"] <= 1 and 0 <= ratios.rate(key, -99)["pos"] <= 1

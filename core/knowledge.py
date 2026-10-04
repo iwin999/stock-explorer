@@ -543,7 +543,8 @@ def _glossary_entries():
 
 
 NOTES_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "bot_notes.json")
-LEVELS = ("age_10", "age_15", "adult")
+LEVELS = ("age_5", "age_10", "age_15", "adult")
+SIMPLE_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "bot_simple.json")
 FAQ = "Common questions"
 
 
@@ -552,12 +553,16 @@ def _load_notes():
     plus what it means inside this app. Questions people ask are matched against the term, its keywords and the FAQ."""
     with open(NOTES_PATH, encoding="utf-8") as f:
         data = json.load(f)
+    with open(SIMPLE_PATH, encoding="utf-8") as f:
+        simple = json.load(f)         # age 5 and under: an everyday story with no finance in it, then the link back
     entries = []
     for n in data["entries"]:
         e = E("n_" + n["id"], n["category"], n["term"],
               n["keywords"] + [f"what is {n['term'].split(' (')[0].lower()}", f"explain {n['term'].split(' (')[0].lower()}"],
               n["age_15"] + " " + n["in_this_app"])
-        e["levels"] = {lv: n[lv] for lv in LEVELS}
+        e["levels"] = {lv: n[lv] for lv in LEVELS if lv != "age_5"}
+        e["simple"] = simple.get(n["id"])
+        e["levels"]["age_5"] = (e["simple"]["story"] + " " + e["simple"]["link"]) if e["simple"] else n["age_10"]
         e["in_app"] = n["in_this_app"]
         e["related_ids"] = ["n_" + r for r in n.get("related", [])]
         entries.append(e)

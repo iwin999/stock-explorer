@@ -124,6 +124,47 @@ def describe(key, s):
     return str(v), ""
 
 
+# ---------------- colour scales for the Risk and return cards ----------------
+# For each ratio: the range shown on the scale, whether a higher number is better ("high"), a lower one ("low"),
+# or neither ("neutral": a description rather than good/bad), and the words at the two ends.
+SCALES = {
+    "cagr":         dict(lo=-0.10, hi=0.30, better="high"),
+    "volatility":   dict(lo=0.10, hi=0.50, better="low"),
+    "max_drawdown": dict(lo=-0.60, hi=0.0, better="high"),
+    "var95":        dict(lo=0.005, hi=0.05, better="low"),
+    "sharpe":       dict(lo=-0.5, hi=2.0, better="high"),
+    "sortino":      dict(lo=-0.5, hi=3.0, better="high"),
+    "calmar":       dict(lo=-0.5, hi=1.5, better="high"),
+    "treynor":      dict(lo=-0.05, hi=0.25, better="high"),
+    "alpha":        dict(lo=-0.10, hi=0.10, better="high"),
+    "information":  dict(lo=-1.0, hi=1.0, better="high"),
+    "beta":         dict(lo=0.4, hi=1.6, better="neutral", ends=("Calmer than market", "Wilder than market")),
+    "correlation":  dict(lo=-1.0, hi=1.0, better="neutral", ends=("Moves opposite", "Moves in step")),
+}
+VERDICTS = [(0.2, "Poor"), (0.4, "Weak"), (0.6, "Fair"), (0.8, "Good"), (1.01, "Excellent")]
+
+
+def rate(key, v):
+    """Where a ratio sits on its colour scale: {"pos": 0-1 along the bar, "label", "better", "ends"}, or None if unknown.
+
+    For good-or-bad ratios the bar always runs red (poor) to green (excellent), so for "lower is better" ratios
+    such as volatility the position is flipped. Beta and correlation are descriptions, not grades, so they use a
+    neutral bar and a plain description instead of a grade."""
+    spec = SCALES.get(key)
+    if spec is None or v is None or v != v:
+        return None
+    frac = min(1.0, max(0.0, (v - spec["lo"]) / (spec["hi"] - spec["lo"])))
+    if spec["better"] == "neutral":
+        if key == "beta":
+            label = "Swings more than the market" if v > 1.05 else "Swings less than the market" if v < 0.95 else "Moves like the market"
+        else:
+            label = "Moves with the market" if v > 0.7 else "Partly follows the market" if v > 0.3 else "Mostly independent" if v > -0.3 else "Tends to move opposite"
+        return {"pos": frac, "label": label, "better": "neutral", "ends": spec["ends"]}
+    pos = 1 - frac if spec["better"] == "low" else frac
+    label = next(word for limit, word in VERDICTS if pos < limit)
+    return {"pos": pos, "label": label, "better": spec["better"], "ends": ("Poor", "Excellent")}
+
+
 GLOSSARY = """
 **Annual return (CAGR).** The steady yearly growth rate that would turn the starting value into the ending value.
 
