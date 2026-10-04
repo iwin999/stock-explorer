@@ -9,6 +9,7 @@ open, so prices and profit/loss move live without reloading the whole page.
 """
 import streamlit as st
 
+from core import about
 from core import accounts as acc
 from core import derivatives as dv
 from core import instruments as ins
@@ -124,7 +125,7 @@ def _sign_out():
 def capital_gate():
     """Choose a name and starting capital, or open an existing account."""
     store = get_store()
-    st.title("Stock Explorer")
+    about.title_row("Stock Explorer")
     st.subheader("Welcome. Who is investing today?")
     st.caption("Practise with virtual money. Nothing real is invested. Your portfolio is saved under your name, "
                "so you can come back and check it later.")

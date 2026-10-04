@@ -73,6 +73,17 @@ excluded from GitHub).
 It answers from notes stored in the app itself (`core/knowledge.py`), so there is no key to set up, no outside service and
 no cost. To teach it something new, add a note to that file and push.
 
+## Personalising the About page (optional)
+The About page works as it is. To add your daughter's first name, her own reason for building it, or an extra thank-you, add
+this to Streamlit's Secrets (all three lines are optional):
+```toml
+[about]
+creator = "Asha"
+reason = "I wanted stock markets to feel less intimidating."
+thanks_extra = "Thank you to my friends who tested it."
+```
+Please keep it to a first name: the site is public.
+
 ## What is different online
 | Topic | Behaviour |
 |---|---|

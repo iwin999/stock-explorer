@@ -190,5 +190,12 @@ Data: Yahoo Finance yearly statements (about 4 years) saved in `data/offline/fun
 
 Result on the saved data (3 Jul 2023 to 1 Oct 2026, 0.10% cost): group 1 +72.3%, groups 1 and 2 +54.1%, all companies equally +59.3%, Nifty 50 +15.6%.
 
+## New in Step 18 (About page)
+| Change | Where |
+|---|---|
+| A small circled **i** at the top right of every page (also on the first screen). Clicking it opens the **About** page over the current page, not in a new tab | `core/about.py`, `core/ui.py` |
+| About has: what the project is, how to use it, limitations, sources and credits (Yahoo Finance, the CMT Level III Chapter 8 authors, standard formulas, software), Meet the creator, and a thank-you note to the school, teachers, family and the community | `core/about.py` |
+| Personal touches can be set without editing code: `[about]` in the app's secrets with `creator` (first name), `reason` and `thanks_extra`. By default nothing identifying is shown | `core/about.py` |
+
 ## Status
 All 8 features are built.

@@ -50,6 +50,15 @@ h3 { font-size: 1.35rem !important; font-weight: 600 !important; }
 .notice { border-left: 4px solid #b7791f; background: #fdf6e7; padding: 0.7rem 1.1rem;
           border-radius: 4px; font-size: 1.0rem; margin: 0.5rem 0 1rem 0; color: #5b4a1e; }
 
+/* The small circled "i" that opens the About page */
+.stApp .st-key-about_btn { display: flex; justify-content: flex-end; margin-top: 0.9rem; }
+.stApp .st-key-about_btn button { border-radius: 50%; width: 2.3rem; height: 2.3rem; min-height: 2.3rem; padding: 0;
+        border: 2px solid #1d3557; color: #1d3557; background: #fff; }
+.stApp .st-key-about_btn button p { font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-weight: 700;
+        font-size: 1.25rem !important; line-height: 1; }
+.stApp .st-key-about_btn button:hover { background: #1d3557; color: #fff; }
+.stApp .st-key-about_btn button:hover p { color: #fff; }
+
 /* Friendly error cards */
 .error-card { border-radius: 8px; padding: 1.1rem 1.4rem; margin: 1rem 0; border: 1px solid #c9d2e0; background: #f3f5f8; }
 .error-card.warn { border-color: #e6c987; background: #fdf6e7; }
@@ -65,6 +74,10 @@ h3 { font-size: 1.35rem !important; font-weight: 600 !important; }
   .stApp [data-testid="stTab"], .stApp button[data-baseweb="tab"] { padding: 0.35rem 0.6rem; font-size: 1rem !important; }
   .stApp [data-testid="stTab"] p { font-size: 1rem !important; }
   .stApp [data-testid="stTab"][aria-selected="true"], .stApp button[data-baseweb="tab"][aria-selected="true"] { border-bottom: 3px solid #1d3557; }
+  /* The title and the About icon stay on one line */
+  .stApp [data-testid="stHorizontalBlock"]:has(.about-row-marker) { flex-wrap: nowrap !important; align-items: center; }
+  .stApp [data-testid="stHorizontalBlock"]:has(.about-row-marker) > [data-testid="stColumn"] { min-width: 0 !important; width: auto !important; flex: 1 1 0 !important; }
+  .stApp [data-testid="stHorizontalBlock"]:has(.about-row-marker) > [data-testid="stColumn"]:nth-child(2) { flex: 0 0 3rem !important; }
   /* Comparison-table rows stay side by side, so each value stays under its heading */
   .stApp [data-testid="stHorizontalBlock"]:has(.tr-marker) { flex-wrap: nowrap !important; gap: 0.25rem !important; }
   .stApp [data-testid="stHorizontalBlock"]:has(.tr-marker) > [data-testid="stColumn"] { min-width: 0 !important; width: auto !important; flex: 1 1 0 !important; }
