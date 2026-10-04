@@ -459,15 +459,16 @@ with tab_portfolio:
     portfolio_ui.render()
 
 # =====================================================================
-# TAB 6: ASK THE BOT - an AI assistant that explains terms and the app
+# TAB 6: ASK THE BOT - answers from the site's own notes (free, no outside service)
 # =====================================================================
 with tab_bot:
     _pf = trading_ui._get_portfolio()
-    assistant_ui.render(
-        name, symbol, latest,
-        signals=[(title, value) for title, _term, value, _meaning in panel],
-        portfolio={"cash": _pf.balance, "holdings": {s_: h["quantity"] for s_, h in _pf.holdings.items()},
-                   "derivatives": len(_pf.derivatives)})
+    assistant_ui.render({
+        "company": name, "symbol": symbol, "last_close": latest,
+        "signals": [(title, value, meaning) for title, _term, value, meaning in panel],
+        "portfolio": {"cash": _pf.balance, "holdings": {s_: h["quantity"] for s_, h in _pf.holdings.items()},
+                      "derivatives": len(_pf.derivatives)},
+    })
 
 # ---------- footer disclaimer ----------
 show_disclaimer()

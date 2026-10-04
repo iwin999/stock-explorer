@@ -159,14 +159,16 @@ Known limits: NSE holidays are not in the calendar (the app says "open" but pric
 
 Limit: while Streamlit is actually rebuilding the app after a push, its own "updating" page is shown by the hosting platform, so it cannot be customised from the app. The in-app "being updated" message appears only for the brief moments when the code changes under a running page.
 
-## New in Step 16 (Ask the bot)
+## New in Step 16 (Ask the bot - free, from the site's own notes)
 | Change | Where |
 |---|---|
-| New **Ask the bot** tab: a Claude-powered assistant that explains finance terms and how to read the app, with starter questions, streaming answers and a note about what it can and cannot do | `core/assistant_ui.py`, `stock_page.py` |
-| It knows the app (tabs, data sources, how futures/options are calculated), all glossary definitions, the company the visitor is viewing, their key signals and their own paper portfolio. It is told never to give personal investment advice, buy/sell calls or predictions, to stay on topic, and to keep its instructions private | `core/assistant.py` |
-| Cost protection: 500-character questions, 15 questions per visit, 400 per day for the whole site (all adjustable in the secrets), short answers (low effort, 2,000-token cap) | `core/assistant.py`, `core/assistant_ui.py` |
-| Friendly handling when the key is missing/invalid, the service is busy, the network is down, or the model declines; the key is never shown or logged | `core/assistant_ui.py` |
-| Tested against a pretend Anthropic server using the real SDK (request contents, streaming, history, limits, errors); not tested against the live service because that needs a paid key | `tests/test_assistant.py` |
+| New **Ask the bot** tab. It answers only from about 100 written notes (finance terms, the simulations and strategy tests, futures and options, how to use the app). No outside service, no key, no cost | `core/knowledge.py`, `core/assistant.py`, `core/assistant_ui.py` |
+| Notes for every financial term are generated from the same text as the "?" bubbles, so they always agree | `core/knowledge.py` |
+| Finds the closest note by comparing the question with every way each note can be asked (rarer words count more), fixes small spelling slips, and judges whether the question is on-topic. If unsure it asks "did you mean...?"; if it has no note it says so instead of guessing | `core/assistant.py` |
+| Live answers from the page: the signals for the selected company, the user's own cash and holdings, whether the market is open | `core/assistant.py` |
+| "Should I buy...?", "will it go up?" and similar always get the same careful answer: it cannot advise or predict | `core/knowledge.py` |
+| Measured on 113 real questions (including misspellings) and 28 off-topic ones: 112/113 answered with the right note, 28/28 off-topic refused | `tests/bot_eval_data.py`, `tests/test_assistant.py` |
+| Follow-up buttons, starter questions, a "Browse all topics" menu and a Clear chat button | `core/assistant_ui.py` |
 
 ## Status
 All 8 features are built.
