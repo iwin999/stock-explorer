@@ -143,3 +143,16 @@ def test_new_notes_are_reachable_and_creator_is_filled_in():
                     "what is a demat account": "n_demat_kyc", "what is sebi": "n_sebi", "what is epat": "n_faq_what_is_epat",
                     "what is cmt": "n_faq_what_is_cmt"}.items():
         assert a.answer(q).get("source") == want, q
+
+
+def test_follow_ups_reexplain_the_last_topic_at_the_new_level():
+    simple = a.answer("explain like I am 5", None, "age_15", "n_rsi")
+    assert simple["source"] == "n_rsi" and "speedometer" in simple["text"]
+    assert "covariance" not in a.answer("even simpler", None, "adult", "n_beta")["text"]
+    assert "covariance" in a.answer("more detail", None, "age_15", "n_beta")["text"]
+    assert a.answer("explain like I am 5")["kind"] == "chat"            # nothing to re-explain yet: asks which term
+
+
+def test_answers_are_longer_and_link_connected_ideas():
+    text = a.answer("what is the sharpe ratio")["text"]
+    assert "**In this app:**" in text and "**Connected ideas**" in text and len(text) > 500

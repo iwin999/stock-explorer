@@ -64,6 +64,8 @@ def _reply(raw_question, history, ctx):
     if problem:
         history.append({"role": "assistant", "content": problem, "related": []})
         return
-    result = ai.answer(question, ctx, st.session_state.get("chat_level", "age_15"))
+    last = next((m.get("source") for m in reversed(history) if m["role"] == "assistant" and m.get("source")), None)
+    result = ai.answer(question, ctx, st.session_state.get("chat_level", "age_15"), last)
     history.append({"role": "user", "content": question})
-    history.append({"role": "assistant", "content": result["text"], "related": result["related"]})
+    history.append({"role": "assistant", "content": result["text"], "related": result["related"],
+                    "source": result.get("source")})

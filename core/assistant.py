@@ -223,14 +223,60 @@ def split_level(question, selected="age_15"):
             if any(re.search(rf"\b{re.escape(w)}\b", low) for w in words):
                 level = lv
                 break
-    return (stripped or question), level
+    return stripped, level
+
+
+LEAD = {"age_10": "Okay, here is the simple version, with an everyday picture:",
+        "age_15": "Here is how it works:",
+        "adult": "Here is the fuller explanation:"}
+NEXT = {"age_10": "Still tricky? Say \"even simpler\", or tap one of the connected ideas below. For the grown-up version, pick Adult above the chat.",
+        "age_15": "Want it simpler or more detailed? Say \"simpler\" or \"more detail\", or tap a connected idea below.",
+        "adult": "For a plainer picture, say \"simpler\" or \"like I'm 10\". Tap a connected idea below to go further."}
+_ORDER = list(kb.LEVELS)
+
+
+def _first_sentence(text):
+    m = re.match(r"(.+?[.!?])(\s|$)", text.strip())
+    return m.group(1) if m else text.strip()
 
 
 def render(entry, level):
-    """The answer text for an entry at a level (notes with levels give a different explanation per level)."""
-    if "levels" in entry:
-        return f"{entry['levels'][level]}\n\n**In this app:** {entry['in_app']}"
-    return entry["answer"]
+    """The answer text for an entry at a level. Notes with levels give a lead-in, the explanation at that level, what it
+    means in this app, a line on each connected idea (same level) and a next step."""
+    if "levels" not in entry:
+        return entry["answer"]
+    parts = [LEAD[level], entry["levels"][level], f"**In this app:** {entry['in_app']}"]
+    links = [kb.BY_ID[r] for r in entry.get("related_ids", []) if r in kb.BY_ID and "levels" in kb.BY_ID[r]][:3]
+    if links:
+        parts.append("**Connected ideas**\n" + "\n".join(f"- **{e['title'].split(' (')[0]}**: {_first_sentence(e['levels'][level])}"
+                                                         for e in links))
+    parts.append(f"_{NEXT[level]}_")
+    return "\n\n".join(parts)
+
+
+_GENERIC = {"simpl", "simple", "simpler", "simplest", "simply", "easier", "again", "detail", "detailed", "deeper", "more", "differently", "slowly", "eli", "eli5",
+            "kid", "child", "little", "baby", "adult", "expert", "teen", "even", "plain", "plainer", "technical", "advanced"}
+
+
+def follow_up(question, level_before, level, last):
+    """If the visitor only asked for a different level or amount of detail ("like I'm 5", "simpler", "more detail"),
+    return the reply re-explaining the previous topic. Otherwise None."""
+    stripped, _ = split_level(question, level_before)
+    rest = [t for t in tokens(stripped) if t not in _GENERIC]
+    low = question.lower()
+    if rest or not re.search(r"\bi\s*am\b|i'm|\bim\b|\blike\b|\beli\b|simpl|easier|detail|deeper|again|kid|child|baby|adult|expert|"
+                              r"teen|technical|advanced|plain", low):
+        return None
+    if not last or last not in kb.BY_ID or "levels" not in kb.BY_ID[last]:
+        return {"kind": "chat", "related": STARTERS, "text":
+                "Happy to! Which term should I explain? Try \"explain RSI like I'm 5\" or \"explain beta simply\"."}
+    i = _ORDER.index(level)
+    if re.search(r"simpl|easier|plain", low) and level == level_before:
+        i = max(0, i - 1)
+    elif re.search(r"detail|deeper|technical|advanced", low) and level == level_before:
+        i = min(2, i + 1)
+    entry = kb.BY_ID[last]
+    return {"kind": "notes", "text": render(entry, _ORDER[i]), "related": related_titles(entry, []), "source": last}
 
 
 def related_titles(entry, ranked, limit=4):
@@ -265,7 +311,7 @@ IDENTITY = re.compile(r"\b(your name|who are you|what are you|are you (a )?(bot|
                       r"what do you do|what can i ask)\b", re.I)
 
 
-def answer(question, ctx=None, level="age_15"):
+def answer(question, ctx=None, level="age_15", last=None):
     """The reply to a question: {"text", "related" (list of note titles), "kind"}.
 
     kind is "notes" (found in the notes), "live" (numbers from the page), "maybe" (a guess at what was meant),
@@ -283,7 +329,12 @@ def answer(question, ctx=None, level="age_15"):
                 "text": "I am the assistant on this site. I am not a person and I am not connected to the internet: I answer "
                         "only from notes written for this app about finance basics, the simulations and strategy tests, "
                         "futures and options, and how to use the site. If something is not in my notes, I will say so."}
+    original, level_before = question, level
     question, level = split_level(question, level)
+    follow = follow_up(original, level_before, level, last)
+    if follow:
+        return follow
+    question = question or original
     live = live_answer(question, ctx)
     if live:
         return {"kind": "live", "text": live, "related": []}

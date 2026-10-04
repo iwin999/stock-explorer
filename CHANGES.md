@@ -205,6 +205,8 @@ Result on the saved data (3 Jul 2023 to 1 Oct 2026, 0.10% cost): group 1 +72.3%,
 | Pick a level above the chat, or type an age ("explain beta like I'm 8", "eli5", "I am 40"). Under each answer, buttons open the related terms | `core/assistant.py`, `core/assistant_ui.py` |
 | Notes that no longer matched the app were corrected (futures, options and ETFs now exist; strategy tests do show win rate; creator name filled in) | `data/bot_notes.json` |
 
+The bot remembers the last topic: "explain like I'm 5", "even simpler" or "more detail" re-explain it at the new level. Answers are longer: a lead-in, the explanation, what it means in the app, one line on each connected idea, and a next step.
+
 To change what the bot says, edit `data/bot_notes.json` only. Entries marked "verify" in the original notes were checked against the app.
 
 ## Status
