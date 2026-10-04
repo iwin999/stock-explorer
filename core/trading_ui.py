@@ -245,7 +245,7 @@ def positions_table(snap):
 def render(symbol, name, fallback_price, offline=False):
     pf = _get_portfolio()
 
-    st.caption("Practise with **virtual** money. Nothing here is real.")
+    st.caption("Practise with **virtual** money. Nothing here is real. **In short:** pick Buy or Sell, choose what, choose how much, press the button.")
     if offline:
         notice("Prices below come from saved data, not live prices.")
 
@@ -253,20 +253,19 @@ def render(symbol, name, fallback_price, offline=False):
 
     stocks_tab, etf_tab, fut_tab, opt_tab = st.tabs(["Stocks", "ETFs and bonds", "Futures", "Options"])
     with stocks_tab:
-        _cash_ticket(pf, symbol, name, fallback_price, offline, key="stk")
-        st.caption("To trade a different company, choose it in the dropdown at the top of the page.")
+        stocks = [s for s in ins.CASH_INSTRUMENTS if ins.asset_class(s) == ins.STOCKS]
+        _trade_picker(pf, "stk", stocks, symbol, offline, "company")
     with etf_tab:
         etfs = [s for s in ins.CASH_INSTRUMENTS if ins.asset_class(s) != ins.STOCKS]
-        pick = st.selectbox("Choose an ETF or bond fund", etfs, format_func=ins.label, key="etf_pick")
-        st.caption(f"Group: {ins.CASH_INSTRUMENTS[pick]['group']}. Prices are live NSE prices.")
-        _cash_ticket(pf, pick, ins.name_of(pick), None, offline, key="etf")
+        st.caption("Funds that hold many companies or bonds in one. Prices are live NSE prices.")
+        _trade_picker(pf, "etf", etfs, etfs[0], offline, "fund")
     with fut_tab:
         _futures_ticket(pf, offline)
     with opt_tab:
         _options_ticket(pf, offline)
 
-    st.subheader("Everything you hold")
-    st.fragment(run_every=None if offline else _refresh_every())(_positions_view)()
+    st.header("Everything you hold")
+    st.fragment(run_every=None if offline else _refresh_every())(_holdings_view)()
 
     st.subheader("Order history")
     orders = pf.orders_dataframe()
@@ -316,41 +315,96 @@ def _positions_view():
         st.dataframe(styled, hide_index=True, width="stretch")
 
 
+@guard()
+def _holdings_view():
+    from core import holdings_ui
+    pf = _get_portfolio()
+    holdings_ui.render(pf, snapshot_now(pf), key="trade")
+
+
 # ---------------- stocks, ETFs and bonds ----------------
-def _cash_ticket(pf, symbol, name, fallback_price, offline, key):
-    """Buy/sell ticket for anything bought like a share."""
-    price = price_of(symbol, fallback_price)
+def _trade_picker(pf, key, universe, default, offline, noun):
+    """Buy or Sell, then choose what: any company or fund for Buy, only things you own for Sell."""
+    mode = st.radio("What do you want to do?", ["Buy", "Sell"], horizontal=True, key=f"mode_{key}")
+    if mode == "Buy":
+        options = list(universe)
+        index = options.index(default) if default in options else 0
+        symbol = st.selectbox(f"Choose a {noun} (click, then type to search)", options, index=index,
+                              format_func=lambda s: f"{ins.name_of(s)}  ({s.replace('.NS', '')})", key=f"pick_{key}")
+    else:
+        owned = [s for s in pf.holdings if s in universe]
+        if not owned:
+            st.info(f"You do not own any {noun}s yet, so there is nothing to sell. Switch to Buy to get started.")
+            return
+        symbol = st.selectbox(f"Which of your {noun}s?", owned, key=f"sellpick_{key}",
+                              format_func=lambda s: f"{ins.name_of(s)}: you own {pf.holdings[s]['quantity']}, "
+                                                    f"bought at {format_inr(pf.holdings[s]['avg_price'])}")
+    _cash_ticket(pf, symbol, ins.name_of(symbol), None, offline, key, mode)
+
+
+def _set_qty(key, value):
+    st.session_state[f"qty_{key}"] = max(1, int(value))
+
+
+def _cash_ticket(pf, symbol, name, fallback_price, offline, key, mode):
+    """The order form for anything bought like a share. Shows what will happen before the button is pressed."""
+    price = price_of(symbol, fallback_price) or spot_price(symbol)
     if not price:
         st.warning("No price is available for this right now. Please try again in a moment.")
         return
+    quote = None if offline else live_quote(symbol)
     owned = pf.holdings.get(symbol, {}).get("quantity", 0)
-    st.write(f"{name}: **{format_inr(price)}** per unit  |  You own: **{owned}**")
-    qty = st.number_input("How many units?", min_value=1, value=1, step=1, key=f"qty_{key}")
-    affordable = int(pf.balance // price)
-    st.write(f"Estimated cost of {qty}: **{format_inr(qty * price)}**  (you can afford up to {affordable})")
+    c1, c2, c3 = st.columns(3)
+    move = (f"{(quote['price'] / quote['previous_close'] - 1) * 100:+.2f}% today"
+            if quote and quote.get("previous_close") else None)
+    c1.metric(name, format_inr(price), move)
+    c2.metric("You own", f"{owned} units")
+    if owned:
+        avg = pf.holdings[symbol]["avg_price"]
+        c3.metric("Your gain on it", format_inr((price - avg) * owned), f"{(price / avg - 1) * 100:+.1f}%")
+    else:
+        c3.metric("Cash available", format_inr(pf.balance))
 
-    # As on the real Indian market (for normal delivery trades), you can only sell what you own.
-    buy_col, sell_col = st.columns(2)
-    action = None
-    if buy_col.button("Buy", type="primary", width="stretch", key=f"buy_{key}"):
-        action = "BUY"
-    if sell_col.button("Sell", width="stretch", disabled=owned == 0, key=f"sell_{key}"):
-        action = "SELL"
-    if owned == 0:
-        st.caption("Sell is available once you own some. Units must be bought before they can be sold.")
-    elif qty > owned:
-        st.caption(f"You own {owned}, so you can sell up to {owned}.")
+    qkey = f"qty_{key}"
+    limit = owned if mode == "Sell" else int(pf.balance // price)
+    if limit < 1:
+        st.warning("Not enough cash to buy even one unit. You can add virtual cash under Account options below."
+                   if mode == "Buy" else "You do not own any of this.")
+        return
+    if st.session_state.get(qkey, 1) > limit:        # the choice changed: keep the number inside what is allowed
+        st.session_state[qkey] = limit
 
-    if action:
+    if mode == "Buy":
+        st.write("How much do you want to spend? Pick a quick amount or type your own.")
+        cols = st.columns(4)
+        for col, amount in zip(cols, (5000, 10000, 25000, 50000)):
+            col.button(f"Rs {amount:,}", key=f"amt_{key}_{amount}", width="stretch", disabled=amount < price,
+                       on_click=_set_qty, args=(key, min(limit, amount // price)))
+    else:
+        st.write("How much do you want to sell?")
+        cols = st.columns(4)
+        for col, (text, share) in zip(cols, (("Quarter", 0.25), ("Half", 0.5), ("Three quarters", 0.75), ("All of it", 1.0))):
+            col.button(text, key=f"sh_{key}_{text}", width="stretch", on_click=_set_qty, args=(key, owned * share))
+    qty = st.number_input("Number of units", min_value=1, max_value=limit, step=1, key=qkey)
+
+    if mode == "Buy":
+        st.info(f"You will pay about **{format_inr(qty * price)}** for **{qty}** unit(s) of {name}. "
+                f"Cash left after: {format_inr(pf.balance - qty * price)}.")
+    else:
+        pnl = (price - pf.holdings[symbol]["avg_price"]) * qty
+        st.info(f"You will receive about **{format_inr(qty * price)}** for **{qty}** unit(s). "
+                f"That locks in a {'profit' if pnl >= 0 else 'loss'} of **{format_inr(abs(pnl))}**.")
+
+    if st.button(f"{mode} {qty} unit(s)", type="primary", width="stretch", key=f"go_{key}"):
         # Trades use a FRESH price (not the 15-second cache), so the order is as accurate as possible.
         fresh = None if offline else get_latest_price(symbol)
         exec_price = round(fresh, 2) if fresh else price
         try:
-            order = (pf.buy(symbol, int(qty), exec_price) if action == "BUY"
+            order = (pf.buy(symbol, int(qty), exec_price) if mode == "Buy"
                      else pf.sell(symbol, int(qty), exec_price))
             _save(pf)
-            verb = "Bought" if action == "BUY" else "Sold"
-            extra = f" Profit/loss on this sale: {format_inr(order['pnl'])}." if action == "SELL" else ""
+            verb = "Bought" if mode == "Buy" else "Sold"
+            extra = f" Profit/loss on this sale: {format_inr(order['pnl'])}." if mode == "Sell" else ""
             st.session_state.flash = ("ok", f"{verb} {qty} of {name} at {format_inr(exec_price)}.{extra}")
         except TradingError as e:
             st.session_state.flash = ("error", str(e))

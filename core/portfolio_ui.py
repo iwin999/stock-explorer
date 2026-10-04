@@ -36,6 +36,7 @@ def render():
     st.caption("Your own paper-trading portfolio. It is saved under your name, so you can come back later and see how it did.")
 
     st.fragment(run_every=_refresh_every())(_dashboard)()
+    st.fragment(run_every=_refresh_every())(_holdings_view)()
 
     with st.expander("Build or add to my portfolio", expanded=not pf.holdings and not pf.derivatives):
         _builder(pf)
@@ -53,6 +54,13 @@ def render():
         "Spreading money across different kinds of investments is called diversification.\n"
         "- **Return** is how much your total has grown or shrunk compared with the money you started with.\n"
         "- The **leaderboard** compares everyone's return, so a bigger portfolio does not automatically win.")
+
+
+@guard()
+def _holdings_view():
+    from core import holdings_ui
+    pf = _get_portfolio()
+    holdings_ui.render(pf, snapshot_now(pf), key="pf")
 
 
 # ---------------- dashboard (updates live) ----------------

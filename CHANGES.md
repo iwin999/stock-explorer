@@ -213,5 +213,13 @@ The bot remembers the last topic: "explain like I'm 5", "even simpler" or "more 
 
 To change what the bot says, edit `data/bot_notes.json` only. Entries marked "verify" in the original notes were checked against the app.
 
+## New in Step 20 (easier trading, every rule compared, tracking each holding)
+| Change | Where |
+|---|---|
+| **Paper trading, Stocks and ETFs tabs:** choose Buy or Sell, then pick any company or fund from a searchable list (Sell lists only what you own). Quick amounts (Rs 5,000 to 50,000) or Quarter / Half / All for selling, a plain preview ("You will pay about..., cash left after...") and a button that says exactly what it will do | `core/trading_ui.py` |
+| **Possible outcomes:** new "All rules side by side" tab: every rule and plain holding in one table (chance of a gain, typical, poor and good case, beats holding), with a "waiting for a signal" label for rules currently in cash | `stock_page.py` |
+| **How each holding is doing** (Paper trading and Your Portfolio): per holding the value, gain or loss, today's move, share of the portfolio, effect on total return in points and days held; a green/red contribution chart; pick one holding for a price chart since you bought it, trend, recent speed and a one-line verdict | `core/holdings.py`, `core/holdings_ui.py` |
+| **Less jargon:** plain wording first on the ratio cards ("Reward for risk (Sharpe)"), a one-line "In short" at the top of Overview, Possible outcomes, Strategy tests and Paper trading | `stock_page.py`, `core/trading_ui.py` |
+
 ## Status
 All 8 features are built.

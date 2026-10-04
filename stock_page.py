@@ -7,6 +7,7 @@ st.cache_data: the second time, the answer comes from memory instantly.
 import zlib
 
 import numpy as np
+import pandas as pd
 import streamlit as st
 
 from core import about, assistant_ui, backtest as bt, fusion_ui, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
@@ -135,6 +136,7 @@ tab_overview, tab_outcomes, tab_strategy, tab_fusion, tab_trade, tab_portfolio, 
 # TAB 1: OVERVIEW - price chart, key signals, risk and return ratios
 # =====================================================================
 with tab_overview:
+    st.markdown("**In short:** the chart shows what the price did. The cards below say whether it is speeding up or slowing down, how bumpy it is, and whether the risk was worth the reward.")
     st.header("Price history")
     period = st.radio("Period", list(PERIODS), index=1, horizontal=True)
 
@@ -181,12 +183,12 @@ with tab_overview:
         st.info("There is not enough price history to calculate these ratios.")
     else:
         titles = {"cagr": "Average yearly return", "volatility": "Volatility", "max_drawdown": "Worst fall (max drawdown)",
-                  "var95": "Bad-day loss (VaR 95%)", "sharpe": "Sharpe ratio", "sortino": "Sortino ratio",
-                  "calmar": "Calmar ratio", "treynor": "Treynor ratio", "beta": "Beta", "alpha": "Alpha (yearly)",
-                  "information": "Information ratio", "correlation": "Correlation with Nifty 50"}
-        groups = [("Return and risk", ["cagr", "volatility", "max_drawdown", "var95"]),
-                  ("Reward for the risk taken", ["sharpe", "sortino", "calmar", "treynor"]),
-                  ("Compared with the Nifty 50", ["beta", "alpha", "information", "correlation"])]
+                  "var95": "Bad-day loss (1 in 20)", "sharpe": "Reward for risk (Sharpe)", "sortino": "Reward vs falls (Sortino)",
+                  "calmar": "Reward vs worst fall (Calmar)", "treynor": "Reward vs market risk (Treynor)", "beta": "Moves vs market (beta)", "alpha": "Extra return (alpha)",
+                  "information": "Steadiness vs Nifty (information ratio)", "correlation": "Moves with Nifty (correlation)"}
+        groups = [("How much it grew, and how bumpy", ["cagr", "volatility", "max_drawdown", "var95"]),
+                  ("Was the risk worth it?", ["sharpe", "sortino", "calmar", "treynor"]),
+                  ("Compared with the market (Nifty 50)", ["beta", "alpha", "information", "correlation"])]
         for group_name, keys in groups:
             st.subheader(group_name)
             for column, key in zip(st.columns(4), keys):
@@ -206,6 +208,7 @@ with tab_overview:
 # =====================================================================
 with tab_outcomes:
     st.header("Possible outcomes")
+    st.markdown("**In short:** nobody knows the future, so we imagine 2,000 of them and see where the price tends to land.")
     st.caption("We run 2,000 simulated futures using how this stock has moved over the past year: its average "
                "direction and how much it swings from day to day. The result is a range of possibilities, "
                "not a forecast. Choose a view below: the price alone, or what each trading rule would have done "
@@ -225,7 +228,7 @@ with tab_outcomes:
     chances = sim.outcome_chances(paths)
     cost_pct = st.session_state.get("cost_pct", bt.DEFAULT_COST_PCT)   # set on the Strategy tests tab
 
-    views = st.tabs(["Price only"] + [STRATEGIES[k].name for k in STRATEGY_KEYS])
+    views = st.tabs(["Price only", "All rules side by side"] + [STRATEGIES[k].name for k in STRATEGY_KEYS])
 
     # ---------- view 1: the price itself ----------
     with views[0]:
@@ -277,8 +280,49 @@ with tab_outcomes:
             "year's drift and volatility continue. Real markets have fatter tails (bigger surprises) and news. "
             "Re-run the simulation to see how much the answer moves with luck alone."))
 
+    # ---------- view 2: every rule at a glance ----------
+    with views[1]:
+        st.caption("Every trading rule run through the same 2,000 simulated futures, next to simply holding the stock. "
+                   "Use this to compare them quickly; open a rule's own tab for its chart and explanation.")
+        rows, outs = [], {}
+        hold_ref = None
+        for key in STRATEGY_KEYS:
+            rule = STRATEGIES[key]
+            if len(close) < rule.warmup + 60:
+                rows.append({"Rule": rule.name, "Style": rule.style or "-", "Chance of a gain": None, "Typical result": None,
+                             "Poor case (1 in 20)": None, "Good case (1 in 20)": None, "Beats holding": None,
+                             "Status": "Not enough price history"})
+                continue
+            out = sim.strategy_outcomes(close, key, paths, cost_pct=cost_pct)
+            outs[key] = out
+            hold_ref = out["hold"]
+            rows.append({"Rule": rule.name, "Style": rule.style or "-", "Chance of a gain": out["chance_gain"] * 100,
+                         "Typical result": out["median"] * 100, "Poor case (1 in 20)": out["poor"] * 100,
+                         "Good case (1 in 20)": out["good"] * 100, "Beats holding": out["chance_beats_hold"] * 100,
+                         "Status": "Waiting for a signal (in cash now)" if out["invested"] < 0.02
+                         else f"Invested {out['invested'] * 100:.0f}% of the days"})
+        if hold_ref is not None:
+            h = np.asarray(hold_ref) * 100
+            rows.insert(0, {"Rule": "Just hold the stock", "Style": "Baseline", "Chance of a gain": float((h > 0).mean() * 100),
+                            "Typical result": float(np.median(h)), "Poor case (1 in 20)": float(np.percentile(h, 5)),
+                            "Good case (1 in 20)": float(np.percentile(h, 95)), "Beats holding": None,
+                            "Status": "Always invested"})
+        if len(rows) > 1 and outs:
+            best_key = max(outs, key=lambda k: outs[k]["median"])
+            callout(f"Over the next {horizon} days, the rule with the best typical result is "
+                    f"<b>{STRATEGIES[best_key].name}</b> ({outs[best_key]['median'] * 100:+.1f}%). That says how the rules "
+                    "behave in these imagined futures, not which one to use.")
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch", column_config={
+            "Chance of a gain": st.column_config.NumberColumn(format="%.0f%%"),
+            "Typical result": st.column_config.NumberColumn(format="%+.1f%%"),
+            "Poor case (1 in 20)": st.column_config.NumberColumn(format="%+.1f%%"),
+            "Good case (1 in 20)": st.column_config.NumberColumn(format="%+.1f%%"),
+            "Beats holding": st.column_config.NumberColumn(format="%.0f%%")})
+        st.caption("Poor case: only 1 simulated future in 20 did worse. Good case: only 1 in 20 did better. "
+                   "'Beats holding' is how often the rule did better than just holding.")
+
     # ---------- views 2..: each trading rule applied to the same simulated futures ----------
-    for view, key in zip(views[1:], STRATEGY_KEYS):
+    for view, key in zip(views[2:], STRATEGY_KEYS):
         rule = STRATEGIES[key]
         with view:
             st.caption(rule.headline)
@@ -330,6 +374,7 @@ with tab_outcomes:
 # =====================================================================
 with tab_strategy:
     st.header("Strategy tests")
+    st.markdown("**In short:** if you had followed a simple rule for the last 5 years, would you have done better than just holding?")
     st.caption("Replay the last 5 years starting with Rs 1,00,000 and see how a rule would have fared against simply "
                "buying and holding. Past results do not predict future results.")
     cost_pct = st.number_input("Trading cost each time the rule switches (%)", min_value=0.0, max_value=2.0,
