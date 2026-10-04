@@ -118,25 +118,32 @@ def exit_all(pf, spot_fn, sigma_fn, now=None):
 
     The cash from the sales stays in the account as cash. `pf.deposited` (the money the account started with, plus any
     cash added later) is NOT touched, so profit or loss so far is kept and the capital is not put back to what it was.
-    A price that cannot be found falls back to the price paid (no profit or loss on that line).
+    A position whose price cannot be found right now is NOT sold (selling it at the price paid would hide a loss); it is
+    listed under "skipped" so the visitor can try again.
 
-    Returns {"count", "realised" (total profit or loss of these exits), "lines": [(description, profit or loss), ...]}.
+    Returns {"count", "realised" (total profit or loss of these exits), "lines": [(description, profit or loss), ...],
+    "skipped": [description, ...]}.
     """
     now = now or datetime.now(dv.IST)
-    lines = []
+    lines, skipped = [], []
     for sym, h in list(pf.holdings.items()):
-        price = spot_fn(sym) or h["avg_price"]
+        price = spot_fn(sym)
+        if not price:
+            skipped.append(f"{h['quantity']} x {ins.name_of(sym)}")
+            continue
         order = pf.sell(sym, h["quantity"], round(price, 2))
         lines.append((f"{h['quantity']} x {ins.name_of(sym)}", order["pnl"]))
     for pos in list(pf.derivatives):
         spot = spot_fn(pos["underlying"])
         name = ins.name_of(pos["underlying"])
+        if not spot:
+            skipped.append(f"{name} {'future' if pos['type'] == 'FUT' else 'option'}")
+            continue
         if pos["type"] == "FUT":
-            price = mark_future(pos, spot, now)["price"] if spot else pos["entry"]
+            price = mark_future(pos, spot, now)["price"]
             lines.append((f"{name} future ({pos['side'].lower()})", pf.close_future(pos["id"], price)))
         else:
             sigma = sigma_fn(pos["underlying"]) or 0.25
-            price = mark_option(pos, spot, sigma, now)["price"] if spot else pos["premium"]
+            price = mark_option(pos, spot, sigma, now)["price"]
             lines.append((f"{name} {pos['strike']:g} {pos['kind'].lower()}", pf.sell_option(pos["id"], price)))
-    return {"count": len(lines), "realised": sum(pnl for _, pnl in lines), "lines": lines}
-
+    return {"count": len(lines), "realised": sum(pnl for _, pnl in lines), "lines": lines, "skipped": skipped}

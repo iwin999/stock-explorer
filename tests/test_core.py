@@ -195,3 +195,34 @@ def test_search_box_suggestions_cover_the_whole_nse_and_bse():
     labels = [companies.label(s).lower() for s in universe.OPTIONS]
     assert any("suzlon" in x for x in labels) and any("bse:" in x for x in labels) and any("tata" in x for x in labels)
     assert sum(s.endswith(".BO") for s in universe.OPTIONS) > 2000 and sum(s.endswith(".NS") for s in universe.OPTIONS) > 1500
+
+
+def test_a_one_row_bse_history_from_yahoo_falls_back_to_the_nse_twin(monkeypatch):
+    import pandas as pd
+    from core import market_data as md
+    good = pd.DataFrame({"Open": 1.0, "High": 1.0, "Low": 1.0, "Close": 100.0, "Volume": 1},
+                        index=pd.date_range("2026-01-01", periods=60))
+    one_row = good.iloc[:1]
+    calls = []
+
+    def fake(symbol, period="5y"):
+        calls.append(symbol)
+        return one_row if symbol == "RELIANCE.BO" else good if symbol == "RELIANCE.NS" else None
+    monkeypatch.setattr(md, "get_history", fake)
+    hist, source, last = md.get_history_with_source("RELIANCE.BO")
+    assert len(hist) == 60 and source == "online" and calls == ["RELIANCE.BO", "RELIANCE.NS"]
+    monkeypatch.setattr(md, "get_history", lambda s, p="5y": None)                  # everything down: saved copy
+    hist, source, _ = md.get_history_with_source("RELIANCE.BO")
+    assert source == "offline" and len(hist) > 1000
+    young = good.iloc[:20]                                                            # a genuinely new listing is still returned
+    monkeypatch.setattr(md, "get_history", lambda s, p="5y": young)
+    assert len(md.get_history_with_source("BRANDNEW.NS")[0]) == 20
+
+
+def test_order_times_are_indian_time():
+    from datetime import datetime
+    from core.trading import IST, Portfolio
+    pf = Portfolio(balance=1000)
+    order = pf.buy("A.NS", 1, 10.0)
+    stamp = datetime.fromisoformat(order["timestamp"])
+    assert stamp.tzinfo is None and abs((stamp - datetime.now(IST).replace(tzinfo=None)).total_seconds()) < 5

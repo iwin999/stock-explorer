@@ -14,11 +14,13 @@ import os
 import tempfile
 import uuid
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 
 from core.formatting import format_inr
 
+IST = ZoneInfo("Asia/Kolkata")
 DEFAULT_BALANCE = 100000.0  # virtual Rs 1,00,000
 DEFAULT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "portfolio.json")
 
@@ -251,7 +253,7 @@ class Portfolio:
 
     def _record(self, order_type, symbol, quantity, price, pnl):
         order = {
-            "timestamp": datetime.now().isoformat(timespec="seconds"),
+            "timestamp": datetime.now(IST).replace(tzinfo=None).isoformat(timespec="seconds"),     # Indian time (the server may be elsewhere)
             "type": order_type,
             "symbol": symbol,
             "quantity": quantity,

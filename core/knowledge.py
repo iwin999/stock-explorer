@@ -76,8 +76,10 @@ MANUAL = [
     E("change_company", USING, "How do I change the company?",
       ["how do i change the company", "how do i search for a stock", "how do i pick another stock", "how do i find a company",
        "search for a company", "choose a different stock", "select a company", "look up a stock"],
-      "Use the two boxes at the top of the page: type a name in 'Search by company name' (for example Reliance or tata "
-      "motors), or choose from the dropdown list. Everything on the page updates for that company."),
+      "Use the search box at the top of the page: start typing a company name (for example Reliance, Tata or Suzlon) and "
+      "pick one from the suggestions. About 7,000 NSE and BSE companies are in it; the BSE listing is shown as (BSE: CODE). "
+      "If a company is very new and not in the list, open 'Cannot find a company?' under the box. Everything on the page "
+      "updates for the company you pick."),
     E("save_portfolio", USING, "Will my portfolio be saved? How do I come back later?",
       ["will my portfolio be saved", "how do i come back later", "how do i open my portfolio again", "returning user",
        "can i check my portfolio later", "is my portfolio saved", "how do i log in again", "i closed the page what now",

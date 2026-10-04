@@ -9,6 +9,8 @@ No screen code here (see core/holdings_ui.py). For every holding we work out:
 """
 from datetime import datetime
 
+from core.trading import IST
+
 import pandas as pd
 
 
@@ -30,7 +32,7 @@ def analyse(pf, snap, quote_fn=None, now=None):
     table = snap["positions"]
     if table.empty:
         return table
-    now = now or datetime.now()
+    now = now or datetime.now(IST).replace(tzinfo=None)             # order times are stored in Indian time
     total = snap["total"] or 1.0
     deposited = pf.deposited or 1.0
     bought = first_buy_dates(pf)

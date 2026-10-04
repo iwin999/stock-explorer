@@ -269,6 +269,7 @@ def render(symbol, name, fallback_price, offline=False):
     st.fragment(run_every=None if offline else _refresh_every())(_holdings_view)()
 
     st.subheader("Order history")
+    st.caption("Times are Indian time (IST).")
     orders = pf.orders_dataframe()
     if orders.empty:
         st.caption("No trades yet.")
@@ -330,8 +331,12 @@ def _do_exit_all():
         report = val.exit_all(pf, spot_price, vol_estimate)
         _save(pf)
         st.session_state["exit_report"] = report
-        st.session_state.flash = ("ok", f"Exited {report['count']} position(s). Profit or loss from these exits: "
-                                        f"{format_inr(report['realised'])}. Cash is now {format_inr(pf.balance)}.")
+        message = (f"Exited {report['count']} position(s). Profit or loss from these exits: "
+                   f"{format_inr(report['realised'])}. Cash is now {format_inr(pf.balance)}.")
+        if report["skipped"]:
+            message += (" Not sold, because no price could be found right now: " + ", ".join(report["skipped"]) +
+                        ". Try again in a moment.")
+        st.session_state.flash = ("ok" if not report["skipped"] else "error", message)
     except TradingError as e:
         st.session_state.flash = ("error", str(e))
 

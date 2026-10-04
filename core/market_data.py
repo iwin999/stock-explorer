@@ -107,17 +107,32 @@ def load_offline(symbol, folder=None):
         return None
 
 
+MIN_ROWS = 30     # fewer rows than this is not a usable history (Yahoo sometimes answers a BSE ticker with a single row)
+
+
 def get_history_with_source(symbol, period="7y"):
     """Try the internet first; if that fails, use the saved backup.
 
     Returns (DataFrame or None, source, last_date) where source is "online" or "offline".
     The screen uses `source` to warn visitors when they are seeing saved data.
+    A BSE listing whose Yahoo history is empty or a single row uses its NSE twin's history instead (the same company,
+    almost the same prices), online first, then the saved copy.
     """
     hist = get_history(symbol, period)
-    if hist is not None:
+    if hist is not None and len(hist) >= MIN_ROWS:
         return hist, "online", hist.index[-1]
+    if symbol.endswith(".BO"):
+        from core.companies import to_nse
+        twin = to_nse(symbol)
+        if twin != symbol:
+            twin_hist = get_history(twin, period)
+            if twin_hist is not None and len(twin_hist) >= MIN_ROWS:
+                log.warning("Yahoo history for %s is incomplete; using %s", symbol, twin)
+                return twin_hist, "online", twin_hist.index[-1]
     saved = load_offline(symbol)
     if saved is not None:
         log.warning("Using offline backup for %s", symbol)
         return saved, "offline", saved.index[-1]
+    if hist is not None:                       # a genuinely short history (a company listed a few weeks ago)
+        return hist, "online", hist.index[-1]
     return None, "none", None

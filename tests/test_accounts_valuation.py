@@ -222,3 +222,18 @@ def test_exit_all_sells_everything_but_never_restores_the_starting_capital():
     assert abs(pf.balance - deposited - sum(p for _, p in result["lines"])) < 1e-6
     assert pf.balance != deposited                                    # profit and loss stay in the cash
     assert val.exit_all(pf, spot, lambda s: 0.2, now)["count"] == 0   # nothing left to exit
+
+
+def test_exit_all_never_sells_at_cost_price_when_a_price_is_missing():
+    from datetime import datetime
+    from core import derivatives as dv
+    from core import valuation as val
+    from core.trading import Portfolio
+    now = datetime(2026, 10, 5, 12, 0, tzinfo=dv.IST)
+    pf = Portfolio(balance=100000)
+    pf.buy("LOSER.NS", 100, 100.0)           # now 80, but the price cannot be found
+    pf.buy("OK.NS", 10, 50.0)                # now 60
+    result = val.exit_all(pf, lambda s: {"OK.NS": 60.0}.get(s), lambda s: 0.2, now)
+    assert result["count"] == 1 and len(result["skipped"]) == 1 and "LOSER" in result["skipped"][0] or "Loser" in result["skipped"][0]
+    assert "LOSER.NS" in pf.holdings and "OK.NS" not in pf.holdings          # the unpriced one is still held, loss not hidden
+    assert abs(result["realised"] - 100.0) < 1e-6
