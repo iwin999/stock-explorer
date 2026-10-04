@@ -105,6 +105,26 @@ def bollinger_rule(prices):
     return _latch((prices < lower) & valid, (prices > mid) & valid)
 
 
+def fusion_trend(prices):
+    """The trend half of the Winner's Circle (CMT Level III, Ch. 8): a clear uptrend (price above a rising 200-day
+    average, 50-day average above it) and a positive 6-month return. The Nifty comparison is left out here because
+    a simulated path has no matching index path."""
+    s50, s200 = _sma(prices, 50), _sma(prices, 200)
+    lagged = np.full(s200.shape, np.nan)
+    lagged[:, 20:] = s200[:, :-20]
+    ret6 = np.full(prices.shape, np.nan)
+    ret6[:, 126:] = prices[:, 126:] / prices[:, :-126] - 1
+    ok = (prices > s200) & (s50 > s200) & (s200 > lagged) & (ret6 > 0)
+    return np.nan_to_num(ok.astype(float)).astype(int)
+
+
+def fusion_rule_for(fundamentals_pass):
+    """The fusion rule for one company: hold only while the trend is clear AND the company's fundamentals or valuation
+    pass (groups 1 and 2 of the Winner's Circle). If neither passes, the rule never buys."""
+    gate = 1 if fundamentals_pass else 0
+    return lambda prices: fusion_trend(prices) * gate
+
+
 # ---------------- descriptions (plain words + the full "know how") ----------------
 @dataclass
 class Strategy:
@@ -201,3 +221,31 @@ STRATEGIES = {
             "closing below the band, and the rule keeps buying into the fall."),
         style="Swing / mean reversion"),
 }
+
+
+# The fusion rule is described like the others, but it is not in STRATEGIES: it needs one company's fundamentals,
+# so it is only used for the forward simulation (Possible outcomes), built per company with fusion_rule_for().
+FUSION_RULE = Strategy(
+    "fusion", "Fusion rule (Winner's Circle)",
+    "Hold the stock only while its price is in a clear uptrend with positive 6-month momentum AND its fundamentals or "
+    "valuation pass. Otherwise stay in cash.",
+    None, 250,
+    plain=(
+        "- This mixes the two ways of judging a share: is the **company healthy or fairly priced**, and is the **price "
+        "actually rising**?\n"
+        "- The rule only buys when both agree. If the company's numbers do not pass, it never buys.\n"
+        "- If they do pass, it still waits for the price to be in a clear uptrend, and leaves when the trend breaks.\n"
+        "- It is the idea from the CMT Level III chapter on fusion analysis: fundamentals pick what to own, the trend decides when."),
+    know_how=(
+        "**Rule.** Position = 1 when (a) the price is above its 200-day average, (b) the 50-day average is above the 200-day, "
+        "(c) the 200-day average is higher than 20 days ago, (d) the 6-month return is positive, AND (e) the company's "
+        "fundamentals or valuation pass in the Fusion analysis tab (quality score or valuation score of 50 or more: groups 1 and 2). "
+        "Otherwise 0 (cash).\n\n"
+        "**Factors.** 50 and 200-day averages, 126-day (about 6 months) return, and the company's latest quality and valuation "
+        "scores. The Nifty 50 comparison used on the Fusion tab is left out because a simulated path has no matching index path.\n\n"
+        "**How it is used here.** The fundamentals gate is today's rating, held fixed. The trend part is run day by day on each "
+        "of the 2,000 simulated futures, joined onto the last 400 real days. Positions decided at a close are earned the next day, "
+        "and the trading cost is charged on every switch.\n\n"
+        "**Limits.** Only the price is simulated; company results could change during the period. The gate uses current "
+        "scores. Past behaviour does not predict the future."),
+    style="Fusion (fundamentals + trend)")

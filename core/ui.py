@@ -40,8 +40,15 @@ h3 { font-size: 1.35rem !important; font-weight: 600 !important; }
 .stApp [data-testid="stPopover"] button { min-height: 1.7rem; padding: 0 0.55rem; border-radius: 50%;
         border: 1px solid #b8c0cc; color: #1d3557; background: #fff; }
 .stApp [data-testid="stPopover"] button p { font-size: 0.9rem !important; font-weight: 700; }
-.metric-title { font-size: 1.02rem; color: #5b6573; padding-top: 0.25rem; }
+.metric-title { font-size: 1.02rem; color: #5b6573; padding-top: 0.25rem; min-height: 3.1em; }
 .term-cell { font-size: 1.05rem; padding-top: 0.3rem; }
+.swap { display: inline-grid; align-items: start; overflow: hidden; cursor: help; vertical-align: bottom; }
+.swap .fin { border-bottom: 1px dotted #9aa6b2; justify-self: start; }
+.swap > span { grid-area: 1 / 1; transition: transform 0.6s cubic-bezier(.4,0,.2,1), opacity 0.6s ease; }
+.swap .lay { transform: translateY(100%); opacity: 0; color: #1d5c42; font-weight: 600; }
+.swap:hover .fin, .swap:focus .fin { transform: translateY(-100%); opacity: 0; transition-delay: 2s; }
+.swap:hover .lay, .swap:focus .lay { transform: none; opacity: 1; transition-delay: 2s; }
+@media (hover: none) { .swap:hover .fin, .swap:focus .fin, .swap:hover .lay, .swap:focus .lay { transition-delay: 0.1s; } }
 .scale { margin: 0.2rem 0 0.9rem 0; }
 .scale-bar { position: relative; height: 0.7rem; border-radius: 999px; background: linear-gradient(90deg, #d9534f 0%, #f0ad4e 50%, #4fae6a 100%); }
 .scale-bar.neutral { background: linear-gradient(90deg, #cfe0f1 0%, #8fb4d9 50%, #3f78b0 100%); }
@@ -153,10 +160,33 @@ def help_bubble(key):
         st.markdown(as_markdown(key))
 
 
+# The same idea in everyday words. A label shows the finance term; hold the pointer over it for about two seconds
+# and it slides into the plain-words version (on a phone, tap it).
+LAYMAN = {
+    "rsi": "How fast it has been rising or falling", "macd": "Is the price speeding up or slowing down?",
+    "trend": "Which way the price is heading", "volatility": "How bumpy and risky the ride is",
+    "cagr": "How much it grew per year", "max_drawdown": "The worst fall it had", "var95": "How bad a bad day can get",
+    "sharpe": "Reward for the risk taken", "sortino": "Reward compared with the falls",
+    "calmar": "Reward compared with the worst fall", "treynor": "Reward for riding the market's ups and downs",
+    "beta": "Does it swing more than the market?", "alpha": "Extra return beyond the market",
+    "information": "Did it beat the market steadily?", "correlation": "Does it move together with the market?",
+    "total_return": "Total gain or loss", "win_rate": "How often a trade made money",
+    "avg_win": "Typical winning trade", "avg_loss": "Typical losing trade", "expectancy": "Average gain per trade",
+}
+
+
+def jargon(text, key):
+    """HTML for a label: the finance term, sliding into plain words on hover. Plain text if there is no translation."""
+    plain = LAYMAN.get(key)
+    if not plain:
+        return text
+    return f'<span class="swap" tabindex="0"><span class="fin">{text}</span><span class="lay">{plain}</span></span>'
+
+
 def metric_with_help(title, value, key, delta=None):
     """A metric card with its name and a "?" bubble above it."""
     name_col, help_col = st.columns([5, 1])
-    name_col.markdown(f'<div class="metric-title">{title}</div>', unsafe_allow_html=True)
+    name_col.markdown(f'<div class="metric-title">{jargon(title, key)}</div>', unsafe_allow_html=True)
     with help_col:
         help_bubble(key)
     st.metric(title, value, delta, label_visibility="collapsed")
@@ -188,7 +218,7 @@ def term_row(term, key, *cells, header=False):
         for c, text in zip(cols[2:], cells):
             c.markdown(f'<div class="term-cell"><b>{text}</b></div>', unsafe_allow_html=True)
         return
-    cols[0].markdown(f'<div class="term-cell">{marker}{term}</div>', unsafe_allow_html=True)
+    cols[0].markdown(f'<div class="term-cell">{marker}{jargon(term, key)}</div>', unsafe_allow_html=True)
     if key:
         with cols[1]:
             help_bubble(key)

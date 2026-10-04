@@ -18,7 +18,7 @@ from core.errors import guard
 from core.live import live_quote
 from core.market_data import get_company_name, get_history_with_source
 from core.market_hours import is_market_open, now_ist, status_message
-from core.strategies import STRATEGIES
+from core.strategies import FUSION_RULE, STRATEGIES, fusion_rule_for
 from core.ui import (ratio_scale, callout, know_how_button, metric_with_help, notice, plain_english, setup_page,
                      show_disclaimer, term_row)
 
@@ -148,12 +148,12 @@ with tab_overview:
 
     # ---------- key signals ----------
     st.header("Key signals")
-    st.caption("Four commonly used measures. They describe the past; they do not predict.")
+    st.caption("Four commonly used measures. They describe the past; they do not predict. Hold your pointer over a term for two seconds to see it in plain words.")
     panel = [
-        ("Recent strength (RSI)", "rsi", *ind.describe_rsi(close)),
-        ("Momentum (MACD)", "macd", *ind.describe_macd(close)),
-        ("Trend direction", "trend", *ind.describe_trend(close)),
-        ("Price swings (volatility)", "volatility", *ind.describe_volatility(close.iloc[-252:])),  # last year, same window as the simulation
+        ("RSI", "rsi", *ind.describe_rsi(close)),
+        ("MACD", "macd", *ind.describe_macd(close)),
+        ("Trend", "trend", *ind.describe_trend(close)),
+        ("Volatility", "volatility", *ind.describe_volatility(close.iloc[-252:])),  # last year, same window as the simulation
     ]
     for column, (title, term, value, meaning) in zip(st.columns(4), panel):
         with column:
@@ -171,7 +171,8 @@ with tab_overview:
     # ---------- risk and return ratios ----------
     st.header("Risk and return")
     st.caption("How much this stock earned, and how much risk it took to earn it, measured against the Nifty 50.")
-    st.caption("Each bar runs from red (poor) to green (excellent); the dark pointer shows where this stock sits. "
+    st.caption("Hold your pointer over any term for two seconds and it turns into plain words (tap it on a phone). "
+               "Each bar runs from red (poor) to green (excellent); the dark pointer shows where this stock sits. "
                "Blue bars (beta, correlation) describe behaviour rather than grade it. Tap the ? for the formula.")
     ratio_period = st.radio("Measured over", ["1 year", "3 years", "5 years"], index=1, horizontal=True, key="ratio_period")
     n_days = {"1 year": 252, "3 years": 756, "5 years": 1260}[ratio_period]
@@ -182,10 +183,10 @@ with tab_overview:
     if r is None:
         st.info("There is not enough price history to calculate these ratios.")
     else:
-        titles = {"cagr": "Average yearly return", "volatility": "Volatility", "max_drawdown": "Worst fall (max drawdown)",
-                  "var95": "Bad-day loss (1 in 20)", "sharpe": "Reward for risk (Sharpe)", "sortino": "Reward vs falls (Sortino)",
-                  "calmar": "Reward vs worst fall (Calmar)", "treynor": "Reward vs market risk (Treynor)", "beta": "Moves vs market (beta)", "alpha": "Extra return (alpha)",
-                  "information": "Steadiness vs Nifty (information ratio)", "correlation": "Moves with Nifty (correlation)"}
+        titles = {"cagr": "CAGR", "volatility": "Volatility", "max_drawdown": "Max drawdown",
+                  "var95": "VaR (95%)", "sharpe": "Sharpe ratio", "sortino": "Sortino ratio",
+                  "calmar": "Calmar ratio", "treynor": "Treynor ratio", "beta": "Beta", "alpha": "Alpha",
+                  "information": "Information ratio", "correlation": "Correlation"}
         groups = [("How much it grew, and how bumpy", ["cagr", "volatility", "max_drawdown", "var95"]),
                   ("Was the risk worth it?", ["sharpe", "sortino", "calmar", "treynor"]),
                   ("Compared with the market (Nifty 50)", ["beta", "alpha", "information", "correlation"])]
@@ -211,8 +212,8 @@ with tab_outcomes:
     st.markdown("**In short:** nobody knows the future, so we imagine 2,000 of them and see where the price tends to land.")
     st.caption("We run 2,000 simulated futures using how this stock has moved over the past year: its average "
                "direction and how much it swings from day to day. The result is a range of possibilities, "
-               "not a forecast. Choose a view below: the price alone, or what each trading rule would have done "
-               "in those same futures.")
+               "not a forecast. The table shows what each trading rule would have done in those same futures; "
+               "open any item underneath for the details.")
 
     horizon = st.radio("Time ahead", [30, 60, 90], horizontal=True, format_func=lambda d: f"{d} days")
     if "sim_round" not in st.session_state:
@@ -228,10 +229,66 @@ with tab_outcomes:
     chances = sim.outcome_chances(paths)
     cost_pct = st.session_state.get("cost_pct", bt.DEFAULT_COST_PCT)   # set on the Strategy tests tab
 
-    views = st.tabs(["Price only", "All rules side by side"] + [STRATEGIES[k].name for k in STRATEGY_KEYS])
+    # ---------- every rule at a glance (the first thing on the page) ----------
+    fusion_info = fusion_ui.company_row(symbol)                       # None if this company has no fundamentals
+    fusion_passes = bool(fusion_info and (fusion_info["quality_ok"] or fusion_info["value_ok"]))
+    RULES = [(k, STRATEGIES[k], None) for k in STRATEGY_KEYS]
+    if fusion_info is not None:
+        RULES.append(("fusion", FUSION_RULE, fusion_rule_for(fusion_passes)))
 
-    # ---------- view 1: the price itself ----------
-    with views[0]:
+    outs = {}
+    for key, rule, fn in RULES:
+        if len(close) >= rule.warmup + 60:
+            outs[key] = sim.strategy_outcomes(close, key, paths, cost_pct=cost_pct, rule_fn=fn)
+
+    st.subheader("All trading rules side by side")
+    st.caption("Every rule run through the same 2,000 simulated futures, next to simply holding the stock. Open any rule "
+               "below the table to study it in more detail.")
+    rows = []
+    hold_ref = next((o["hold"] for o in outs.values()), None)
+    if hold_ref is not None:
+        h = np.asarray(hold_ref) * 100
+        rows.append({"Rule": "Just hold the stock", "Chance of a gain": float((h > 0).mean() * 100),
+                     "Typical result": float(np.median(h)), "Poor case (1 in 20)": float(np.percentile(h, 5)),
+                     "Good case (1 in 20)": float(np.percentile(h, 95)), "Beats holding": None, "Status": "Always invested"})
+    for key, rule, fn in RULES:
+        out = outs.get(key)
+        if out is None:
+            rows.append({"Rule": rule.name, "Chance of a gain": None, "Typical result": None,
+                         "Poor case (1 in 20)": None, "Good case (1 in 20)": None, "Beats holding": None,
+                         "Status": "Not enough price history"})
+            continue
+        if key == "fusion" and not fusion_passes:
+            status = "Fundamentals do not pass, so it stays in cash"
+        elif out["invested"] < 0.02:
+            status = "Waiting for a signal (in cash now)"
+        else:
+            status = f"Invested {out['invested'] * 100:.0f}% of the days"
+        rows.append({"Rule": rule.name, "Chance of a gain": out["chance_gain"] * 100,
+                     "Typical result": out["median"] * 100, "Poor case (1 in 20)": out["poor"] * 100,
+                     "Good case (1 in 20)": out["good"] * 100, "Beats holding": out["chance_beats_hold"] * 100,
+                     "Status": status})
+    if outs:
+        best_key = max(outs, key=lambda k: outs[k]["median"])
+        best_name = next(r.name for k, r, _ in RULES if k == best_key)
+        callout(f"Over the next {horizon} days, the rule with the best typical result is <b>{best_name}</b> "
+                f"({outs[best_key]['median'] * 100:+.1f}%). That says how the rules behave in these imagined futures, "
+                "not which one to use.")
+    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch", column_config={
+        "Chance of a gain": st.column_config.NumberColumn(format="%.0f%%"),
+        "Typical result": st.column_config.NumberColumn(format="%+.1f%%"),
+        "Poor case (1 in 20)": st.column_config.NumberColumn(format="%+.1f%%"),
+        "Good case (1 in 20)": st.column_config.NumberColumn(format="%+.1f%%"),
+        "Beats holding": st.column_config.NumberColumn(format="%.0f%%")})
+    st.caption("Poor case: only 1 simulated future in 20 did worse. Good case: only 1 in 20 did better. "
+               "'Beats holding' is how often the rule did better than just holding. "
+               + ("The fusion rule is not shown for this one because it has no company results to judge." if fusion_info is None else ""))
+
+    st.subheader("Study one in more detail")
+    st.caption("Open an item to see its chart, what it means in plain English, and exactly how it was calculated.")
+
+    # ---------- the price itself ----------
+    with st.expander("Price only: where the share price itself could end up", expanded=False):
         callout(f"Based on past behaviour, there is roughly a <b>70% chance</b> the price will be between "
                 f"<b>{format_inr(low)}</b> and <b>{format_inr(high)}</b> in {horizon} days "
                 f"(last close: {format_inr(latest)}).")
@@ -280,61 +337,22 @@ with tab_outcomes:
             "year's drift and volatility continue. Real markets have fatter tails (bigger surprises) and news. "
             "Re-run the simulation to see how much the answer moves with luck alone."))
 
-    # ---------- view 2: every rule at a glance ----------
-    with views[1]:
-        st.caption("Every trading rule run through the same 2,000 simulated futures, next to simply holding the stock. "
-                   "Use this to compare them quickly; open a rule's own tab for its chart and explanation.")
-        rows, outs = [], {}
-        hold_ref = None
-        for key in STRATEGY_KEYS:
-            rule = STRATEGIES[key]
-            if len(close) < rule.warmup + 60:
-                rows.append({"Rule": rule.name, "Style": rule.style or "-", "Chance of a gain": None, "Typical result": None,
-                             "Poor case (1 in 20)": None, "Good case (1 in 20)": None, "Beats holding": None,
-                             "Status": "Not enough price history"})
-                continue
-            out = sim.strategy_outcomes(close, key, paths, cost_pct=cost_pct)
-            outs[key] = out
-            hold_ref = out["hold"]
-            rows.append({"Rule": rule.name, "Style": rule.style or "-", "Chance of a gain": out["chance_gain"] * 100,
-                         "Typical result": out["median"] * 100, "Poor case (1 in 20)": out["poor"] * 100,
-                         "Good case (1 in 20)": out["good"] * 100, "Beats holding": out["chance_beats_hold"] * 100,
-                         "Status": "Waiting for a signal (in cash now)" if out["invested"] < 0.02
-                         else f"Invested {out['invested'] * 100:.0f}% of the days"})
-        if hold_ref is not None:
-            h = np.asarray(hold_ref) * 100
-            rows.insert(0, {"Rule": "Just hold the stock", "Style": "Baseline", "Chance of a gain": float((h > 0).mean() * 100),
-                            "Typical result": float(np.median(h)), "Poor case (1 in 20)": float(np.percentile(h, 5)),
-                            "Good case (1 in 20)": float(np.percentile(h, 95)), "Beats holding": None,
-                            "Status": "Always invested"})
-        if len(rows) > 1 and outs:
-            best_key = max(outs, key=lambda k: outs[k]["median"])
-            callout(f"Over the next {horizon} days, the rule with the best typical result is "
-                    f"<b>{STRATEGIES[best_key].name}</b> ({outs[best_key]['median'] * 100:+.1f}%). That says how the rules "
-                    "behave in these imagined futures, not which one to use.")
-        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch", column_config={
-            "Chance of a gain": st.column_config.NumberColumn(format="%.0f%%"),
-            "Typical result": st.column_config.NumberColumn(format="%+.1f%%"),
-            "Poor case (1 in 20)": st.column_config.NumberColumn(format="%+.1f%%"),
-            "Good case (1 in 20)": st.column_config.NumberColumn(format="%+.1f%%"),
-            "Beats holding": st.column_config.NumberColumn(format="%.0f%%")})
-        st.caption("Poor case: only 1 simulated future in 20 did worse. Good case: only 1 in 20 did better. "
-                   "'Beats holding' is how often the rule did better than just holding.")
-
-    # ---------- views 2..: each trading rule applied to the same simulated futures ----------
-    for view, key in zip(views[2:], STRATEGY_KEYS):
-        rule = STRATEGIES[key]
-        with view:
+    # ---------- each trading rule applied to the same simulated futures ----------
+    for key, rule, fn in RULES:
+        with st.expander(f"{rule.name}: study in more detail", expanded=False):
             st.caption(rule.headline)
             if len(close) < rule.warmup + 60:
                 st.info("This company does not have enough price history for this rule.")
                 continue
-            out = sim.strategy_outcomes(close, key, paths, cost_pct=cost_pct)
+            out = outs[key]
             callout(f"If this rule were followed through each of the 2,000 simulated futures over the next {horizon} days, "
                     f"roughly <b>{out['chance_gain'] * 100:.0f}%</b> would end with a gain. The typical (median) result is "
                     f"<b>{out['median'] * 100:+.1f}%</b>, and in 9 cases out of 10 the result falls between "
                     f"<b>{out['poor'] * 100:+.1f}%</b> and <b>{out['good'] * 100:+.1f}%</b>.")
-            if out["invested"] < 0.02:
+            if key == "fusion" and not fusion_passes:
+                notice("This company's quality and valuation scores both fall below the pass mark (see the Fusion analysis "
+                       "tab), so the fusion rule never buys it. That is the rule working as designed: no fundamental support, no purchase.")
+            elif out["invested"] < 0.02:
                 notice("The rule is currently in cash: it is not signalling a purchase, and it would only buy if the "
                        "price moved enough to trigger it. Results close to zero reflect that.")
             for col, (title, term, value) in zip(st.columns(5), [
@@ -384,7 +402,7 @@ with tab_strategy:
     test_tabs = st.tabs([f"{STRATEGIES[k].name}" for k in STRATEGY_KEYS] + ["Monte Carlo test"])
 
     ROW_LABELS = [("Ending value of Rs 1,00,000", "ending_value"), ("Total return", "total_return"),
-                  ("Average yearly return", "cagr"), ("Worst fall (max drawdown)", "max_drawdown"),
+                  ("CAGR", "cagr"), ("Max drawdown", "max_drawdown"),
                   ("Volatility", "volatility"), ("Sharpe ratio", "sharpe"), ("Sortino ratio", "sortino"),
                   ("Calmar ratio", "calmar"), ("Treynor ratio", "treynor"), ("Beta", "beta")]
 

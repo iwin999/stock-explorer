@@ -87,7 +87,7 @@ def outcome_chances(paths, threshold=0.05):
     }
 
 
-def strategy_outcomes(close, strategy_key, paths, cost_pct=0.10, prefix_days=400):
+def strategy_outcomes(close, strategy_key, paths, cost_pct=0.10, prefix_days=400, rule_fn=None):
     """Apply a trading rule to every simulated future and see how it would have fared.
 
     For each of the 2,000 simulated price paths we join them onto the last ~400 days of real
@@ -99,14 +99,14 @@ def strategy_outcomes(close, strategy_key, paths, cost_pct=0.10, prefix_days=400
     """
     from core.strategies import STRATEGIES  # imported here to keep this file importable on its own
 
-    rule = STRATEGIES[strategy_key]
+    rule_fn = rule_fn or STRATEGIES[strategy_key].fn            # a custom rule (the fusion rule) can be passed in
     prefix = close.to_numpy(dtype=float)[-prefix_days:]
     n_hist = len(prefix)
     n_paths, width = paths.shape
     steps = width - 1
 
     full = np.hstack([np.tile(prefix, (n_paths, 1)), paths[:, 1:]])      # history + simulated days
-    pos = rule.fn(full)
+    pos = rule_fn(full)
 
     held = pos[:, n_hist - 1: n_hist - 1 + steps]          # position decided yesterday, held today
     before = pos[:, n_hist - 2: n_hist - 2 + steps]        # the position held the day before

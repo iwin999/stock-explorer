@@ -50,7 +50,8 @@ def company_row(symbol):
     row = table.loc[symbol]
     if row.get("group") != row.get("group"):
         return None
-    return {"group": int(row["group"]), "stage_name": row["stage_name"], "verdict": row["verdict"]}
+    return {"group": int(row["group"]), "stage_name": row["stage_name"], "verdict": row["verdict"],
+            "quality_ok": bool(row.get("quality_ok")), "value_ok": bool(row.get("value_ok"))}
 
 
 def _num(x, kind):

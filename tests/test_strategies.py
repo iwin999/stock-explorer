@@ -50,3 +50,21 @@ def test_all_ratio_keys_used_on_screen_have_help():
                 "beta", "alpha", "information", "correlation", "rsi", "macd", "trend", "total_return",
                 "ending_value", "chance_gain", "typical", "poor_case", "good_case", "beats_holding", "chance_loss"]:
         assert key in glossary.TERMS, key
+
+
+def test_fusion_rule_needs_both_trend_and_fundamentals():
+    import numpy as np
+    from core.simulation import simulate, strategy_outcomes
+    from core.strategies import FUSION_RULE, STRATEGIES, fusion_rule_for, fusion_trend
+    import pandas as pd
+    up = np.linspace(100, 200, 400)[None, :]
+    down = np.linspace(200, 100, 400)[None, :]
+    assert fusion_trend(up)[0, -1] == 1 and fusion_trend(down)[0, -1] == 0           # clear uptrend vs clear downtrend
+    assert fusion_trend(up)[0, :100].sum() == 0                                       # not before the averages exist
+    assert fusion_rule_for(True)(up)[0, -1] == 1 and fusion_rule_for(False)(up).sum() == 0   # no fundamentals, never buys
+    close = pd.Series(np.linspace(100, 200, 500) * (1 + 0.01 * np.sin(np.arange(500))))
+    paths = simulate(close, calendar_days=30, n_paths=200, seed=1)
+    on = strategy_outcomes(close, "fusion", paths, rule_fn=fusion_rule_for(True))
+    off = strategy_outcomes(close, "fusion", paths, rule_fn=fusion_rule_for(False))
+    assert on["invested"] > 0.5 and off["invested"] == 0 and off["median"] == 0
+    assert "fusion" not in STRATEGIES and FUSION_RULE.plain and FUSION_RULE.know_how

@@ -221,5 +221,12 @@ To change what the bot says, edit `data/bot_notes.json` only. Entries marked "ve
 | **How each holding is doing** (Paper trading and Your Portfolio): per holding the value, gain or loss, today's move, share of the portfolio, effect on total return in points and days held; a green/red contribution chart; pick one holding for a price chart since you bought it, trend, recent speed and a one-line verdict | `core/holdings.py`, `core/holdings_ui.py` |
 | **Less jargon:** plain wording first on the ratio cards ("Reward for risk (Sharpe)"), a one-line "In short" at the top of Overview, Possible outcomes, Strategy tests and Paper trading | `stock_page.py`, `core/trading_ui.py` |
 
+## New in Step 21 (hover-to-translate terms, side-by-side outcomes first, fusion rule)
+| Change | Where |
+|---|---|
+| Finance terms on the ratio cards, key signals and strategy tables show the real term (Sharpe ratio, Max drawdown...). Hold the pointer over one for about 2 seconds and it slides smoothly into plain words ("Reward for the risk taken", "The worst fall it had"). On a phone, tap it | `core/ui.py` (`LAYMAN`, `jargon`) |
+| **Possible outcomes** now opens with every rule side by side (plus plain holding). Underneath, one expandable item per rule, and one for the price alone, hold the chart, plain English and exact method | `stock_page.py` |
+| **New fusion rule** in Possible outcomes: hold only while the price is in a clear uptrend with positive 6-month return AND the company's quality or valuation score passes (groups 1 and 2). The fundamentals gate is today's rating; the trend part is run on each simulated future. Companies with no results data do not get this row | `core/strategies.py` (`fusion_trend`, `FUSION_RULE`), `core/simulation.py` |
+
 ## Status
 All 8 features are built.
