@@ -228,5 +228,8 @@ To change what the bot says, edit `data/bot_notes.json` only. Entries marked "ve
 | **Possible outcomes** now opens with every rule side by side (plus plain holding). Underneath, one expandable item per rule, and one for the price alone, hold the chart, plain English and exact method | `stock_page.py` |
 | **New fusion rule** in Possible outcomes: hold only while the price is in a clear uptrend with positive 6-month return AND the company's quality or valuation score passes (groups 1 and 2). The fundamentals gate is today's rating; the trend part is run on each simulated future. Companies with no results data do not get this row | `core/strategies.py` (`fusion_trend`, `FUSION_RULE`), `core/simulation.py` |
 
+## New in Step 22 (Mayo ribbon)
+A thin four-colour ribbon (crimson, gold, sky blue, green, taken from the Mayo College crest) runs across the top of every page. Nothing else about the look was changed. `core/ui.py`.
+
 ## Status
 All 8 features are built.
