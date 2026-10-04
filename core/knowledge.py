@@ -7,6 +7,9 @@ and the answer.
 Entries for the financial terms (RSI, Sharpe ratio and so on) are generated automatically from core/glossary.py, so
 the "?" bubbles and the bot always agree.
 """
+import json
+import os
+
 from core import glossary
 
 # ---- categories shown to visitors ----
@@ -539,5 +542,34 @@ def _glossary_entries():
     return entries
 
 
-ENTRIES = MANUAL + _glossary_entries()
+NOTES_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "bot_notes.json")
+LEVELS = ("age_10", "age_15", "adult")
+FAQ = "Common questions"
+
+
+def _load_notes():
+    """The bot's main notes (data/bot_notes.json): each term has three explanation levels (age 10, age 15, adult)
+    plus what it means inside this app. Questions people ask are matched against the term, its keywords and the FAQ."""
+    with open(NOTES_PATH, encoding="utf-8") as f:
+        data = json.load(f)
+    entries = []
+    for n in data["entries"]:
+        e = E("n_" + n["id"], n["category"], n["term"],
+              n["keywords"] + [f"what is {n['term'].split(' (')[0].lower()}", f"explain {n['term'].split(' (')[0].lower()}"],
+              n["age_15"] + " " + n["in_this_app"])
+        e["levels"] = {lv: n[lv] for lv in LEVELS}
+        e["in_app"] = n["in_this_app"]
+        e["related_ids"] = ["n_" + r for r in n.get("related", [])]
+        entries.append(e)
+    for q in data["faq"]:
+        entries.append(E("n_faq_" + q["id"], FAQ, q["question"], q["keywords"] + [q["question"]], q["answer"]))
+    return entries, data["meta"], data["fallback"]
+
+
+NOTES, NOTES_META, FALLBACK = _load_notes()
+# the main notes come first, so on an equal match they win over the older hand-written entries
+ENTRIES = NOTES + MANUAL + _glossary_entries()
 BY_ID = {e["id"]: e for e in ENTRIES}
+for _c in dict.fromkeys(e["category"] for e in ENTRIES):
+    if _c not in CATEGORY_ORDER:
+        CATEGORY_ORDER.append(_c)

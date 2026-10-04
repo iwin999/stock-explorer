@@ -13,6 +13,9 @@ def render(ctx):
                "futures and options, and how to use the app. If something is not in its notes, it says so. It teaches; it "
                "does not give investment advice or predict prices.")
 
+    st.radio("Explain at this level", list(ai.LEVEL_NAMES), index=1, horizontal=True, key="chat_level",
+             format_func=ai.LEVEL_NAMES.get,
+             help="Pick how simply I explain things. You can also type an age, like \"explain beta like I'm 8\".")
     history = st.session_state.setdefault("chat", [])
     question = None
 
@@ -61,6 +64,6 @@ def _reply(raw_question, history, ctx):
     if problem:
         history.append({"role": "assistant", "content": problem, "related": []})
         return
-    result = ai.answer(question, ctx)
+    result = ai.answer(question, ctx, st.session_state.get("chat_level", "age_15"))
     history.append({"role": "user", "content": question})
     history.append({"role": "assistant", "content": result["text"], "related": result["related"]})

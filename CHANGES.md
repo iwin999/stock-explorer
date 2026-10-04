@@ -197,5 +197,15 @@ Result on the saved data (3 Jul 2023 to 1 Oct 2026, 0.10% cost): group 1 +72.3%,
 | About has: what the project is, how to use it, limitations, sources and credits (Yahoo Finance, the CMT Level III Chapter 8 authors, standard formulas, software), Meet the creator, and a thank-you note to the school, teachers, family and the community | `core/about.py` |
 | Personal touches can be set without editing code: `[about]` in the app's secrets with `creator` (first name), `reason` and `thanks_extra`. By default nothing identifying is shown | `core/about.py` |
 
+## New in Step 19 (creator details and the full bot notes)
+| Change | Where |
+|---|---|
+| About now names the creator: Freya Shah, PreSC Commerce - B, Mayo College Girls School; CMT Level I and II passed, Level III appearing; EPAT Batch 72. Two **?** bubbles explain what CMT and EPAT are. Gratitude thanks the school, its IT department and the visitor | `core/about.py`, `core/ui.py` |
+| The bot now has the full notes (about 100 terms and 13 common questions) in one editable file. Every term is explained at three levels (age 10 and under, 11 to 15, 16 and over) plus what it means in this app | `data/bot_notes.json`, `core/knowledge.py` |
+| Pick a level above the chat, or type an age ("explain beta like I'm 8", "eli5", "I am 40"). Under each answer, buttons open the related terms | `core/assistant.py`, `core/assistant_ui.py` |
+| Notes that no longer matched the app were corrected (futures, options and ETFs now exist; strategy tests do show win rate; creator name filled in) | `data/bot_notes.json` |
+
+To change what the bot says, edit `data/bot_notes.json` only. Entries marked "verify" in the original notes were checked against the app.
+
 ## Status
 All 8 features are built.

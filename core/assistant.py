@@ -125,8 +125,15 @@ def rank(question, limit=4):
     """Best matching notes as [(score, entry), ...], highest first."""
     q = _correct(tokens(question))
     scored = []
+    low = question.lower()
     for entry, phrase_tokens in _INDEX:
-        best = max((_similarity(q, p) for p in phrase_tokens), default=0.0)
+        # the tiny second term only breaks ties: of two notes that match equally, the one whose wording is closer wins
+        best = 0.0
+        for p, raw in zip(phrase_tokens, _phrasings(entry)):
+            sim = _similarity(q, p)
+            if sim > 0.3:
+                sim += 0.01 * difflib.SequenceMatcher(None, low, raw.lower()).ratio()
+            best = max(best, sim)
         scored.append((best, entry))
     scored.sort(key=lambda x: -x[0])
     return scored[:limit]
@@ -180,8 +187,57 @@ def topics():
     return out
 
 
-STARTERS = ["What does the RSI number mean?", "Explain the Sharpe ratio in simple words",
+STARTERS = ["What does the RSI number mean?", "Explain the Sharpe ratio like I'm 10",
             "How does the Monte Carlo simulation work?", "What is the difference between a future and an option?"]
+
+
+_AGE_PATTERNS = [re.compile(p, re.I) for p in (
+    r"\b(?:like\s+)?(?:i\s*am|i'm|im)\s+(\d{1,3})(?:\s*(?:years?|yrs?)(?:\s*old)?)?\b",
+    r"\b(\d{1,3})[\s-]*(?:years?|yrs?)[\s-]*old\b", r"\bage[d]?\s+(\d{1,3})\b", r"\beli\s*(\d{1,3})\b")]
+LEVEL_NAMES = {"age_10": "Simple (age 10 and under)", "age_15": "Teen (11 to 15)", "adult": "Adult (16 and over)"}
+
+
+def level_for_age(age):
+    for band in kb.NOTES_META["age_bands"]:
+        if band["min_age"] <= age <= band["max_age"]:
+            return band["level"]
+    return None
+
+
+def split_level(question, selected="age_15"):
+    """(question without any age phrase, level). An age in the question ("explain like I'm 8") beats the selected level."""
+    level = selected if selected in kb.LEVELS else "age_15"
+    stripped = question
+    for pat in _AGE_PATTERNS:
+        m = pat.search(stripped)
+        if m:
+            lv = level_for_age(int(m.group(1)))
+            if lv:
+                level = lv
+            stripped = (stripped[:m.start()] + " " + stripped[m.end():]).strip(" ,.?!")
+            stripped = re.sub(r"[\s,]*\b(explain|like|as|to|for|a|an|if)\s*$", "", stripped, flags=re.I).strip(" ,.?!")
+            break
+    else:
+        low = question.lower()
+        for lv, words in kb.NOTES_META["word_hints"].items():
+            if any(re.search(rf"\b{re.escape(w)}\b", low) for w in words):
+                level = lv
+                break
+    return (stripped or question), level
+
+
+def render(entry, level):
+    """The answer text for an entry at a level (notes with levels give a different explanation per level)."""
+    if "levels" in entry:
+        return f"{entry['levels'][level]}\n\n**In this app:** {entry['in_app']}"
+    return entry["answer"]
+
+
+def related_titles(entry, ranked, limit=4):
+    """Follow-up buttons: the entry's own related terms first, then other close matches."""
+    out = [kb.BY_ID[r]["title"] for r in entry.get("related_ids", []) if r in kb.BY_ID]
+    out += [e["title"] for s, e in ranked if s >= MAYBE and e["title"] != entry["title"] and e["title"] not in out]
+    return out[:limit]
 
 
 def clean_question(text):
@@ -197,7 +253,7 @@ def _verdict(score, unknown):
     """Decide how to respond from two numbers: how well the best note matches, and how much of the question is about
     things the notes know nothing about. Tuned against tests/bot_eval_data.py."""
     if score >= STRONG:
-        return "notes"
+        return "notes" if unknown <= 0.35 else "maybe"       # a good match, but much of the question is about something else
     if score >= 0.45:
         return "notes" if unknown <= 0.2 else "maybe" if unknown <= 0.5 else "unknown"
     if score >= MAYBE:
@@ -209,7 +265,7 @@ IDENTITY = re.compile(r"\b(your name|who are you|what are you|are you (a )?(bot|
                       r"what do you do|what can i ask)\b", re.I)
 
 
-def answer(question, ctx=None):
+def answer(question, ctx=None, level="age_15"):
     """The reply to a question: {"text", "related" (list of note titles), "kind"}.
 
     kind is "notes" (found in the notes), "live" (numbers from the page), "maybe" (a guess at what was meant),
@@ -227,6 +283,7 @@ def answer(question, ctx=None):
                 "text": "I am the assistant on this site. I am not a person and I am not connected to the internet: I answer "
                         "only from notes written for this app about finance basics, the simulations and strategy tests, "
                         "futures and options, and how to use the site. If something is not in my notes, I will say so."}
+    question, level = split_level(question, level)
     live = live_answer(question, ctx)
     if live:
         return {"kind": "live", "text": live, "related": []}
@@ -238,7 +295,8 @@ def answer(question, ctx=None):
     if verdict == "maybe" and best_score < 0.45 and not has_finance_word(question):
         verdict = "unknown"                      # a weak guess on everyday words alone is not worth showing
     if verdict == "notes":
-        return {"kind": "notes", "text": best["answer"], "related": related, "source": best["id"]}
+        return {"kind": "notes", "text": render(best, level), "related": related_titles(best, ranked) or related,
+                "source": best["id"]}
     if verdict == "maybe":
         guesses = [best["title"]] + related
         return {"kind": "maybe", "related": guesses[:3],

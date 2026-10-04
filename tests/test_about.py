@@ -16,14 +16,32 @@ def test_about_covers_everything_requested():
         assert needle in about.LIMITATIONS, needle
     for needle in ("Yahoo Finance", "Lundgren", "Letizia", "Black-Scholes", "Streamlit", "not affiliated"):
         assert needle in about.SOURCES, needle
-    assert "Level II" in about.creator_markdown() and "Level III" in about.creator_markdown()
-    assert "AI coding assistant" in about.creator_markdown()                  # honest about the build
-    assert "school" in about.gratitude_markdown() and "teachers" in about.gratitude_markdown()
+    assert "AI coding assistant" in about.creator_story()                       # honest about the build
 
 
-def test_creator_text_does_not_reveal_personal_details_by_default():
-    text = (about.creator_markdown() + about.gratitude_markdown()).lower()
-    for private in ("class 11", "grade", "years old", "phone", "address", "mumbai", "delhi"):
+def test_creator_details_are_exactly_as_given():
+    assert about.CREATOR_NAME == "Freya Shah"
+    assert about.CREATOR_CLASS == "PreSC Commerce - B" and about.CREATOR_SCHOOL == "Mayo College Girls School"
+    assert dict(about.CREDENTIALS) == {"CMT Level I": "Passed", "CMT Level II": "Passed", "CMT Level III": "Appearing"}
+    assert about.EPAT_BATCH == "EPAT Batch 72"
+    assert about._initials("Freya Shah") == "FS"
+
+
+def test_explainers_say_what_cmt_and_epat_are():
+    assert "Chartered Market Technician" in about.CMT_EXPLAINER and "technical analysis" in about.CMT_EXPLAINER
+    assert "Level I" in about.CMT_EXPLAINER and "Level III" in about.CMT_EXPLAINER
+    assert "Executive Programme in Algorithmic Trading" in about.EPAT_EXPLAINER and "QuantInsti" in about.EPAT_EXPLAINER
+    assert "Batch 72" in about.EPAT_EXPLAINER
+
+
+def test_gratitude_thanks_the_school_it_department_and_the_visitor():
+    g = about.gratitude_markdown()
+    assert "Mayo College Girls School" in g and "IT department" in g and "visitor" in g and "opportunity" in g
+
+
+def test_no_phone_address_or_age_is_shown():
+    text = (about.creator_story() + about.gratitude_markdown() + about.CMT_EXPLAINER + about.EPAT_EXPLAINER).lower()
+    for private in ("phone", "address:", "years old", "born", "home"):
         assert private not in text
 
 

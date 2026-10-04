@@ -59,6 +59,16 @@ h3 { font-size: 1.35rem !important; font-weight: 600 !important; }
 .stApp .st-key-about_btn button:hover { background: #1d3557; color: #fff; }
 .stApp .st-key-about_btn button:hover p { color: #fff; }
 
+/* About page: creator card */
+.monogram { width: 4.2rem; height: 4.2rem; border-radius: 50%; background: #1d3557; color: #fff; display: flex;
+        align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 700; letter-spacing: 1px; }
+.creator-name { font-size: 1.7rem; font-weight: 700; line-height: 1.2; color: #1d3557; }
+.creator-meta { font-size: 1.05rem; color: #5b6573; margin-top: 0.15rem; }
+.chip { display: inline-block; padding: 0.3rem 0.8rem; margin: 0 0.4rem 0.4rem 0; border-radius: 999px; font-size: 0.95rem;
+        font-weight: 600; border: 1px solid #c9d2e0; background: #f3f5f8; color: #1d3557; }
+.chip-done { background: #e6f2ec; border-color: #9fd0b8; color: #1d5c42; }
+.chip-next { background: #fdf6e7; border-color: #e6c987; color: #7a5a14; }
+
 /* Friendly error cards */
 .error-card { border-radius: 8px; padding: 1.1rem 1.4rem; margin: 1rem 0; border: 1px solid #c9d2e0; background: #f3f5f8; }
 .error-card.warn { border-color: #e6c987; background: #fdf6e7; }

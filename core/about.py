@@ -14,6 +14,41 @@ from core import errors as er
 
 SITE_NAME = "Stock Explorer"
 
+# ---- the creator (edit here, or override with [about] in the app's secrets) ----
+CREATOR_NAME = "Freya Shah"
+CREATOR_CLASS = "PreSC Commerce - B"
+CREATOR_SCHOOL = "Mayo College Girls School"
+CREDENTIALS = [
+    ("CMT Level I", "Passed"),
+    ("CMT Level II", "Passed"),
+    ("CMT Level III", "Appearing"),
+]
+EPAT_BATCH = "EPAT Batch 72"
+
+CMT_EXPLAINER = """\
+**CMT: Chartered Market Technician**
+
+A global professional qualification in **technical analysis**: reading price and volume to understand what the market is \
+doing. It is awarded by the CMT Association and is taken in three levels.
+
+- **Level I** covers the foundations: charts, indicators, and how markets behave.
+- **Level II** applies them: building and testing analysis, risk management, and combining signals.
+- **Level III** is the most advanced: portfolio construction, behavioural finance, and approaches such as the **fusion \
+analysis** used in this app.
+
+It is usually pursued by people already working in finance, which makes passing two levels while still at school a real \
+achievement."""
+
+EPAT_EXPLAINER = """\
+**EPAT: Executive Programme in Algorithmic Trading**
+
+A professional programme from **QuantInsti** that teaches how to trade with code and data: Python programming, statistics, \
+financial markets, and how to design, test and run automated trading strategies.
+
+"**Batch 72**" is the cohort of learners Freya studied with. Like the CMT, it is usually taken by working professionals, so \
+it is a serious step for a school student, and the skills behind the simulations and strategy tests in this app are exactly \
+the kind the programme teaches."""
+
 WHAT_IT_IS = """\
 **Stock Explorer** is an educational website that makes Indian (NSE) stocks easier to understand. You can look at price charts \
 and signals, see a range of possible outcomes from simulations, test simple trading rules on past prices, study stocks with a \
@@ -80,26 +115,51 @@ def _secret(name, default):
         return default
 
 
-def creator_markdown():
-    name = _secret("creator", "")
+def _initials(name):
+    return "".join(w[0] for w in name.split()[:2]).upper() or "?"
+
+
+def creator_story():
     reason = _secret("reason", "I wanted stock markets to feel less intimidating, especially for people who are not finance "
                                "experts.")
-    hello = f"Hello, I'm {name}, the creator of {SITE_NAME}." if name else f"Hello! I'm the student who created {SITE_NAME}."
-    return (f"{hello} {reason}\n\n"
-            "I am studying for the **CMT (Chartered Market Technician) designation**: I have passed Level II and am preparing "
-            "for Level III. The ideas on this site, from the indicators to the fusion analysis, come from what I have been "
-            "learning. I built it with an AI coding assistant, which wrote the code while I chose what to build and checked "
-            "that each part made sense.\n\n"
-            "If you find something that looks wrong, or have an idea, please tell the admin at "
+    return (f"{reason}\n\n"
+            "Everything on this site, from the indicators to the fusion analysis, comes from what I have been learning. "
+            "I built it with an AI coding assistant, which wrote the code while I chose what to build and checked that each "
+            "part made sense.\n\n"
+            f"If you find something that looks wrong, or have an idea, please tell the admin at "
             f"[{er.admin_email()}](mailto:{er.admin_email()}).")
 
 
 def gratitude_markdown():
     extra = _secret("thanks_extra", "")
-    return ("**Thank you.** To my school and my teachers, for giving me the opportunity to build this and show it at the "
-            "exhibition, and for your encouragement and guidance along the way. To my family, for their patience and support. "
-            "To the CMT community for the learning that inspired this project, and to everyone who shares open-source software "
-            "and data. And thank you to every visitor for trying it." + (f" {extra}" if extra else ""))
+    return (f"**Thank you, {CREATOR_SCHOOL} and the IT department,** for giving me this opportunity. And thank you, the "
+            "visitor, for taking the time to use it." + (f" {extra}" if extra else ""))
+
+
+def _creator_section():
+    name = _secret("creator", CREATOR_NAME)
+    left, right = st.columns([1, 5])
+    with left:
+        st.markdown(f'<div class="monogram">{_initials(name)}</div>', unsafe_allow_html=True)
+    with right:
+        st.markdown(f'<div class="creator-name">{name}</div>'
+                    f'<div class="creator-meta">{CREATOR_CLASS} &middot; {CREATOR_SCHOOL}</div>', unsafe_allow_html=True)
+
+    st.markdown('<div style="height:0.8rem"></div><b>Credentials</b>', unsafe_allow_html=True)
+    tip, row = st.columns([1, 9])
+    with tip:
+        with st.popover("?"):
+            st.markdown(CMT_EXPLAINER)
+    chips = "".join(f'<span class="chip {"chip-done" if status == "Passed" else "chip-next"}">{label}: {status}</span>'
+                    for label, status in CREDENTIALS)
+    row.markdown(chips, unsafe_allow_html=True)
+    tip, row = st.columns([1, 9])
+    with tip:
+        with st.popover("?"):
+            st.markdown(EPAT_EXPLAINER)
+    row.markdown(f'<span class="chip chip-done">Part of {EPAT_BATCH}</span>', unsafe_allow_html=True)
+    st.write("")
+    st.markdown(creator_story())
 
 
 @st.dialog("About Stock Explorer", width="large")
@@ -113,7 +173,7 @@ def _dialog():
     st.markdown("### Sources and credits")
     st.markdown(SOURCES)
     st.markdown("### Meet the creator")
-    st.markdown(creator_markdown())
+    _creator_section()
     st.markdown("### Gratitude")
     st.markdown(gratitude_markdown())
     st.caption("Educational project. Not investment advice. No real money is involved.")
