@@ -135,7 +135,7 @@ def capital_gate():
     mode = st.radio("I am a", ["New user", "Returning user"], horizontal=True, key="gate_mode")
 
     if mode == "New user":
-        name = st.text_input("Choose your name", max_chars=24, key="gate_name", placeholder="e.g. Asha")
+        name = st.text_input("Choose your name", max_chars=24, key="gate_name", placeholder="e.g. Freya")
         labels = [format_inr(a, 0) for a in CAPITAL_PRESETS] + ["Other amount"]
         choice = st.radio("How much would you like to practise with?", labels, index=1, horizontal=True, key="gate_cap")
         if choice == "Other amount":
