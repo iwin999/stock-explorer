@@ -259,9 +259,11 @@ def _organiser_tools():
                     "(see DEPLOY.md).")
             return
         if pin is not None:
-            entered = st.text_input("Organiser PIN", type="password", key="admin_pin")
-            if entered != pin:
-                st.caption("Enter the PIN to continue.")
+            entered = st.text_input("Organiser PIN", type="password", key="admin_pin",
+                                    help="Type the PIN and press Enter.")
+            # forgiving: ignore stray spaces or quote marks that were typed around it
+            if entered.strip().strip("\"'“”‘’").strip() != pin.strip():
+                st.caption("Type the PIN and press Enter. Use only the characters, without quote marks.")
                 return
         try:
             records = store.all()

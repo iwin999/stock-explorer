@@ -188,3 +188,10 @@ def test_new_accounts_record_when_they_were_created(tmp_path):
     store = acc.FileStore(str(tmp_path))
     pf = acc.create_account(store, "Timed", 100000)
     assert pf.created_at and acc.load_account(store, "Timed").created_at == pf.created_at
+
+
+def test_pin_check_ignores_quotes_and_spaces():
+    def matches(entered, pin):
+        return entered.strip().strip("\"'“”‘’").strip() == pin.strip()
+    assert matches('4827', '4827') and matches(' 4827 ', '4827') and matches('"4827"', '4827') and matches("“4827”", "4827")
+    assert not matches('4828', '4827') and not matches('', '4827')
