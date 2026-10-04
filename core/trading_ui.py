@@ -245,6 +245,7 @@ def positions_table(snap):
 def render(symbol, name, fallback_price, offline=False):
     pf = _get_portfolio()
 
+    exit_all_control("trade")
     st.caption("Practise with **virtual** money. Nothing here is real. **In short:** pick Buy or Sell, choose what, choose how much, press the button.")
     if offline:
         notice("Prices below come from saved data, not live prices.")
@@ -266,7 +267,6 @@ def render(symbol, name, fallback_price, offline=False):
 
     st.header("Everything you hold")
     st.fragment(run_every=None if offline else _refresh_every())(_holdings_view)()
-    _exit_all_section(pf)
 
     st.subheader("Order history")
     orders = pf.orders_dataframe()
@@ -323,30 +323,8 @@ def _holdings_view():
     holdings_ui.render(pf, snapshot_now(pf), key="trade")
 
 
-def _exit_all_section(pf):
-    """One button to sell everything and close every contract. Cash stays as cash; the starting capital is never reset."""
-    last = st.session_state.get("exit_report")
-    if last:
-        with st.expander(f"Last exit: what was sold ({last['count']} positions)", expanded=False):
-            rows = [{"Position": d, "Profit / loss": format_inr(p)} for d, p in last["lines"]]
-            st.dataframe(rows, hide_index=True, width="stretch")
-            st.caption(f"Total profit or loss from this exit: {format_inr(last['realised'])}.")
-    if not pf.holdings and not pf.derivatives:
-        return
-    with st.expander("Exit all positions", expanded=False):
-        st.markdown(
-            "Sells **every** share, ETF and bond fund, and closes **every** future and option, in one go, at the current "
-            "prices (the last closing prices when the market is closed).\n\n"
-            "- The money from the sales stays in your account as **cash**, with your profit or loss included.\n"
-            "- It does **not** put your capital back to what you started with. Your starting capital is unchanged, so your "
-            "profit or loss so far is kept.\n"
-            "- It cannot be undone.")
-        sure = st.checkbox("I understand and want to exit everything", key="exit_all_sure")
-        st.button("Exit all positions", type="primary", disabled=not sure, key="exit_all_go", on_click=_do_exit_all)
-
-
 def _do_exit_all():
-    """Runs when the button is pressed (before the page redraws, which is also why the tick box can be cleared here)."""
+    """Sell everything and close every contract (see valuation.exit_all). The starting capital is never touched."""
     pf = _get_portfolio()
     try:
         report = val.exit_all(pf, spot_price, vol_estimate)
@@ -356,7 +334,42 @@ def _do_exit_all():
                                         f"{format_inr(report['realised'])}. Cash is now {format_inr(pf.balance)}.")
     except TradingError as e:
         st.session_state.flash = ("error", str(e))
-    st.session_state["exit_all_sure"] = False
+
+
+@st.dialog("Exit all positions?")
+def _exit_dialog():
+    pf = _get_portfolio()
+    count = len(pf.holdings) + len(pf.derivatives)
+    st.write(f"This sells everything you hold ({count} position{'s' if count != 1 else ''}) and closes every future and "
+             "option, at the current prices (the last closing prices when the market is closed).")
+    st.markdown("- The money stays in your account as **cash**, with your profit or loss included.\n"
+                "- Your **starting capital does not change**: this does not put your money back to what you started with.\n"
+                "- It cannot be undone.")
+    yes, no = st.columns(2)
+    if yes.button("Yes, exit everything", type="primary", key="exit_yes", width="stretch"):
+        _do_exit_all()
+        st.rerun()
+    if no.button("Cancel", key="exit_no", width="stretch"):
+        st.rerun()
+
+
+def exit_all_control(key):
+    """The 'Exit all positions' button, shown first in the Paper trading and Your Portfolio tabs. It is greyed out until
+    something is held, and asks for a confirmation before doing anything."""
+    pf = _get_portfolio()
+    has = bool(pf.holdings or pf.derivatives)
+    left, right = st.columns([1.3, 3])
+    if left.button("Exit all positions", key=f"exit_open_{key}", type="primary" if has else "secondary",
+                   disabled=not has, width="stretch"):
+        _exit_dialog()
+    right.caption("Sell everything you hold in one go. Your cash stays as it is; your starting capital is not reset."
+                  if has else "Available as soon as you hold something.")
+    last = st.session_state.get("exit_report")
+    if last:
+        with st.expander(f"Last exit: what was sold ({last['count']} position{'s' if last['count'] != 1 else ''})"):
+            st.dataframe([{"Position": d, "Profit / loss": format_inr(p)} for d, p in last["lines"]], hide_index=True,
+                         width="stretch")
+            st.caption(f"Total profit or loss from this exit: {format_inr(last['realised'])}.")
 
 
 # ---------------- stocks, ETFs and bonds ----------------

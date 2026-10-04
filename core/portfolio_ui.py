@@ -14,7 +14,7 @@ from core.formatting import format_inr, format_ist
 from core.live import spot_price, vol_estimate
 from core.market_hours import now_ist
 from core.trading import Portfolio
-from core.trading_ui import (_get_portfolio, _refresh_every, _save, _sign_out, admin_pin, get_store,
+from core.trading_ui import (exit_all_control, _get_portfolio, _refresh_every, _save, _sign_out, admin_pin, get_store,
                              positions_table, snapshot_now, storage_diagnosis)
 from core.errors import guard
 from core.ui import callout, know_how_button, notice, plain_english
@@ -32,6 +32,7 @@ def _all_accounts(_store):
 
 def render():
     pf = _get_portfolio()
+    exit_all_control("portfolio")
     st.header(f"Your portfolio: {pf.name}")
     st.caption("Your own paper-trading portfolio. It is saved under your name, so you can come back later and see how it did.")
 

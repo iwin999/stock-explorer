@@ -267,7 +267,11 @@ Limits: the Fusion screen and model-portfolio test still use the 119 saved compa
 The About page Gratitude note now gives Mr. Prashant Kulshrestha a special mention for his guidance, between the thanks to the school and the thanks to the visitor. `core/about.py`.
 
 ## New in Step 28 (exit all positions)
-Paper trading has an **Exit all positions** option (under Everything you hold): after a tick-box confirmation it sells every share, ETF and bond fund and closes every future and option at current prices. The money stays as cash with profit or loss included; the starting capital is never reset. `core/valuation.py` (`exit_all`), `core/trading_ui.py`.
+| Change | Where |
+|---|---|
+| A big **Exit all positions** button is the first thing in both the **Paper trading** and **Your Portfolio** tabs. It is greyed out until something is held and turns on as soon as there is a position | `core/trading_ui.py` (`exit_all_control`), `core/portfolio_ui.py` |
+| Pressing it opens a simple "Exit all positions?" pop-up with Yes and Cancel. Yes sells every share, ETF and bond fund and closes every future and option at current prices (last close when the market is closed). The money stays as cash with profit or loss included; the starting capital is never reset. A "Last exit" list shows what was sold | `core/valuation.py` (`exit_all`) |
+| The page now **stays on the tab you are using** after a click (before, a Buy or Sell jumped back to Overview) | `stock_page.py` (`key="main_tabs"`) |
 
 ## New in Step 29 (one search box with suggestions)
 | Change | Where |

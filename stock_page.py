@@ -138,7 +138,8 @@ PERIODS = {"6 months": 126, "1 year": 252, "2 years": 504, "5 years": 1260}
 STRATEGY_KEYS = list(STRATEGIES)
 
 tab_overview, tab_carpet, tab_outcomes, tab_strategy, tab_fusion, tab_trade, tab_portfolio, tab_bot = st.tabs(
-    ["Overview", "Market carpet", "Possible outcomes", "Strategy tests", "Fusion analysis", "Paper trading", "Your Portfolio", "Ask the bot"])
+    ["Overview", "Market carpet", "Possible outcomes", "Strategy tests", "Fusion analysis", "Paper trading", "Your Portfolio", "Ask the bot"],
+    key="main_tabs")           # a key keeps the chosen tab selected when the page refreshes after a click
 
 # =====================================================================
 # TAB 1: OVERVIEW - price chart, key signals, risk and return ratios
