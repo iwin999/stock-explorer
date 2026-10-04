@@ -149,5 +149,15 @@ Known limits: NSE holidays are not in the calendar (the app says "open" but pric
 | Organiser could not tell why the database was not connecting | Organiser tools explain what is missing | `core/portfolio_ui.py` |
 | Supabase secret keys in the new `sb_secret_` format were sent the old way | Sent in the apikey header only | `core/accounts.py` |
 
+## New in Step 15 (friendly errors)
+| Change | Where |
+|---|---|
+| Visitors never see a technical error box. Three short messages instead: **Network issue** (with a Try again button), **The app is being updated** (about 2 minutes; contact the admin if longer), and **Congratulations! You have found an error** (contact the admin, with a short reference code such as E-954C1D). The full technical details go only to the server log | `core/errors.py` |
+| The page itself moved to `stock_page.py`; `app.py` is now a small safety-net wrapper that runs it. Streamlit still starts from `app.py` | `app.py`, `stock_page.py` |
+| The parts that refresh on their own (live prices, dashboard, leaderboard) have the same safety net | `core/trading_ui.py`, `core/portfolio_ui.py` |
+| Admin contact shown in the messages: `shahfreya002@gmail.com` (can be overridden with `admin_email` in the app's secrets) | `core/errors.py` |
+
+Limit: while Streamlit is actually rebuilding the app after a push, its own "updating" page is shown by the hosting platform, so it cannot be customised from the app. The in-app "being updated" message appears only for the brief moments when the code changes under a running page.
+
 ## Status
 All 8 features are built.

@@ -40,7 +40,7 @@ Online, visitors choose a name and capital and their portfolio is saved under th
 | 7 | Offline backup + automatic fallback | `scripts/download_offline_data.py`, `core/market_data.py` |
 | 8 | Disclaimer in the footer of the page | `core/ui.py` |
 
-`app.py` is the page itself; everything in `core/` is a separate, testable piece.
+`app.py` starts the app inside a safety net (friendly error messages); `stock_page.py` is the page itself; everything in `core/` is a separate, testable piece.
 `CHANGES.md` lists what was kept from last year's `senior_app.py` and what was improved.
 `PRESENTING.md` has talking points and likely questions.
 

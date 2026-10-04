@@ -18,6 +18,7 @@ from core.live import REFRESH_SECONDS, close_on, live_quote, spot_price, vol_est
 from core.market_data import get_latest_price
 from core.market_hours import is_market_open, now_ist
 from core.trading import MAX_CAPITAL, MIN_CAPITAL, Portfolio, TradingError, check_capital
+from core.errors import guard
 from core.ui import know_how_button, notice, show_disclaimer
 
 CAPITAL_PRESETS = [50000, 100000, 500000, 1000000]
@@ -292,6 +293,7 @@ def render(symbol, name, fallback_price, offline=False):
             st.rerun()
 
 
+@guard()
 def _account_summary():
     pf = _get_portfolio()
     snap = snapshot_now(pf)
@@ -303,6 +305,7 @@ def _account_summary():
     st.caption(f"Updated {now_ist():%H:%M:%S} IST. Prices come from Yahoo Finance and can be delayed by a few minutes.")
 
 
+@guard()
 def _positions_view():
     pf = _get_portfolio()
     styled = positions_table(snapshot_now(pf))
@@ -484,6 +487,7 @@ def _options_ticket(pf, offline):
         "**Risks.** Options can lose all of the premium quickly, especially close to expiry."))
 
 
+@guard()
 def _open_derivatives(kind):
     """List open futures ('FUT') or options ('OPT') with a Close/Sell button for each."""
     pf = _get_portfolio()

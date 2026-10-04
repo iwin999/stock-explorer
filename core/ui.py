@@ -50,6 +50,13 @@ h3 { font-size: 1.35rem !important; font-weight: 600 !important; }
 .notice { border-left: 4px solid #b7791f; background: #fdf6e7; padding: 0.7rem 1.1rem;
           border-radius: 4px; font-size: 1.0rem; margin: 0.5rem 0 1rem 0; color: #5b4a1e; }
 
+/* Friendly error cards */
+.error-card { border-radius: 8px; padding: 1.1rem 1.4rem; margin: 1rem 0; border: 1px solid #c9d2e0; background: #f3f5f8; }
+.error-card.warn { border-color: #e6c987; background: #fdf6e7; }
+.error-card .error-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.4rem; color: #1d3557; }
+.error-card p { margin: 0.3rem 0; font-size: 1.1rem !important; }
+.error-card p.small { font-size: 0.95rem !important; color: #5b6573; }
+
 /* ---- small screens (phones) ---- */
 @media (max-width: 640px) {
   /* Tabs wrap onto a second line instead of hiding behind a scroll arrow */
