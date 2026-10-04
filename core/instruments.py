@@ -8,7 +8,7 @@ Cash-market instruments (bought and sold like shares, live Yahoo prices):
 
 Futures and options use these underlyings (see core/derivatives.py for how they are priced).
 """
-from core.companies import COMPANIES, NAME_BY_SYMBOL
+from core.companies import COMPANIES, NAME_BY_SYMBOL, code_of
 
 # asset classes shown to visitors
 STOCKS, ETFS, BONDS, FUTURES, OPTIONS, CASH = (
@@ -47,10 +47,20 @@ for _sym, _name, _cls, _group in _ETF_ROWS:
 
 
 def name_of(symbol):
-    """Readable name for any instrument or index."""
+    """Readable name for any instrument or index. A company we have never seen is looked up once on Yahoo."""
     if symbol in CASH_INSTRUMENTS:
         return CASH_INSTRUMENTS[symbol]["name"]
-    return {"^NSEI": "Nifty 50 index", "^NSEBANK": "Bank Nifty index"}.get(symbol, NAME_BY_SYMBOL.get(symbol, symbol))
+    if symbol in NAME_BY_SYMBOL:
+        return NAME_BY_SYMBOL[symbol]
+    if symbol in ("^NSEI", "^NSEBANK"):
+        return {"^NSEI": "Nifty 50 index", "^NSEBANK": "Bank Nifty index"}[symbol]
+    if symbol.endswith((".NS", ".BO")):
+        from core.market_data import get_company_name
+        name = get_company_name(symbol)
+        if name != symbol:
+            NAME_BY_SYMBOL[symbol] = name              # remembered, so Yahoo is asked only once
+        return name
+    return symbol
 
 
 def asset_class(symbol):
@@ -64,7 +74,7 @@ def symbols_in_class(cls):
 
 def label(symbol):
     """Dropdown text, e.g. 'Gold ETF (Nippon India Gold BeES) (GOLDBEES)'."""
-    return f"{name_of(symbol)} ({symbol.replace('.NS', '')})"
+    return f"{name_of(symbol)} ({code_of(symbol)})"
 
 
 # ---------------- futures and options underlyings ----------------

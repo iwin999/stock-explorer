@@ -66,7 +66,7 @@ trading_ui.show_events()       # e.g. 'your future expired and was settled'
 # ---------- company search + dropdown ----------
 col_search, col_pick = st.columns(2)
 with col_search:
-    query = st.text_input("Search by company name", placeholder="e.g. Reliance, Tata Motors, HDFC")
+    query = st.text_input("Search by company name", placeholder="Any NSE or BSE company, e.g. Reliance, Suzlon, Zomato")
 
 if query.strip():
     results, source = run_search(query.strip())
@@ -79,7 +79,7 @@ if query.strip():
         hint = f"{len(options)} match(es)"
 else:
     options = [s for _, s, _ in companies.COMPANIES]
-    hint = "Or choose from the list (type to filter)"
+    hint = "Or choose from the popular list (type to filter)"
 
 with col_pick:
     symbol = st.selectbox(hint, options, format_func=companies.label)

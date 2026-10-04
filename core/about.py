@@ -50,7 +50,7 @@ it is a serious step for a school student, and the skills behind the simulations
 the kind the programme teaches."""
 
 WHAT_IT_IS = """\
-**Stock Explorer** is an educational website that makes Indian (NSE) stocks easier to understand. You can look at price charts \
+**Stock Explorer** is an educational website that makes Indian (NSE and BSE) stocks easier to understand. You can look at price charts \
 and signals, see a range of possible outcomes from simulations, test simple trading rules on past prices, study stocks with a \
 method from the CMT Level III curriculum, and practise buying and selling with **virtual money** in shares, ETFs, bond funds, \
 futures and options. Nothing here is real money, and nothing here is investment advice."""

@@ -138,9 +138,22 @@ BENCHMARK = "^NSEI"   # Nifty 50
 NAME_BY_SYMBOL = {symbol: name for name, symbol, _ in COMPANIES}
 
 
+def code_of(symbol):
+    """Short code for display: RELIANCE for the NSE listing, 'BSE: SUZLON' for a BSE (.BO) listing."""
+    if symbol.endswith(".BO"):
+        return "BSE: " + symbol[:-3]
+    return symbol.replace(".NS", "")
+
+
 def label(symbol):
-    """Text shown in the dropdown, e.g. 'Reliance Industries (RELIANCE)'."""
-    return f"{NAME_BY_SYMBOL.get(symbol, symbol)} ({symbol.replace('.NS', '')})"
+    """Text shown in the dropdown, e.g. 'Reliance Industries (RELIANCE)' or 'Suzlon Energy (BSE: SUZLON)'."""
+    return f"{NAME_BY_SYMBOL.get(symbol, symbol)} ({code_of(symbol)})"
+
+
+def remember(results):
+    """Keep the names of companies found through Yahoo, so they show properly everywhere (dropdowns, trades, holdings)."""
+    for r in results:
+        NAME_BY_SYMBOL.setdefault(r["symbol"], r["name"])
 
 
 def search_local(query, limit=10):
@@ -176,9 +189,17 @@ def search_local(query, limit=10):
     return results
 
 
-def search(query):
-    """Our list first; the senior's Yahoo search only if our list finds nothing."""
-    local = search_local(query)
-    if local:
-        return local, "our company list"
-    return yahoo_search(query), "Yahoo Finance"
+def search(query, limit=25):
+    """Our list first, then every other NSE or BSE company Yahoo Finance knows by that name.
+
+    Yahoo has no 'list everything' call, so companies outside our built-in list are found on demand, as they are
+    searched for. Results from Yahoo are added after ours (no duplicates).
+    """
+    results = search_local(query)
+    seen = {r["symbol"] for r in results}
+    extra = [r for r in yahoo_search(query) if r["symbol"] not in seen] if len(query.strip()) >= 2 else []
+    remember(extra)
+    results = (results + extra)[:limit]
+    if results and extra:
+        return results, "our list and Yahoo Finance (NSE and BSE)"
+    return results, "our company list" if results else "Yahoo Finance"

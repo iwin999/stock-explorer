@@ -254,7 +254,7 @@ def render(symbol, name, fallback_price, offline=False):
     stocks_tab, etf_tab, fut_tab, opt_tab = st.tabs(["Stocks", "ETFs and bonds", "Futures", "Options"])
     with stocks_tab:
         stocks = [s for s in ins.CASH_INSTRUMENTS if ins.asset_class(s) == ins.STOCKS]
-        _trade_picker(pf, "stk", stocks, symbol, offline, "company")
+        _trade_picker(pf, "stk", stocks, symbol, offline, "company", open_universe=True)
     with etf_tab:
         etfs = [s for s in ins.CASH_INSTRUMENTS if ins.asset_class(s) != ins.STOCKS]
         st.caption("Funds that hold many companies or bonds in one. Prices are live NSE prices.")
@@ -323,16 +323,22 @@ def _holdings_view():
 
 
 # ---------------- stocks, ETFs and bonds ----------------
-def _trade_picker(pf, key, universe, default, offline, noun):
-    """Buy or Sell, then choose what: any company or fund for Buy, only things you own for Sell."""
+def _trade_picker(pf, key, universe, default, offline, noun, open_universe=False):
+    """Buy or Sell, then choose what: Buy lists the fixed list (plus the company chosen at the top of the page when
+    `open_universe` is on, so any NSE or BSE company can be traded); Sell lists only what you own."""
     mode = st.radio("What do you want to do?", ["Buy", "Sell"], horizontal=True, key=f"mode_{key}")
     if mode == "Buy":
         options = list(universe)
+        if open_universe and default not in options:
+            options.insert(0, default)
         index = options.index(default) if default in options else 0
         symbol = st.selectbox(f"Choose a {noun} (click, then type to search)", options, index=index,
-                              format_func=lambda s: f"{ins.name_of(s)}  ({s.replace('.NS', '')})", key=f"pick_{key}")
+                              format_func=ins.label, key=f"pick_{key}_{default}")      # follows the company chosen at the top
+        if open_universe:
+            st.caption("To trade a company that is not in this list, search for it at the top of the page; it will "
+                       "appear here first. NSE and BSE companies both work.")
     else:
-        owned = [s for s in pf.holdings if s in universe]
+        owned = [s for s in pf.holdings if s in universe or (open_universe and s not in ins.CASH_INSTRUMENTS)]
         if not owned:
             st.info(f"You do not own any {noun}s yet, so there is nothing to sell. Switch to Buy to get started.")
             return

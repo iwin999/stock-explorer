@@ -1,6 +1,6 @@
 # Stock Explorer
 
-An educational stock-analysis app for Indian (NSE) companies, built for a school exhibition.
+An educational stock-analysis app for Indian (NSE and BSE) companies, built for a school exhibition.
 **Educational project. Not investment advice.**
 
 ## Run it (Mac)

@@ -234,5 +234,14 @@ A thin four-colour ribbon (crimson, gold, sky blue, green, taken from the Mayo C
 ## New in Step 23 (leaderboard rank in the market strip)
 The strip at the top now has a fifth card, **Leaderboard**, showing your rank (for example "#2 of 14"). The cards were made a little smaller so every number fits. `core/market_strip.py`, `core/portfolio_ui.py` (`my_rank`).
 
+## New in Step 24 (NSE and BSE)
+| Change | Where |
+|---|---|
+| Search now covers **every NSE and BSE company Yahoo Finance knows**, not just the built-in 119. Type any name; ours come first, then Yahoo's NSE and BSE listings (BSE shown as "Name (BSE: CODE)") | `core/companies.py` (`search`, `code_of`, `label`) |
+| Any company you search for can be analysed (charts, signals, risk, simulations, strategy tests) and **bought and sold in paper trading**. The trade picker starts on the company chosen at the top and follows it | `core/trading_ui.py` |
+| Names of companies outside the list are looked up once and remembered, so holdings and trades show names, not tickers | `core/instruments.py` (`name_of`) |
+
+Honest limits: Yahoo has no "list every stock" call (BSE has about 5,000), so companies are found as they are searched for, not downloaded in bulk. The 119 built-in companies keep their saved backup prices and the Fusion rating; other companies need Yahoo to be reachable and have no Fusion rating. The portfolio builder and the Nifty/Bank Nifty futures and options still use the built-in lists.
+
 ## Status
 All 8 features are built.

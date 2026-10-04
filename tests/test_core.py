@@ -143,3 +143,25 @@ def test_indian_time_conversion():
     assert format_ist("2026-10-03T18:30:00Z") == "04 Oct 2026, 12:00 AM"          # crosses midnight
     assert format_ist("2026-10-03T06:30:00") == "03 Oct 2026, 12:00 PM"           # no zone: treated as UTC
     assert format_ist(None) == "not recorded" and format_ist("garbage") == "not recorded"
+
+
+def test_search_adds_bse_and_other_companies_from_yahoo(monkeypatch):
+    from core import companies
+    fake = [{"symbol": "SUZLON.NS", "name": "Suzlon Energy Limited"}, {"symbol": "SUZLON.BO", "name": "Suzlon Energy Limited"},
+            {"symbol": "RELIANCE.NS", "name": "Reliance Industries Limited"}]
+    monkeypatch.setattr(companies, "yahoo_search", lambda q: fake)
+    results, source = companies.search("reliance")
+    symbols = [r["symbol"] for r in results]
+    assert symbols[0] == "RELIANCE.NS" and symbols.count("RELIANCE.NS") == 1          # ours first, no duplicates
+    assert "SUZLON.BO" in symbols and "BSE" in source
+    assert companies.label("SUZLON.BO") == "Suzlon Energy Limited (BSE: SUZLON)"
+    assert companies.label("RELIANCE.NS") == "Reliance Industries (RELIANCE)"
+    from core import instruments as ins
+    assert ins.name_of("SUZLON.BO") == "Suzlon Energy Limited" and ins.asset_class("SUZLON.BO") == ins.STOCKS
+
+
+def test_search_still_works_when_yahoo_is_down(monkeypatch):
+    from core import companies
+    monkeypatch.setattr(companies, "yahoo_search", lambda q: [])
+    results, source = companies.search("tata motors")
+    assert results and source == "our company list"
