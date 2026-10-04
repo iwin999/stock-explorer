@@ -95,7 +95,11 @@ def save_offline(symbol, hist, folder=None):
 
 
 def load_offline(symbol, folder=None):
-    """Read a stock's backup file, or None if we don't have one / it is damaged."""
+    """Read a stock's backup file, or None if we don't have one / it is damaged.
+    A BSE listing of a built-in company uses its NSE twin's file (the same company, almost the same prices)."""
+    if symbol.endswith(".BO") and not os.path.exists(offline_path(symbol, folder)):
+        from core.companies import to_nse
+        symbol = to_nse(symbol)
     try:
         df = pd.read_csv(offline_path(symbol, folder), index_col=0, parse_dates=True)
         return df.dropna() if not df.empty else None

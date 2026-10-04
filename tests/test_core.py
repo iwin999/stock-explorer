@@ -165,3 +165,24 @@ def test_search_still_works_when_yahoo_is_down(monkeypatch):
     monkeypatch.setattr(companies, "yahoo_search", lambda q: [])
     results, source = companies.search("tata motors")
     assert results and source == "our company list"
+
+
+def test_every_builtin_company_has_a_bse_twin_that_behaves_like_the_nse_one():
+    from core import companies, instruments as ins
+    assert len(companies.BSE_OF) == len(companies.COMPANIES)
+    for _name, nse, _ in companies.COMPANIES:
+        bse = companies.BSE_OF[nse]
+        assert bse.endswith(".BO") and companies.to_nse(bse) == nse and companies.twin_of(nse) == bse
+        assert ins.asset_class(bse) == ins.STOCKS and ins.name_of(bse) == ins.name_of(nse)
+    assert companies.listings("TCS.NS") == ["TCS.NS", "TCS.BO"] and companies.listings("UNKNOWN.NS") == ["UNKNOWN.NS"]
+    assert companies.benchmark_for("TCS.BO") == ("^BSESN", "Sensex") and companies.benchmark_for("TCS.NS")[1] == "Nifty 50"
+    hits = [r["symbol"] for r in companies.search_local("reliance")]
+    assert "RELIANCE.NS" in hits and "RELIANCE.BO" in hits                      # a search shows both listings
+    assert "^BSESN" in ins.FNO_UNDERLYINGS and "TCS.BO" in ins.FNO_UNDERLYINGS     # futures and options on the Sensex and BSE shares
+
+
+def test_bse_listing_falls_back_to_the_nse_saved_prices():
+    from core import market_data
+    nse, bse = market_data.load_offline("TCS.NS"), market_data.load_offline("TCS.BO")
+    assert nse is not None and bse is not None and bse.index[-1] == nse.index[-1]
+    assert market_data.load_offline("^BSESN") is not None

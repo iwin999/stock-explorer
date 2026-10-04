@@ -8,7 +8,7 @@ Cash-market instruments (bought and sold like shares, live Yahoo prices):
 
 Futures and options use these underlyings (see core/derivatives.py for how they are priced).
 """
-from core.companies import COMPANIES, NAME_BY_SYMBOL, code_of
+from core.companies import BSE_OF, COMPANIES, NAME_BY_SYMBOL, code_of
 
 # asset classes shown to visitors
 STOCKS, ETFS, BONDS, FUTURES, OPTIONS, CASH = (
@@ -42,6 +42,8 @@ ETF_LIST = [(sym, name, cls, group) for sym, name, cls, group in _ETF_ROWS]
 CASH_INSTRUMENTS = {}                      # symbol -> {"name", "class", "group"}
 for _name, _sym, _ in COMPANIES:
     CASH_INSTRUMENTS[_sym] = {"name": _name, "class": STOCKS, "group": "Stock"}
+    if _sym in BSE_OF:                                  # the same company on the BSE
+        CASH_INSTRUMENTS[BSE_OF[_sym]] = {"name": _name, "class": STOCKS, "group": "Stock (BSE)"}
 for _sym, _name, _cls, _group in _ETF_ROWS:
     CASH_INSTRUMENTS[_sym] = {"name": _name, "class": _cls, "group": _group}
 
@@ -52,8 +54,8 @@ def name_of(symbol):
         return CASH_INSTRUMENTS[symbol]["name"]
     if symbol in NAME_BY_SYMBOL:
         return NAME_BY_SYMBOL[symbol]
-    if symbol in ("^NSEI", "^NSEBANK"):
-        return {"^NSEI": "Nifty 50 index", "^NSEBANK": "Bank Nifty index"}[symbol]
+    if symbol in INDEX_NAMES:
+        return INDEX_NAMES[symbol]
     if symbol.endswith((".NS", ".BO")):
         from core.market_data import get_company_name
         name = get_company_name(symbol)
@@ -78,12 +80,13 @@ def label(symbol):
 
 
 # ---------------- futures and options underlyings ----------------
-INDEX_UNDERLYINGS = ["^NSEI", "^NSEBANK"]
+INDEX_NAMES = {"^NSEI": "Nifty 50 index", "^NSEBANK": "Bank Nifty index", "^BSESN": "Sensex index (BSE)"}
+INDEX_UNDERLYINGS = ["^NSEI", "^NSEBANK", "^BSESN"]
 _STOCK_FNO = ["RELIANCE", "TCS", "HDFCBANK", "ICICIBANK", "INFY", "SBIN", "BHARTIARTL", "ITC", "LT",
               "HINDUNILVR", "KOTAKBANK", "AXISBANK", "BAJFINANCE", "MARUTI", "SUNPHARMA", "M&M",
               "HCLTECH", "TATASTEEL", "TITAN", "WIPRO", "ASIANPAINT", "ONGC", "NTPC", "ADANIENT"]
-FNO_UNDERLYINGS = INDEX_UNDERLYINGS + [s + ".NS" for s in _STOCK_FNO]
+FNO_UNDERLYINGS = INDEX_UNDERLYINGS + [s + ".NS" for s in _STOCK_FNO] + [BSE_OF[s + ".NS"] for s in _STOCK_FNO if s + ".NS" in BSE_OF]
 
 # every symbol the app may need prices for (used by the offline download script)
 ALL_PRICED_SYMBOLS = list(dict.fromkeys(
-    [s for _, s, _ in COMPANIES] + [r[0] for r in _ETF_ROWS] + INDEX_UNDERLYINGS))
+    [s for _, s, _ in COMPANIES] + [r[0] for r in _ETF_ROWS] + ["^NSEI", "^NSEBANK", "^BSESN"]))   # saved copies kept for the NSE listings and the indices

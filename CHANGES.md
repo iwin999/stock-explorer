@@ -251,5 +251,17 @@ Honest limits: Yahoo has no "list every stock" call (BSE has about 5,000), so co
 | The Mayo College Girls School crest now sits beside the page title | `assets/mayo-crest.png`, `core/about.py` |
 | Market strip cards wrap onto a second row on narrow screens instead of being cut off | `core/market_strip.py` |
 
+## New in Step 26 (NSE and BSE as equals)
+Every feature that worked for an NSE company now works for the same company's BSE listing, and wherever NSE is named, BSE is named too.
+| Change | Where |
+|---|---|
+| All 119 built-in companies have a validated BSE twin. Dropdown, search, paper trading, the portfolio builder and futures/options list both listings ("Name (RELIANCE)" and "Name (BSE: RELIANCE)") | `data/offline/bse_twins.json`, `core/companies.py`, `core/instruments.py` |
+| A BSE listing is compared with the **Sensex** (an NSE listing with the Nifty 50). Sensex also added to the market strip, and as a futures/options underlying | `core/companies.py` (`benchmark_for`), `stock_page.py`, `core/market_strip.py` |
+| Saved prices work for BSE twins (they use the NSE twin's file) and for the Sensex | `core/market_data.py`, `data/offline/IDX_BSESN.csv` |
+| Fusion analysis works for BSE listings (via the NSE twin's rating) and now rates **any** NSE or BSE company on demand from Yahoo, ranked against the saved companies | `core/fusion_ui.py` (`rating_row`) |
+| Wording: About, bot notes, captions, README and presenting notes now say NSE and BSE; the bot explains the BSE and the Sensex | `core/about.py`, `core/knowledge.py`, `data/bot_notes.json` |
+
+Limits: the Fusion screen and model-portfolio test still use the 119 saved companies (NSE listings); futures and options use the same simplified expiry rule for the Sensex.
+
 ## Status
 All 8 features are built.

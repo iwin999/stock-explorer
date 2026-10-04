@@ -88,7 +88,7 @@ def num(x, digits=2):
     return "n/a" if x is None else f"{x:.{digits}f}"
 
 
-def describe(key, s):
+def describe(key, s, bench="Nifty 50"):
     """(value as text, one-sentence meaning) for a ratio key, from a summary dict."""
     v = s.get(key)
     if v is None:
@@ -112,13 +112,13 @@ def describe(key, s):
         return pct(v), "Extra return earned per unit of risk taken from moving with the market (beta)."
     if key == "beta":
         word = "more" if v > 1.05 else "less" if v < 0.95 else "about as much"
-        return num(v), f"When the Nifty 50 moves 1%, this stock has tended to move {v:.2f}%: {word} swing than the market."
+        return num(v), f"When the {bench} moves 1%, this stock has tended to move {v:.2f}%: {word} swing than the market."
     if key == "alpha":
         return pct(v, sign=True), "Yearly return beyond what the market's movements alone would explain. Positive means it did better than expected for its risk."
     if key == "information":
-        return num(v), "How consistently it beat (or trailed) the Nifty 50, relative to how much it differed. Above 0.5 is considered good."
+        return num(v), f"How consistently it beat (or trailed) the {bench}, relative to how much it differed. Above 0.5 is considered good."
     if key == "correlation":
-        return num(v), "How closely it moves with the Nifty 50: 1 means in step, 0 means unrelated, below 0 means opposite."
+        return num(v), f"How closely it moves with the {bench}: 1 means in step, 0 means unrelated, below 0 means opposite."
     if key == "win_rate":
         return pct(v, 0), "The share of days the price closed higher."
     return str(v), ""
@@ -180,15 +180,15 @@ GLOSSARY = """
 
 **Calmar ratio.** Yearly return divided by the maximum drawdown: reward compared with the worst pain.
 
-**Beta.** How strongly the stock moves compared with the market (the Nifty 50). Beta 1.5 means that when the market moves 1%, this stock tends to move 1.5%.
+**Beta.** How strongly the stock moves compared with the market (the Nifty 50 for NSE listings, the Sensex for BSE listings). Beta 1.5 means that when the market moves 1%, this stock tends to move 1.5%.
 
 **Alpha.** The extra yearly return beyond what its beta alone would explain. Positive alpha means it beat what its market risk deserved.
 
 **Treynor ratio.** Extra return over the safe rate, divided by beta: reward per unit of market risk.
 
-**Information ratio.** How steadily the stock beat (or trailed) the Nifty 50.
+**Information ratio.** How steadily the stock beat (or trailed) the market index.
 
-**Correlation.** How closely it moves in step with the Nifty 50, from -1 to 1.
+**Correlation.** How closely it moves in step with the market index, from -1 to 1.
 
 *Safe rate used here: 6.5% a year (about what a government bond pays). Ratios describe the past only.*
 """

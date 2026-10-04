@@ -49,7 +49,7 @@ The page has four tabs: **Overview, Possible outcomes, Strategy tests, Paper tra
 - **Future:** an agreement to buy or sell at a set price on a set date. Only a margin (15% here) is paid up front, so gains and losses are magnified.
 - **Option:** the right (not obligation) to buy (call) or sell (put) at a set price. The most you can lose is the premium paid.
 - **Bond fund (ETF):** a fund holding government or company bonds that pays interest; usually steadier than shares.
-- **Why are futures and options "calculated"?** No free source has real NSE derivative prices, so we use the standard formulas from the live share price.
+- **Why are futures and options "calculated"?** No free source has real NSE or BSE derivative prices, so we use the standard formulas from the live share price.
 
 ## Questions people may ask
 **Is this a prediction?** No. It only shows how bumpy the price *has been*. It cannot know news, results or crashes.
@@ -68,7 +68,7 @@ The page has four tabs: **Overview, Possible outcomes, Strategy tests, Paper tra
 
 **Why Tata Motors twice?** The company split into passenger vehicles (TMPV) and commercial vehicles (TMCV).
 
-**What are the limits?** Daily data only, NSE only, no fees/taxes in the backtest, the normal-distribution simulation under-estimates rare big moves.
+**What are the limits?** Daily data only, NSE and BSE listings (not other markets), no fees/taxes in the backtest, the normal-distribution simulation under-estimates rare big moves.
 
 ## If something goes wrong on the day
 - Page shows an error: refresh the browser. Still broken: Ctrl+C in Terminal, run `start.command` again.

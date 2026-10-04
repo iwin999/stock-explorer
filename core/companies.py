@@ -1,9 +1,13 @@
-"""A built-in list of ~100 popular NSE companies, plus the search over it.
+"""A built-in list of ~120 popular companies listed on the NSE and the BSE, plus the search over it.
 
 Format of each row: (display name, NSE ticker, extra words people might type).
-Yahoo Finance adds '.NS' to NSE tickers, e.g. Reliance -> RELIANCE.NS.
+Yahoo Finance adds '.NS' to NSE tickers (Reliance -> RELIANCE.NS) and '.BO' to BSE tickers (RELIANCE.BO). Every company
+in the list is also on the BSE; those BSE twins are in data/offline/bse_twins.json and are used wherever the NSE
+listing is, so a BSE company can do everything an NSE company can.
 """
 import difflib
+import json
+import os
 
 from core.search import yahoo_search
 
@@ -133,9 +137,46 @@ COMPANIES = [
 
 # The market index used as the yardstick for beta, alpha and the other market ratios
 BENCHMARK = "^NSEI"   # Nifty 50
+BENCHMARK_BSE = "^BSESN"   # Sensex
+
+
+def benchmark_for(symbol):
+    """(index symbol, its name) a company is compared with: the Sensex for a BSE listing, the Nifty 50 otherwise."""
+    return (BENCHMARK_BSE, "Sensex") if symbol.endswith(".BO") else (BENCHMARK, "Nifty 50")
 
 # Quick look-up: ticker -> display name
 NAME_BY_SYMBOL = {symbol: name for name, symbol, _ in COMPANIES}
+
+
+def _load_twins():
+    path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "offline", "bse_twins.json")
+    try:
+        with open(path) as f:
+            return json.load(f)                       # {"RELIANCE.NS": "RELIANCE.BO", ...}
+    except (OSError, ValueError):
+        return {}
+
+
+BSE_OF = _load_twins()                                # NSE symbol -> its BSE symbol
+NSE_OF = {b: n for n, b in BSE_OF.items()}            # BSE symbol -> its NSE symbol
+for _n, _b in BSE_OF.items():
+    NAME_BY_SYMBOL.setdefault(_b, NAME_BY_SYMBOL[_n])  # the same company, so the same name
+
+
+def twin_of(symbol):
+    """The same company's listing on the other exchange (None if we do not know it)."""
+    return BSE_OF.get(symbol) or NSE_OF.get(symbol)
+
+
+def to_nse(symbol):
+    """A BSE listing of a built-in company becomes its NSE twin (for data we only keep for the NSE listing);
+    everything else is returned unchanged."""
+    return NSE_OF.get(symbol, symbol)
+
+
+def listings(symbol):
+    """[NSE symbol, BSE symbol] of a built-in company (just [symbol] if it has no twin)."""
+    return [symbol, BSE_OF[symbol]] if symbol in BSE_OF else [symbol]
 
 
 def code_of(symbol):
@@ -175,7 +216,7 @@ def search_local(query, limit=10):
             starts = name.lower().startswith(words[0])
             matches.append((0 if starts else 1, name, symbol))
     matches.sort()
-    results = [{"symbol": s, "name": n} for _, n, s in matches[:limit]]
+    results = [{"symbol": sym, "name": n} for _, n, s in matches[:limit] for sym in listings(s)]
 
     if not results:  # spelling mistakes: compare against each single word of every name
         best = {}
@@ -185,7 +226,7 @@ def search_local(query, limit=10):
                 if score >= 0.75 and score > best.get(symbol, (0,))[0]:
                     best[symbol] = (score, name)
         for symbol, (score, name) in sorted(best.items(), key=lambda kv: -kv[1][0])[:limit]:
-            results.append({"symbol": symbol, "name": name})
+            results.extend({"symbol": sym, "name": name} for sym in listings(symbol))
     return results
 
 

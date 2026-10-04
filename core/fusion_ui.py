@@ -9,6 +9,7 @@ from core import fundamentals as fd
 from core import fusion as fu
 from core import ratios
 from core.charts import fusion_chart, stage_bar
+from core.companies import to_nse
 from core.errors import guard
 from core.formatting import format_inr
 from core.ui import callout, know_how_button, metric_with_help, notice, plain_english, term_row
@@ -39,15 +40,46 @@ def _backtest(cost_pct):
     return fu.run_fusion_backtest(d["prices"], d["bench"], d["tech"], d["funds"], cost_pct=cost_pct)
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
+def _rated_alone(symbol, asof):
+    """Rate ONE company that is not in the built-in list: fetch its prices and yearly results from Yahoo, then rank it
+    against the saved companies. Returns the table row (a Series) or None if Yahoo has too little data."""
+    from core import fundamentals as fd
+    from core.market_data import get_history_with_source
+    d = _data()
+    hist, _, _ = get_history_with_source(symbol, "7y")
+    if d is None or hist is None or len(hist) < 260:
+        return None
+    technicals = dict(d["tech"])
+    technicals[symbol] = fu.technical_table(hist["Close"], d["bench"])
+    funds = {"companies": dict(d["funds"]["companies"])}
+    try:
+        record = fd.fetch_company(symbol)
+    except Exception:
+        record = None
+    if record:
+        funds["companies"][symbol] = record
+    table = fu.classify(pd.Timestamp(asof), technicals, funds)
+    return table.loc[symbol] if symbol in table.index else None
+
+
+def rating_row(symbol, asof):
+    """(table row, note) for any company. A BSE listing of a built-in company uses its NSE twin's rating."""
+    symbol = to_nse(symbol)
+    table = _classified(asof)
+    if symbol in table.index:
+        return table.loc[symbol]
+    return _rated_alone(symbol, asof)
+
+
 def company_row(symbol):
     """The fusion rating of one company as a dict (None if it cannot be rated). Used by the bot too."""
     d = _data()
     if d is None:
         return None
-    table = _classified(d["asof"])
-    if symbol not in table.index:
+    row = rating_row(symbol, d["asof"])
+    if row is None:
         return None
-    row = table.loc[symbol]
     if row.get("group") != row.get("group"):
         return None
     return {"group": int(row["group"]), "stage_name": row["stage_name"], "verdict": row["verdict"],
@@ -87,11 +119,14 @@ def render(symbol, name):
 
 # ---------------------------------------------------------------- this company
 def _this_company(symbol, name, asof):
-    table = _classified(asof)
-    if symbol not in table.index:
-        st.info(f"There is not enough saved price history to rate {name}.")
+    with st.spinner(f"Rating {name}..."):
+        r = rating_row(symbol, asof)
+    if r is None:
+        st.info(f"There is not enough price history (or Yahoo could not be reached) to rate {name}.")
         return
-    r = table.loc[symbol]
+    if to_nse(symbol) not in _classified(asof).index:
+        st.caption(f"{name} is not in the built-in list, so it was rated just now from Yahoo's prices and yearly results, "
+                   "ranked against the saved companies. Results can be missing or incomplete for smaller companies.")
     judged = r.get("group") == r.get("group")      # not NaN
 
     if judged:

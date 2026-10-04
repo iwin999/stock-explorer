@@ -49,10 +49,11 @@ def _strip(portfolio_fn, rank_fn):
     now = now_ist()
     # One row. The column widths follow how much each card has to show, so the cards are only as wide as they
     # need to be and the fifth (leaderboard) fits into the space that used to sit empty.
-    c1, c2, c3, c4, c5 = st.columns([1.25, 1, 1, 1.45, 1.2], gap="small")
+    c1, c2, c3, c6, c4, c5 = st.columns([1.25, 1, 1, 1, 1.45, 1.2], gap="small")
     c1.metric("Market", "Open" if is_market_open() else "Closed", f"{now:%a %H:%M} IST", delta_color="off")
     _index_card(c2, "Nifty 50", "^NSEI")
     _index_card(c3, "Bank Nifty", "^NSEBANK")
+    _index_card(c6, "Sensex", "^BSESN")
     snap = portfolio_fn()
     if snap:
         c4.metric("Your portfolio", _short(snap["total"]), f"{snap['return_pct']:+.2f}% overall")

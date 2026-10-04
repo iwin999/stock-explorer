@@ -28,7 +28,7 @@ MANUAL = [
     E("what_is_app", USING, "What is Stock Explorer?",
       ["what is this app", "what is stock explorer", "what does this site do", "what can i do here", "tell me about this app",
        "what is this website for", "about this project"],
-      "Stock Explorer is an educational website for Indian (NSE) stocks. You can look at price charts and signals, see a range "
+      "Stock Explorer is an educational website for Indian stocks listed on the NSE and the BSE. You can look at price charts and signals, see a range "
       "of possible outcomes from simulations, test simple trading rules on the past, and practise buying and selling with "
       "virtual money. Nothing here is real money or investment advice."),
     E("tabs", USING, "What are the tabs?",
@@ -66,11 +66,11 @@ MANUAL = [
        "is this live data", "how accurate are the prices", "where do prices come from", "yahoo finance"],
       "Share, ETF and bond-fund prices come from Yahoo Finance and can be a few minutes late. They update on their own "
       "while the market is open. Futures and options prices are calculated from the live share price, because free "
-      "sources have no real NSE futures or options prices."),
+      "sources have no real NSE or BSE futures or options prices."),
     E("market_hours", USING, "When is the market open? Why are prices not changing?",
       ["when is the market open", "market hours", "trading hours", "why is the price not changing", "why does it say market closed",
        "why is the price not updating", "what time does the market open", "is the stock market open today", "why is nothing moving"],
-      "The Indian market (NSE) trades Monday to Friday, 9:15 AM to 3:30 PM Indian time. Outside those hours, and on "
+      "The Indian market (NSE and BSE) trades Monday to Friday, 9:15 AM to 3:30 PM Indian time. Outside those hours, and on "
       "holidays, prices do not move, so the site shows the last closing price. During market hours the headline price, "
       "your portfolio value and the leaderboard refresh by themselves."),
     E("change_company", USING, "How do I change the company?",
@@ -185,7 +185,7 @@ MANUAL = [
     E("nifty", RISK, "What is the Nifty 50?",
       ["what is nifty", "what is the nifty 50", "what is nifty 50", "what is the benchmark", "what is the market index",
        "why compare with nifty", "what is an index"],
-      "The Nifty 50 is an index of 50 large Indian companies on the NSE. It is used as a stand-in for 'the market'. "
+      "The Nifty 50 is an index of 50 large Indian companies on the NSE, and the Sensex is the BSE's index of 30 large companies. Either is used as a stand-in for 'the market': NSE listings are compared with the Nifty 50 and BSE listings with the Sensex. "
       "Ratios like beta, alpha and correlation compare a stock with it."),
     E("risk_return", RISK, "What is the link between risk and return?",
       ["what is risk and return", "what is the relationship between risk and return", "higher risk higher return",
@@ -299,7 +299,9 @@ MANUAL = [
     E("nse", TRADING, "What is the NSE?",
       ["what is nse", "what is the nse", "what is the national stock exchange", "what is nse india", "what is bse"],
       "The NSE (National Stock Exchange of India) is where most Indian shares are traded. The .NS you may see after a "
-      "name, such as RELIANCE.NS, tells the data provider it is the NSE listing."),
+      "name, such as RELIANCE.NS, tells the data provider it is the NSE listing. The BSE (Bombay Stock Exchange) is India's "
+      "older exchange; its listings end in .BO, such as RELIANCE.BO. Most large companies are listed on both, and in this site "
+      "every feature works for both listings."),
     E("sell_rule", TRADING, "Why can't I sell something I don't own?",
       ["why can't i sell", "why is the sell button grey", "why is sell disabled", "can i short sell shares",
        "can i sell without buying", "why can i not sell"],
@@ -363,7 +365,7 @@ MANUAL = [
     E("calculated_prices", DERIV, "Why are futures and option prices 'calculated'?",
       ["why are futures prices calculated", "are option prices real", "how are option prices worked out", "are futures prices real",
        "what is black scholes", "what is cost of carry", "are derivative prices real", "why are the prices not real"],
-      "Free data sources have no real NSE futures or options prices. So the site uses standard formulas on the live "
+      "Free data sources have no real NSE or BSE futures or options prices. So the site uses standard formulas on the live "
       "share price: a future's price is spot x e^(rate x time left), and an option's premium comes from the "
       "Black-Scholes formula with the stock's last-year volatility. They are fair-value estimates; real prices also "
       "reflect demand and traders' views."),

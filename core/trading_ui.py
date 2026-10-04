@@ -24,7 +24,7 @@ from core.ui import know_how_button, notice, show_disclaimer
 
 CAPITAL_PRESETS = [50000, 100000, 500000, 1000000]
 DERIVATIVES_NOTE = ("Futures and options prices here are **calculated** from the live share price with standard "
-                    "formulas, because free data for NSE derivatives does not exist. Lot sizes and margins are "
+                    "formulas, because free data for NSE or BSE derivatives does not exist. Lot sizes and margins are "
                     "simplified for learning. They are estimates, not exchange quotes.")
 
 
@@ -257,7 +257,7 @@ def render(symbol, name, fallback_price, offline=False):
         _trade_picker(pf, "stk", stocks, symbol, offline, "company", open_universe=True)
     with etf_tab:
         etfs = [s for s in ins.CASH_INSTRUMENTS if ins.asset_class(s) != ins.STOCKS]
-        st.caption("Funds that hold many companies or bonds in one. Prices are live NSE prices.")
+        st.caption("Funds that hold many companies or bonds in one. Prices are live exchange prices.")
         _trade_picker(pf, "etf", etfs, etfs[0], offline, "fund")
     with fut_tab:
         _futures_ticket(pf, offline)

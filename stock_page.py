@@ -44,9 +44,9 @@ def load_name(symbol):
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
-def load_benchmark():
-    """Nifty 50 history: the yardstick for beta, alpha and the other market ratios."""
-    return get_history_with_source(companies.BENCHMARK, "7y")
+def load_benchmark(index_symbol):
+    """The market index's history (Nifty 50 for NSE listings, Sensex for BSE): the yardstick for beta, alpha and the other market ratios."""
+    return get_history_with_source(index_symbol, "7y")
 
 
 @st.cache_data(ttl=600, show_spinner=False)
@@ -56,7 +56,7 @@ def run_search(query):
 
 # ---------- header ----------
 about.title_row("Stock Explorer")
-st.caption("Price history, key signals and a range of possible outcomes for Indian (NSE) companies.")
+st.caption("Price history, key signals and a range of possible outcomes for Indian companies listed on the NSE and the BSE.")
 market_strip.render(lambda: trading_ui.snapshot_now(trading_ui._get_portfolio()), portfolio_ui.my_rank)
 trading_ui.user_bar()
 trading_ui.housekeeping()      # settle expired futures/options, close busted futures
@@ -73,13 +73,13 @@ if query.strip():
     options = [r["symbol"] for r in results]
     if not options:
         st.warning(f"No company found for “{query}”. Try another spelling, or choose from the list.")
-        options = [s for _, s, _ in companies.COMPANIES]
+        options = [x for _, s, _ in companies.COMPANIES for x in companies.listings(s)]
         hint = "All companies"
     else:
         hint = f"{len(options)} match(es)"
 else:
-    options = [s for _, s, _ in companies.COMPANIES]
-    hint = "Or choose from the popular list (type to filter)"
+    options = [x for _, s, _ in companies.COMPANIES for x in companies.listings(s)]
+    hint = "Or choose from the popular list (NSE and BSE, type to filter)"
 
 with col_pick:
     symbol = st.selectbox(hint, options, format_func=companies.label)
@@ -123,8 +123,9 @@ def show_headline():
 st.fragment(run_every=15 if (is_market_open() and source != "offline") else None)(show_headline)()
 
 
-# The Nifty 50 index, used to compare the stock against the market (None if unavailable)
-_bench, _, _ = load_benchmark()
+# The market index (Nifty 50 for an NSE listing, Sensex for a BSE listing), used to compare the stock against the market
+bench_symbol, bench_name = companies.benchmark_for(symbol)
+_bench, _, _ = load_benchmark(bench_symbol)
 bench_close = _bench["Close"] if _bench is not None else None
 
 PERIODS = {"6 months": 126, "1 year": 252, "2 years": 504, "5 years": 1260}
@@ -171,7 +172,7 @@ with tab_overview:
 
     # ---------- risk and return ratios ----------
     st.header("Risk and return")
-    st.caption("How much this stock earned, and how much risk it took to earn it, measured against the Nifty 50.")
+    st.caption(f"How much this stock earned, and how much risk it took to earn it, measured against the {bench_name}.")
     st.caption("Hold your pointer over any term for two seconds and it turns into plain words (tap it on a phone). "
                "Each bar runs from red (poor) to green (excellent); the dark pointer shows where this stock sits. "
                "Blue bars (beta, correlation) describe behaviour rather than grade it. Tap the ? for the formula.")
@@ -190,17 +191,17 @@ with tab_overview:
                   "information": "Information ratio", "correlation": "Correlation"}
         groups = [("How much it grew, and how bumpy", ["cagr", "volatility", "max_drawdown", "var95"]),
                   ("Was the risk worth it?", ["sharpe", "sortino", "calmar", "treynor"]),
-                  ("Compared with the market (Nifty 50)", ["beta", "alpha", "information", "correlation"])]
+                  (f"Compared with the market ({bench_name})", ["beta", "alpha", "information", "correlation"])]
         for group_name, keys in groups:
             st.subheader(group_name)
             for column, key in zip(st.columns(4), keys):
-                value, meaning = ratios.describe(key, r)
+                value, meaning = ratios.describe(key, r, bench_name)
                 with column:
                     metric_with_help(titles[key], value, key)
                     scale = ratio_scale(key, r.get(key))
                     st.markdown(scale or f'<div class="meaning">{meaning}</div>', unsafe_allow_html=True)
         if bench_returns is None:
-            st.caption("Nifty 50 data could not be loaded, so the comparison ratios are not available.")
+            st.caption(f"{bench_name} data could not be loaded, so the comparison ratios are not available.")
         st.caption(f"A safe return of {ratios.RISK_FREE * 100:.1f}% a year (about a government bond) is assumed where a "
                    "ratio needs one. Ratios describe the past only.")
     plain_english(ratios.GLOSSARY, "What do these ratios mean? (plain English)")
@@ -473,7 +474,7 @@ with tab_strategy:
                 f"Subtract {cost_pct:.2f}% of the portfolio each time the position changes (including buying in on day one).\n"
                 "4. Compound the daily results from Rs 1,00,000. Buy-and-hold is the same, with one purchase on day one.\n"
                 "5. Ratios use the daily results: Sharpe = (average daily return above the safe rate) / (daily volatility) x sqrt(252); "
-                "Sortino uses only the downside volatility; Calmar = yearly return / worst fall; Treynor and Beta compare with the Nifty 50.\n\n"
+                "Sortino uses only the downside volatility; Calmar = yearly return / worst fall; Treynor and Beta compare with the market index (the Nifty 50, or the Sensex for a BSE listing).\n\n"
                 "**Assumptions and limits.** No taxes beyond the cost set above; cash earns nothing; trades fill at the next close; "
                 "one stock, one period, and a rule that has not been tuned (which avoids overfitting, but also means no claim about the future).\n\n"
                 "---\n\n" + rule.know_how))

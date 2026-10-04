@@ -91,7 +91,7 @@ it does not know.
 
 SOURCES = """\
 **Data**
-- Prices of shares, ETFs, bond funds and the Nifty 50, and companies' yearly results: [Yahoo Finance](https://finance.yahoo.com), \
+- Prices of shares, ETFs, bond funds and the Nifty 50 and Sensex indices, and companies' yearly results: [Yahoo Finance](https://finance.yahoo.com), \
 read with the open-source `yfinance` library. This is unofficial and may be delayed or occasionally wrong.
 - Portfolios are stored in a [Supabase](https://supabase.com) database.
 
@@ -107,7 +107,7 @@ CMT, CFTe. Explanations here are written in our own words.
 **Software**
 - Python, Streamlit, pandas, NumPy, Plotly, Requests and yfinance, all open source. Hosted on Streamlit Community Cloud.
 
-*This is an independent student project. It is not affiliated with, or endorsed by, the NSE, Yahoo, the CMT Association, \
+*This is an independent student project. It is not affiliated with, or endorsed by, the NSE, the BSE, Yahoo, the CMT Association, \
 Supabase or any broker.*"""
 
 

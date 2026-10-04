@@ -84,21 +84,21 @@ TERMS = {
     # ---------------- compared with the market ----------------
     "beta": dict(
         title="Beta",
-        use="How strongly the stock moves compared with the market (the Nifty 50).",
-        formula="Covariance of the stock's daily returns with the Nifty's, divided by the variance of the Nifty's returns.",
+        use="How strongly the stock moves compared with the market (the Nifty 50, or the Sensex for a BSE listing).",
+        formula="Covariance of the stock's daily returns with the market index's, divided by the variance of the index's returns.",
         read="1: moves with the market. Above 1: swings more than the market. Below 1: swings less. Negative: tends to move opposite."),
     "alpha": dict(
         title="Alpha (Jensen's alpha)",
         use="The yearly return beyond what the stock's market risk alone would explain.",
-        formula="(Stock return - safe rate) - beta x (Nifty return - safe rate), annualised.",
+        formula="(Stock return - safe rate) - beta x (index return - safe rate), annualised.",
         read="Positive: did better than its risk deserved. Negative: did worse."),
     "information": dict(
         title="Information ratio",
-        use="How consistently the stock beat (or trailed) the Nifty 50, relative to how much it differed.",
-        formula="Average daily return minus Nifty's, divided by the standard deviation of that difference, scaled to a year.",
+        use="How consistently the stock beat (or trailed) the market index, relative to how much it differed.",
+        formula="Average daily return minus the index's, divided by the standard deviation of that difference, scaled to a year.",
         read="Above 0.5 is generally considered good. Negative means it tended to trail the market."),
     "correlation": dict(
-        title="Correlation with the Nifty 50",
+        title="Correlation with the market index",
         use="How closely the stock moves in step with the market.",
         formula="Pearson correlation of daily returns, between -1 and 1.",
         read="Near 1: moves with the market. Near 0: unrelated. Below 0: moves the opposite way."),

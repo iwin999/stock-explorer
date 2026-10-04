@@ -156,7 +156,7 @@ def live_answer(question, ctx):
     """An answer built from numbers on the page, or None if the question is not about the page."""
     q = question.lower()
     if _PAT_MARKET.search(q):
-        return f"{status_message()}. The NSE trades Monday to Friday, 9:15 AM to 3:30 PM Indian time."
+        return f"{status_message()}. The NSE and BSE trade Monday to Friday, 9:15 AM to 3:30 PM Indian time."
     if ctx and _PAT_FUSION.search(q) and ctx.get("fusion"):
         f = ctx["fusion"]
         return (f"{ctx['company']} is in fusion group {f['group']} ({f['stage_name'].lower()}). {f['verdict']}. "

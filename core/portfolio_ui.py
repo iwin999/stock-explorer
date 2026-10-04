@@ -169,8 +169,8 @@ def _builder(pf):
         "using the nearest month-end expiry. Long profits if the price rises, short if it falls.\n"
         "5. **Options:** the money pays the premium for a call or put at the strike nearest today's price, nearest expiry.\n"
         "6. Whatever cannot be bought in whole units stays as cash.\n\n"
-        "**Bonds here** are real NSE-traded bond funds (government and PSU bond ETFs, and liquid ETFs) with live prices.\n\n"
-        "**Futures and options** prices are calculated with standard formulas because free data for NSE derivatives "
+        "**Bonds here** are real exchange-traded bond funds (government and PSU bond ETFs, and liquid ETFs) with live prices.\n\n"
+        "**Futures and options** prices are calculated with standard formulas because free data for NSE or BSE derivatives "
         "does not exist. See the Paper trading tab for details.\n\n"
         "**Diversification.** Spreading money across different kinds of investments reduces the damage if any one of "
         "them does badly. Futures and options are riskier than the others."))

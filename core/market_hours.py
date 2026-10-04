@@ -1,6 +1,6 @@
 """Is the Indian stock market open right now?
 
-NSE trades Monday to Friday, 9:15 AM to 3:30 PM Indian time (IST). We use this to
+The NSE and BSE trade Monday to Friday, 9:15 AM to 3:30 PM Indian time (IST). We use this to
 decide whether to refresh prices automatically. (Exchange holidays are not
 included, so on a weekday holiday the app may say "open" while prices stay still.)
 """
