@@ -159,5 +159,14 @@ Known limits: NSE holidays are not in the calendar (the app says "open" but pric
 
 Limit: while Streamlit is actually rebuilding the app after a push, its own "updating" page is shown by the hosting platform, so it cannot be customised from the app. The in-app "being updated" message appears only for the brief moments when the code changes under a running page.
 
+## New in Step 16 (Ask the bot)
+| Change | Where |
+|---|---|
+| New **Ask the bot** tab: a Claude-powered assistant that explains finance terms and how to read the app, with starter questions, streaming answers and a note about what it can and cannot do | `core/assistant_ui.py`, `stock_page.py` |
+| It knows the app (tabs, data sources, how futures/options are calculated), all glossary definitions, the company the visitor is viewing, their key signals and their own paper portfolio. It is told never to give personal investment advice, buy/sell calls or predictions, to stay on topic, and to keep its instructions private | `core/assistant.py` |
+| Cost protection: 500-character questions, 15 questions per visit, 400 per day for the whole site (all adjustable in the secrets), short answers (low effort, 2,000-token cap) | `core/assistant.py`, `core/assistant_ui.py` |
+| Friendly handling when the key is missing/invalid, the service is busy, the network is down, or the model declines; the key is never shown or logged | `core/assistant_ui.py` |
+| Tested against a pretend Anthropic server using the real SDK (request contents, streaming, history, limits, errors); not tested against the live service because that needs a paid key | `tests/test_assistant.py` |
+
 ## Status
 All 8 features are built.

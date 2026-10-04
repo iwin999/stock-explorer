@@ -4,4 +4,5 @@ yfinance~=1.7.0
 pandas~=3.0.6
 plotly~=7.1.0
 requests~=2.34.0
+anthropic~=1.11.0
 tzdata

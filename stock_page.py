@@ -9,7 +9,7 @@ import zlib
 import numpy as np
 import streamlit as st
 
-from core import backtest as bt, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
+from core import assistant_ui, backtest as bt, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
 from core.charts import (backtest_chart, fan_chart, outlook_gauge, outcome_histogram, price_chart,
                          zoom_to_window)
 from core.formatting import format_inr
@@ -128,8 +128,8 @@ bench_close = _bench["Close"] if _bench is not None else None
 PERIODS = {"6 months": 126, "1 year": 252, "2 years": 504, "5 years": 1260}
 STRATEGY_KEYS = list(STRATEGIES)
 
-tab_overview, tab_outcomes, tab_strategy, tab_trade, tab_portfolio = st.tabs(
-    ["Overview", "Possible outcomes", "Strategy tests", "Paper trading", "Your Portfolio"])
+tab_overview, tab_outcomes, tab_strategy, tab_trade, tab_portfolio, tab_bot = st.tabs(
+    ["Overview", "Possible outcomes", "Strategy tests", "Paper trading", "Your Portfolio", "Ask the bot"])
 
 # =====================================================================
 # TAB 1: OVERVIEW - price chart, key signals, risk and return ratios
@@ -457,6 +457,17 @@ with tab_trade:
 # =====================================================================
 with tab_portfolio:
     portfolio_ui.render()
+
+# =====================================================================
+# TAB 6: ASK THE BOT - an AI assistant that explains terms and the app
+# =====================================================================
+with tab_bot:
+    _pf = trading_ui._get_portfolio()
+    assistant_ui.render(
+        name, symbol, latest,
+        signals=[(title, value) for title, _term, value, _meaning in panel],
+        portfolio={"cash": _pf.balance, "holdings": {s_: h["quantity"] for s_, h in _pf.holdings.items()},
+                   "derivatives": len(_pf.derivatives)})
 
 # ---------- footer disclaimer ----------
 show_disclaimer()

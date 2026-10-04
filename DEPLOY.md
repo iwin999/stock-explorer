@@ -69,6 +69,28 @@ restarts or sleeps**. With it, every portfolio is kept until you delete it.
 To try the database on your own Mac, put the same secrets in a file called `.streamlit/secrets.toml` (it is already
 excluded from GitHub).
 
+## Step 4 (optional): Switch on the "Ask the bot" assistant
+The assistant uses Claude (Anthropic's AI) and is **paid per question** (see the cost notes below). Until you add a key,
+the tab politely says it is not switched on yet; nothing else is affected.
+
+1. Go to **console.anthropic.com**, sign in, and open **Billing**: add a small amount of credit (for example $10) and
+   set a **monthly spend limit** there, so the bill can never go above what you choose.
+2. Open **API Keys -> Create key**. Copy it into a private note. Never put it on GitHub or in a chat.
+3. In Streamlit open your app -> **Settings -> Secrets** and add these lines under what is already there:
+   ```toml
+   [anthropic]
+   api_key = "YOUR-ANTHROPIC-KEY"
+   # optional settings (these are the defaults):
+   # model = "claude-opus-5-5"     # cheaper choices: "claude-sonnet-5-5" or "claude-haiku-4-5"
+   # session_limit = 15            # questions per visitor visit
+   # daily_limit = 400             # questions per day for the whole site
+   ```
+   (If you already have an `admin_pin` line and a `[supabase]` section, keep them; put `[anthropic]` after them.)
+4. Save. After about a minute the **Ask the bot** tab starts answering.
+
+Rough cost per question (about 2,800 input and 700 output tokens, 1 US dollar taken as Rs 88):
+Opus 5.5 about Rs 2.50, Sonnet 5.5 about Rs 1.20, Haiku 4.5 about Rs 0.60. The daily limit caps the worst case.
+
 ## What is different online
 | Topic | Behaviour |
 |---|---|
