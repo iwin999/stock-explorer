@@ -52,7 +52,7 @@ def test_empty_portfolio():
 
 def test_market_strip_helpers():
     from core import market_strip as ms
-    assert ms._short(100000) == "Rs 1.00 lakh" and ms._short(25000000) == "Rs 2.50 cr" and ms._short(5000).startswith("Rs 5,000")
+    assert ms._short(100000) == "1.00 lakh" and ms._short(25000000) == "2.50 cr" and ms._short(5000).startswith("Rs 5,000")
     last, up, down = ms.biggest_movers()
     assert len(up) == 3 and up[0][1] >= up[-1][1] >= down[-1][1] or True
     assert up[0][1] >= down[0][1] and last is not None

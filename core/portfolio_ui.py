@@ -193,6 +193,17 @@ def _ranked(records):
     return rows
 
 
+def my_rank():
+    """(your rank, number of portfolios) on the leaderboard, or None if it cannot be worked out."""
+    try:
+        rows = _ranked(_all_accounts(get_store()))
+    except Exception:
+        return None
+    me = _get_portfolio().name
+    mine = next((r for r in rows if r["Name"] == me), None)
+    return (mine["Rank"], len(rows)) if mine else None
+
+
 @guard()
 def _leaderboard():
     me = _get_portfolio().name

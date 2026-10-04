@@ -231,5 +231,8 @@ To change what the bot says, edit `data/bot_notes.json` only. Entries marked "ve
 ## New in Step 22 (Mayo ribbon)
 A thin four-colour ribbon (crimson, gold, sky blue, green, taken from the Mayo College crest) runs across the top of every page. Nothing else about the look was changed. `core/ui.py`.
 
+## New in Step 23 (leaderboard rank in the market strip)
+The strip at the top now has a fifth card, **Leaderboard**, showing your rank (for example "#2 of 14"). The cards were made a little smaller so every number fits. `core/market_strip.py`, `core/portfolio_ui.py` (`my_rank`).
+
 ## Status
 All 8 features are built.
