@@ -110,6 +110,12 @@ def render():
         st.subheader("Industries")
         st.caption(f"{len(table)} industries that have NSE or BSE companies. Size = combined market value of the "
                    "companies; colour = performance. **Click an industry** to open its own carpet of NSE and BSE companies.")
+        pick = st.selectbox("Choose an industry here, or click a tile on the carpet below", ["-"] + keys, format_func=lambda k: "-" if k == "-" else mc.SECTORS.get(k, k),
+                            key=f"carpet_pick_{nonce}")
+        if pick != "-":
+            st.session_state["carpet_open"] = pick
+            st.session_state["carpet_nonce"] = nonce + 1
+            st.rerun()
         event = st.plotly_chart(mc.carpet(data, metric), width="stretch", on_select="rerun", selection_mode="points",
                                 key=f"carpet_main_{nonce}")
         clicked = _clicked_sector(event, data)
@@ -124,12 +130,6 @@ def render():
             f"Performance ({label})": st.column_config.NumberColumn(format="%+.2f%%")})
         st.caption("'Companies shown' are the largest companies of the industry on the NSE and BSE together (no company "
                    "twice). 'Listed' is how many the two exchanges list in total.")
-        pick = st.selectbox("Or choose an industry here", ["-"] + keys, format_func=lambda k: "-" if k == "-" else mc.SECTORS.get(k, k),
-                            key=f"carpet_pick_{nonce}")
-        if pick != "-":
-            st.session_state["carpet_open"] = pick
-            st.session_state["carpet_nonce"] = nonce + 1
-            st.rerun()
     else:
         # ---------- one industry: its own carpet ----------
         info = data["sectors"][opened]
