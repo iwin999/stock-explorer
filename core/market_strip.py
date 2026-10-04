@@ -46,29 +46,26 @@ def _index_card(col, label, symbol):
 
 @guard()
 def _strip(portfolio_fn, rank_fn):
-    c1, c2, c3, c4, c5 = st.columns(5, gap="small")
     now = now_ist()
-    c1.metric("Market", "Open" if is_market_open() else "Closed", f"{now:%a %H:%M}", delta_color="off")
+    # One row. The column widths follow how much each card has to show, so the cards are only as wide as they
+    # need to be and the fifth (leaderboard) fits into the space that used to sit empty.
+    c1, c2, c3, c4, c5 = st.columns([1.25, 1, 1, 1.45, 1.2], gap="small")
+    c1.metric("Market", "Open" if is_market_open() else "Closed", f"{now:%a %H:%M} IST", delta_color="off")
     _index_card(c2, "Nifty 50", "^NSEI")
     _index_card(c3, "Bank Nifty", "^NSEBANK")
     snap = portfolio_fn()
     if snap:
-        c4.metric("Your portfolio", _short(snap["total"]), f"{snap['return_pct']:+.2f}%")
+        c4.metric("Your portfolio", _short(snap["total"]), f"{snap['return_pct']:+.2f}% overall")
     rank = rank_fn()
-    if rank:
-        c5.metric("Leaderboard", f"#{rank[0]} of {rank[1]}", "rank", delta_color="off")
-    else:
-        c5.metric("Leaderboard", "n/a")
+    c5.metric("Leaderboard", f"#{rank[0]} of {rank[1]}" if rank else "n/a", "your rank" if rank else None, delta_color="off")
     st.caption(status_message() + ". " + ("Updating automatically." if is_market_open() else "Showing the last closing levels."))
 
 
 def render(portfolio_fn, rank_fn):
     """portfolio_fn() returns the valuation snapshot of the signed-in account (or None); rank_fn() returns (rank, total) or None."""
     st.markdown("""<style>
-.st-key-market_strip [data-testid="stMetricValue"], .st-key-market_strip [data-testid="stMetricValue"] * { font-size: 1.55rem !important; }
-.st-key-market_strip [data-testid="stMetricLabel"], .st-key-market_strip [data-testid="stMetricLabel"] * { font-size: 0.9rem !important; }
-.st-key-market_strip [data-testid="stMetricDelta"], .st-key-market_strip [data-testid="stMetricDelta"] * { font-size: 0.85rem !important; }
-.st-key-market_strip [data-testid="stMetric"] { padding: 0.7rem 0.8rem; }
+.st-key-market_strip [data-testid="stMetricValue"], .st-key-market_strip [data-testid="stMetricValue"] * { font-size: 1.9rem !important; }
+.st-key-market_strip [data-testid="stMetric"] { padding: 0.8rem 0.9rem; }
 </style>""", unsafe_allow_html=True)
     with st.container(key="market_strip"):
         st.fragment(run_every=REFRESH_SECONDS if is_market_open() else None)(_strip)(portfolio_fn, rank_fn)
