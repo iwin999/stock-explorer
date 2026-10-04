@@ -34,7 +34,7 @@ MANUAL = [
     E("tabs", USING, "What are the tabs?",
       ["what are the tabs", "what is in each tab", "how is the app organised", "explain the tabs", "what does each tab do",
        "show me around", "how do i use this app", "how to use", "help me use the app"],
-      "Overview: price chart, key signals and risk-and-return numbers. Possible outcomes: simulated futures and a gauge. "
+      "Overview: price chart, key signals and risk-and-return numbers. Market carpet: a colour map of industries and companies. Possible outcomes: simulated futures and a gauge. "
       "Strategy tests: trading rules replayed over 5 years. Paper trading: buy and sell with virtual money. "
       "Your Portfolio: build and track your own portfolio and see the leaderboard. Ask the bot: this assistant."),
     E("start_here", USING, "Where should I start?",
@@ -480,6 +480,22 @@ MANUAL = [
       "The chapter says a strict 50-50 split never works. Each team weighs the two differently, disagreements will happen, "
       "and a tiebreaking process is needed that respects both views. In the Winner's Circle the price trend is the one "
       "condition that is not negotiable."),
+    E("market_carpet_what", FUSION, "What is the market carpet?",
+      ["what is a market carpet", "what is the market carpet tab", "what is a heat map of the market", "what is a treemap",
+       "how do i read the market carpet", "what do the colours and sizes mean on the carpet", "what do the tiles mean",
+       "what is the industry map", "how to find strong industries", "what is the market map"],
+      "The market carpet is a map of the market. Each tile is an industry (or, once you open one, a company). The size "
+      "shows how big it is by market value, and the colour shows performance: green is up, red is down. Look for the "
+      "greenest industries first, then click one to see its companies and find the large, strong ones. It shows what "
+      "has already happened, not what will happen."),
+    E("top_down_steps", FUSION, "How do I use the carpet for top-down analysis?",
+      ["what is top down analysis with the carpet", "how do i find strong industries and then companies",
+       "what are the steps of top down investing", "what did davis suggest", "rank industry groups by strength",
+       "which industry is strongest right now", "how do i pick stocks from an industry"],
+      "Chapter 2 of CMT Level III gives three steps: 1) decide the trend of the whole market and trade with it, 2) rank "
+      "industry groups by strength and focus on the strongest (the Market carpet tab does this), 3) inside a strong "
+      "industry, open the individual charts, work out targets and decide where to act. The tab can show the strongest "
+      "and weakest industry at the top, measured today or against the 50-day or 200-day average."),
     E("top_down", FUSION, "What is the top-down approach?",
       ["what is the top down approach", "what is top down analysis", "how do you find ideas top down",
        "what is a relative rotation graph", "what is sector rotation", "start with sectors then stocks"],
@@ -492,7 +508,7 @@ MANUAL = [
 def _glossary_entries():
     """One entry per financial term, built from the same text as the '?' bubbles."""
     category = {"rsi": SIGNALS, "macd": SIGNALS, "trend": SIGNALS, "volatility": SIGNALS,
-                "fusion_group": FUSION, "trend_stage": FUSION, "outperformance": FUSION, "quality_score": FUSION,
+                "fusion_group": FUSION, "market_carpet": SIGNALS, "trend_stage": FUSION, "outperformance": FUSION, "quality_score": FUSION,
                 "valuation_score": FUSION, "overlay_verdict": FUSION, "expectancy": FUSION}
     asks = {
         "rsi": ["rsi", "relative strength index", "what does the rsi number mean", "what is the strength score"],

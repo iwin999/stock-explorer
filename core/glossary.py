@@ -8,6 +8,11 @@ These feed the small "?" bubbles shown next to every term on the site. Each entr
 """
 
 TERMS = {
+    "market_carpet": dict(
+        title="Market carpet",
+        use="A map of many companies at once, used to spot the strongest industries before looking at single companies.",
+        formula="Tile size = market capitalisation (share price x number of shares). Tile colour = performance (today, or the gap from the 50-day or 200-day average). An industry's colour is the market-cap-weighted average of its companies.",
+        read="Large green tiles are big companies or industries that are doing well; red means falling. Look for strong industries first, then strong companies inside them. It describes the past and does not predict."),
     # ---------------- key signals ----------------
     "rsi": dict(
         title="RSI (Relative Strength Index)",

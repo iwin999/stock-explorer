@@ -114,6 +114,12 @@ h3 { font-size: 1.35rem !important; font-weight: 600 !important; }
 .stApp::before { content: ""; position: fixed; top: 0; left: 0; right: 0; height: 6px; z-index: 999999;
   background: linear-gradient(90deg, #C0392B 0 25%, #C8962E 25% 50%, #4FB0DD 50% 75%, #2E7D4F 75% 100%); }
 
+/* the school crest beside the page title */
+.brand { display: flex; align-items: center; gap: 0.9rem; }
+.brand h1 { margin: 0; padding: 0; }
+.brand-crest { height: 4.2rem; width: auto; flex: 0 0 auto; }
+@media (max-width: 640px) { .brand-crest { height: 3rem; } .brand h1 { font-size: 1.9rem !important; } }
+
 /* less empty space above the title */
 .stApp [data-testid="stMainBlockContainer"], .stApp .block-container { padding-top: 2.2rem !important; }
 

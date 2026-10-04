@@ -66,6 +66,8 @@ def render(portfolio_fn, rank_fn):
     st.markdown("""<style>
 .st-key-market_strip [data-testid="stMetricValue"], .st-key-market_strip [data-testid="stMetricValue"] * { font-size: 1.9rem !important; }
 .st-key-market_strip [data-testid="stMetric"] { padding: 0.8rem 0.9rem; }
+.st-key-market_strip [data-testid="stHorizontalBlock"] { flex-wrap: wrap !important; }
+.st-key-market_strip [data-testid="stColumn"] { min-width: 150px !important; flex: 1 1 150px !important; }
 </style>""", unsafe_allow_html=True)
     with st.container(key="market_strip"):
         st.fragment(run_every=REFRESH_SECONDS if is_market_open() else None)(_strip)(portfolio_fn, rank_fn)

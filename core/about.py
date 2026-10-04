@@ -8,6 +8,9 @@ set in the app's secrets without touching the code:
     reason = "I wanted markets to feel less intimidating."
     thanks_extra = "...and my friends who tested it."
 """
+import base64
+import os
+
 import streamlit as st
 
 from core import errors as er
@@ -185,11 +188,25 @@ def icon():
         _dialog()
 
 
+CREST_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets", "mayo-crest.png")
+
+
+@st.cache_resource
+def _crest_html():
+    """The school crest as a small inline image (empty if the file is missing)."""
+    try:
+        with open(CREST_PATH, "rb") as f:
+            data = base64.b64encode(f.read()).decode()
+    except OSError:
+        return ""
+    return f'<img class="brand-crest" src="data:image/png;base64,{data}" alt="Mayo College Girls School crest">'
+
+
 def title_row(title="Stock Explorer"):
-    """The page title with the About icon at the far right."""
+    """The page title, with the Mayo College Girls School crest beside it and the About icon at the far right."""
     left, right = st.columns([14, 1])
     with left:
-        st.markdown('<span class="about-row-marker"></span>', unsafe_allow_html=True)
-        st.title(title)
+        st.markdown(f'<span class="about-row-marker"></span><div class="brand">{_crest_html()}<h1>{title}</h1></div>',
+                    unsafe_allow_html=True)
     with right:
         icon()

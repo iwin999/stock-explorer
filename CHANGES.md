@@ -243,5 +243,13 @@ The strip at the top now has a fifth card, **Leaderboard**, showing your rank (f
 
 Honest limits: Yahoo has no "list every stock" call (BSE has about 5,000), so companies are found as they are searched for, not downloaded in bulk. The 119 built-in companies keep their saved backup prices and the Fusion rating; other companies need Yahoo to be reachable and have no Fusion rating. The portfolio builder and the Nifty/Bank Nifty futures and options still use the built-in lists.
 
+## New in Step 25 (Market carpet, school crest)
+| Change | Where |
+|---|---|
+| New **Market carpet** tab (CMT Level III Ch. 2.3, top-down analysis). The main carpet shows only the industries that have NSE or BSE companies; tile size = combined market value, colour = performance (today, or against the 50-day or 200-day average). Click an industry to open its own carpet of NSE and BSE companies (no company counted twice), with a table and a Back button | `core/market_carpet.py`, `core/carpet_ui.py` |
+| Data from Yahoo's screener (11 industries x NSE and BSE, the largest 60 each), with a saved snapshot as fallback. A "Know how", plain-English box and "?" bubble explain it; the bot knows it | `data/offline/market_carpet.json`, `core/knowledge.py`, `core/glossary.py` |
+| The Mayo College Girls School crest now sits beside the page title | `assets/mayo-crest.png`, `core/about.py` |
+| Market strip cards wrap onto a second row on narrow screens instead of being cut off | `core/market_strip.py` |
+
 ## Status
 All 8 features are built.

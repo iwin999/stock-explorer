@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from core import about, assistant_ui, market_strip, backtest as bt, fusion_ui, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
+from core import about, assistant_ui, carpet_ui, market_strip, backtest as bt, fusion_ui, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
 from core.charts import (backtest_chart, fan_chart, outlook_gauge, outcome_histogram, price_chart,
                          zoom_to_window)
 from core.formatting import format_inr
@@ -130,8 +130,8 @@ bench_close = _bench["Close"] if _bench is not None else None
 PERIODS = {"6 months": 126, "1 year": 252, "2 years": 504, "5 years": 1260}
 STRATEGY_KEYS = list(STRATEGIES)
 
-tab_overview, tab_outcomes, tab_strategy, tab_fusion, tab_trade, tab_portfolio, tab_bot = st.tabs(
-    ["Overview", "Possible outcomes", "Strategy tests", "Fusion analysis", "Paper trading", "Your Portfolio", "Ask the bot"])
+tab_overview, tab_carpet, tab_outcomes, tab_strategy, tab_fusion, tab_trade, tab_portfolio, tab_bot = st.tabs(
+    ["Overview", "Market carpet", "Possible outcomes", "Strategy tests", "Fusion analysis", "Paper trading", "Your Portfolio", "Ask the bot"])
 
 # =====================================================================
 # TAB 1: OVERVIEW - price chart, key signals, risk and return ratios
@@ -204,6 +204,12 @@ with tab_overview:
         st.caption(f"A safe return of {ratios.RISK_FREE * 100:.1f}% a year (about a government bond) is assumed where a "
                    "ratio needs one. Ratios describe the past only.")
     plain_english(ratios.GLOSSARY, "What do these ratios mean? (plain English)")
+
+# =====================================================================
+# MARKET CARPET - industries at a glance, then the companies inside one industry
+# =====================================================================
+with tab_carpet:
+    carpet_ui.render()
 
 # =====================================================================
 # TAB 2: POSSIBLE OUTCOMES - Monte Carlo on the price, and on each rule
