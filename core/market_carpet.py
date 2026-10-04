@@ -192,11 +192,12 @@ def carpet(data, metric, sector=None):
             text.append(_fmt(v))
     fig = go.Figure(go.Treemap(
         ids=ids, labels=labels, parents=[""] * len(ids), values=values, customdata=text, branchvalues="total",
-        marker=dict(root=dict(color='rgba(0,0,0,0)'), colors=colours, colorscale=SCALE, cmin=-span, cmax=span, cmid=0,
+        root=dict(color="rgba(0,0,0,0)"),
+        marker=dict(pad=dict(t=0, l=0, r=0, b=0), colors=colours, colorscale=SCALE, cmin=-span, cmax=span, cmid=0,
                     line=dict(width=1.5, color="#ffffff"),
                     colorbar=dict(title=dict(text=f"{label} (%)"), thickness=12, len=0.8)),
         texttemplate="<b>%{label}</b><br>%{customdata}", textfont=dict(size=15),
         hovertemplate="<b>%{label}</b><br>%{customdata}<br>Size: Rs %{value:,.0f}<extra></extra>",
-        pathbar=dict(visible=False), tiling=dict(pad=2)))
+        pathbar=dict(visible=False), tiling=dict(pad=0)))
     fig.update_layout(height=560, margin=dict(l=0, r=0, t=10, b=0), paper_bgcolor="rgba(0,0,0,0)")
     return fig

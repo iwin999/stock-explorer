@@ -59,3 +59,20 @@ def test_the_icon_is_on_the_first_screen_and_the_main_page_and_opens_without_err
         assert main.button(key="about_btn").label == "i" and not main.exception
         main.button(key="about_btn").click().run()
         assert not main.exception
+
+
+def _error_cards(app):
+    """Text of any friendly error screen the page showed (these hide real errors from visitors, so tests look for them)."""
+    texts = [m.value for m in app.markdown] + [m.value for m in app.error]
+    return [t for t in texts if "found an error" in t or "Something went wrong" in t or "Reference: E-" in t]
+
+
+def test_the_signed_in_page_shows_no_error_screens_in_any_tab():
+    store = acc.FileStore(tempfile.mkdtemp())
+    acc.create_account(store, "Reader2", 100000)
+    with mock.patch("core.trading_ui.get_store", lambda: store), mock.patch("core.portfolio_ui.get_store", lambda: store):
+        main = AppTest.from_file(APP, default_timeout=240)
+        main.query_params["user"] = "Reader2"
+        main.run()
+        assert not main.exception
+        assert _error_cards(main) == [], _error_cards(main)
