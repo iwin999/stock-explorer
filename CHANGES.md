@@ -269,5 +269,12 @@ The About page Gratitude note now gives Mr. Prashant Kulshrestha a special menti
 ## New in Step 28 (exit all positions)
 Paper trading has an **Exit all positions** option (under Everything you hold): after a tick-box confirmation it sells every share, ETF and bond fund and closes every future and option at current prices. The money stays as cash with profit or loss included; the starting capital is never reset. `core/valuation.py` (`exit_all`), `core/trading_ui.py`.
 
+## New in Step 29 (one search box with suggestions)
+| Change | Where |
+|---|---|
+| The two boxes at the top (a text box and a dropdown) are now **one search box**: start typing and matching companies drop down instantly, NSE and BSE listings together (for example "suzl" shows Suzlon on both). About 7,200 NSE and BSE companies are in it, with the popular ones first | `stock_page.py`, `core/universe.py` |
+| The list comes from Yahoo's screener, saved with the app so suggestions are instant and work offline. Run `scripts/download_company_universe.py` now and then to add newly listed companies | `scripts/download_company_universe.py`, `data/offline/company_universe.json` |
+| A small "Cannot find a company? Search Yahoo Finance live" box remains for anything newer than the saved list | `stock_page.py` |
+
 ## Status
 All 8 features are built.

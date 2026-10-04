@@ -154,10 +154,10 @@ def test_search_adds_bse_and_other_companies_from_yahoo(monkeypatch):
     symbols = [r["symbol"] for r in results]
     assert symbols[0] == "RELIANCE.NS" and symbols.count("RELIANCE.NS") == 1          # ours first, no duplicates
     assert "SUZLON.BO" in symbols and "BSE" in source
-    assert companies.label("SUZLON.BO") == "Suzlon Energy Limited (BSE: SUZLON)"
+    assert companies.label("SUZLON.BO").startswith("Suzlon Energy") and companies.label("SUZLON.BO").endswith("(BSE: SUZLON)")
     assert companies.label("RELIANCE.NS") == "Reliance Industries (RELIANCE)"
     from core import instruments as ins
-    assert ins.name_of("SUZLON.BO") == "Suzlon Energy Limited" and ins.asset_class("SUZLON.BO") == ins.STOCKS
+    assert ins.name_of("SUZLON.BO").startswith("Suzlon Energy") and ins.asset_class("SUZLON.BO") == ins.STOCKS
 
 
 def test_search_still_works_when_yahoo_is_down(monkeypatch):
@@ -186,3 +186,12 @@ def test_bse_listing_falls_back_to_the_nse_saved_prices():
     nse, bse = market_data.load_offline("TCS.NS"), market_data.load_offline("TCS.BO")
     assert nse is not None and bse is not None and bse.index[-1] == nse.index[-1]
     assert market_data.load_offline("^BSESN") is not None
+
+
+def test_search_box_suggestions_cover_the_whole_nse_and_bse():
+    from core import companies, universe
+    assert len(universe.OPTIONS) > 5000 and len(set(universe.OPTIONS)) == len(universe.OPTIONS)
+    assert universe.OPTIONS[:2] == ["RELIANCE.NS", "RELIANCE.BO"]                   # popular companies come first
+    labels = [companies.label(s).lower() for s in universe.OPTIONS]
+    assert any("suzlon" in x for x in labels) and any("bse:" in x for x in labels) and any("tata" in x for x in labels)
+    assert sum(s.endswith(".BO") for s in universe.OPTIONS) > 2000 and sum(s.endswith(".NS") for s in universe.OPTIONS) > 1500

@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from core import about, assistant_ui, carpet_ui, market_strip, backtest as bt, fusion_ui, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
+from core import about, assistant_ui, carpet_ui, universe, market_strip, backtest as bt, fusion_ui, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
 from core.charts import (backtest_chart, fan_chart, outlook_gauge, outcome_histogram, price_chart,
                          zoom_to_window)
 from core.formatting import format_inr
@@ -63,26 +63,32 @@ trading_ui.housekeeping()      # settle expired futures/options, close busted fu
 trading_ui.show_flash()        # result of the last click, wherever it came from
 trading_ui.show_events()       # e.g. 'your future expired and was settled'
 
-# ---------- company search + dropdown ----------
-col_search, col_pick = st.columns(2)
-with col_search:
-    query = st.text_input("Search by company name", placeholder="Any NSE or BSE company, e.g. Reliance, Suzlon, Zomato")
+# ---------- company search: one box, suggestions as you type ----------
+def _use_found_company(symbol):
+    """Button callback: make a company found by the live Yahoo search the chosen one."""
+    st.session_state.setdefault("extra_companies", [])
+    if symbol not in st.session_state["extra_companies"]:
+        st.session_state["extra_companies"].append(symbol)
+    st.session_state["company"] = symbol
 
-if query.strip():
-    results, source = run_search(query.strip())
-    options = [r["symbol"] for r in results]
-    if not options:
-        st.warning(f"No company found for “{query}”. Try another spelling, or choose from the list.")
-        options = [x for _, s, _ in companies.COMPANIES for x in companies.listings(s)]
-        hint = "All companies"
-    else:
-        hint = f"{len(options)} match(es)"
-else:
-    options = [x for _, s, _ in companies.COMPANIES for x in companies.listings(s)]
-    hint = "Or choose from the popular list (NSE and BSE, type to filter)"
 
-with col_pick:
-    symbol = st.selectbox(hint, options, format_func=companies.label)
+company_options = list(st.session_state.get("extra_companies", [])) + universe.OPTIONS
+if st.session_state.get("company") not in company_options:
+    st.session_state["company"] = company_options[0]
+symbol = st.selectbox("Search any NSE or BSE company (start typing a name)", company_options,
+                      format_func=companies.label, key="company",
+                      help=f"{len(universe.OPTIONS):,} companies listed on the NSE and the BSE. Type part of a name, "
+                           "for example 'tata', 'suzlon' or 'bank', and pick from the suggestions.")
+with st.expander("Cannot find a company? Search Yahoo Finance live"):
+    live_query = st.text_input("Company name", key="live_query", placeholder="e.g. a company that listed very recently")
+    if live_query.strip():
+        found, _src = run_search(live_query.strip())
+        if not found:
+            st.warning(f"Nothing found for “{live_query}”. Try another spelling.")
+        for r in found[:8]:
+            c1, c2 = st.columns([5, 1])
+            c1.write(companies.label(r["symbol"]) if r["symbol"] in companies.NAME_BY_SYMBOL else f"{r['name']} ({r['symbol']})")
+            c2.button("Use", key=f"use_{r['symbol']}", on_click=_use_found_company, args=(r["symbol"],))
 
 # ---------- load data ----------
 name = load_name(symbol)

@@ -30,7 +30,7 @@ Online, visitors choose a name and capital and their portfolio is saved under th
 ## What it does
 | # | Feature | File |
 |---|---|---|
-| 1 | Company search (name/nickname/typos) + dropdown of 119 companies, each on the NSE and the BSE (plus search for any other NSE or BSE company) | `core/companies.py` |
+| 1 | One search box that suggests companies as you type: about 7,200 NSE and BSE companies (the 119 popular ones first) | `core/companies.py` |
 | 2 | Interactive chart with 50/200-day averages and Bollinger Bands | `core/charts.py` |
 | 3 | RSI, MACD, trend, volatility with plain-English meanings | `core/indicators.py` |
 | 4 | Possible outcomes tab: Monte Carlo simulation, fan chart and a gauge of the chance of ending higher or lower | `core/simulation.py` |
