@@ -150,7 +150,7 @@ with tab_overview:
     p1, p2, p3 = st.columns([5, 3, 1])
     period = p1.radio("Period", list(PERIODS), index=1, horizontal=True)
     show_fib = p2.checkbox("Show Fibonacci levels", key="show_fib",
-                           help="Draws the classic retracement lines (23.6%, 38.2%, 50%, 61.8%, 78.6%) between the highest and lowest price in the period you are viewing.")
+                           help="Draws the Fibonacci retracement lines (23.6%, 38.2%, 50%, 61.8%, 78.6%) and the extension lines (127.2%, 161.8%) from the highest and lowest price in the period you are viewing.")
     with p3:
         help_bubble("fibonacci")
 
@@ -158,11 +158,11 @@ with tab_overview:
     fib = ind.fibonacci_levels(hist, PERIODS[period]) if show_fib else None
     if show_fib:
         add_fibonacci(fig, fib)
-    fig = zoom_to_window(fig, hist, PERIODS[period])
+    extra = [price for _, price in fib["extensions"]] if fib else ()      # keep the extension lines inside the chart
+    fig = zoom_to_window(fig, hist, PERIODS[period], include=extra)
     st.plotly_chart(fig, width="stretch")
     if show_fib:
-        st.info(ind.describe_fibonacci(fib) + " The dashed lines are Fibonacci levels where traders watch for a pause or turn. "
-                "They depend on the period chosen and are a visual guide, not a prediction.")
+        st.info(ind.describe_fibonacci(fib) + " They depend on the period chosen and are a visual guide, not a prediction.")
     st.caption("Each bar is one trading day. The amber and navy lines are the average price over the last 50 and "
                "200 days; they smooth out day-to-day noise. The grey band is the price's usual range, and it "
                "widens when the price is moving more. The bars underneath are volume, the number of shares traded each day "

@@ -66,20 +66,31 @@ def price_chart(hist, symbol, name):
     return fig
 
 
+FIB_RETRACE = {0.236: "#8a93a0", 0.382: "#d98e04", 0.5: "#6b7785", 0.618: "#c8553d", 0.786: "#8a93a0"}
+FIB_EXTEND = "#1f8a6e"
+
+
 def add_fibonacci(fig, fib):
-    """Draw the Fibonacci levels as dashed horizontal lines on the price panel, each labelled with its ratio and price."""
+    """Draw the Fibonacci retracement lines (grey, orange, red), the extension lines (green) and the swing's high and low.
+    The 38.2% to 61.8% zone, where pullbacks most often pause, is lightly shaded."""
     if fib is None:
         return fig
     on_price = dict(row=1, col=1) if getattr(fig, "_grid_ref", None) is not None else {}
-    palette = {0.236: "#9aa6b2", 0.382: "#d98e04", 0.5: "#6b7785", 0.618: "#c8553d", 0.786: "#9aa6b2"}
+    levels = dict(fib["levels"])
+    fig.add_hrect(y0=levels[0.618], y1=levels[0.382], fillcolor="rgba(217,142,4,0.12)", line_width=0, layer="below", **on_price)
     for ratio, price in fib["levels"]:
-        fig.add_hline(y=price, line=dict(color=palette.get(ratio, GREY), width=1.6, dash="dash"),
-                      annotation_text=f"{ratio * 100:.1f}%  Rs {price:,.0f}", annotation_position="top right",
-                      annotation_font=dict(size=13, color=palette.get(ratio, GREY)), **on_price)
+        colour = FIB_RETRACE.get(ratio, GREY)
+        fig.add_hline(y=price, line=dict(color=colour, width=2.2, dash="dash"),
+                      annotation_text=f"<b>{ratio * 100:.1f}%</b>  Rs {price:,.0f}", annotation_position="top right",
+                      annotation_font=dict(size=14, color=colour), **on_price)
+    for ratio, price in fib["extensions"]:
+        fig.add_hline(y=price, line=dict(color=FIB_EXTEND, width=2.4, dash="dashdot"),
+                      annotation_text=f"<b>Extension {ratio * 100:.1f}%</b>  Rs {price:,.0f}",
+                      annotation_position="top right", annotation_font=dict(size=14, color=FIB_EXTEND), **on_price)
     for price, text in ((fib["high"], "High"), (fib["low"], "Low")):             # the two ends of the swing
-        fig.add_hline(y=price, line=dict(color="#444444", width=1.2, dash="dot"),
-                      annotation_text=f"{text}  Rs {price:,.0f}", annotation_position="bottom right",
-                      annotation_font=dict(size=13, color="#444444"), **on_price)
+        fig.add_hline(y=price, line=dict(color="#333333", width=1.6, dash="dot"),
+                      annotation_text=f"<b>{text}</b>  Rs {price:,.0f}", annotation_position="bottom right",
+                      annotation_font=dict(size=14, color="#333333"), **on_price)
     return fig
 
 
@@ -163,7 +174,7 @@ def outlook_gauge(chance_up, calendar_days):
     return fig
 
 
-def zoom_to_window(fig, hist, days):
+def zoom_to_window(fig, hist, days, include=()):
     """Show only the last `days` trading days, with the price axis fitted to that window.
 
     The averages are calculated on ALL the data (they need the warm-up), but the chart only
@@ -178,6 +189,8 @@ def zoom_to_window(fig, hist, days):
             ind.sma(close, 50).iloc[view].min(), ind.sma(close, 200).iloc[view].min()]
     highs = [hist["High"].iloc[view].max(), upper.iloc[view].max(),
              ind.sma(close, 50).iloc[view].max(), ind.sma(close, 200).iloc[view].max()]
+    lows += list(include)                     # extra prices that must stay in view (such as the Fibonacci extensions)
+    highs += list(include)
     low = min(v for v in lows if v == v)     # v == v is False for NaN, so NaNs are skipped
     high = max(v for v in highs if v == v)
     pad = (high - low) * 0.05

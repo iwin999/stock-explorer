@@ -258,4 +258,4 @@ def test_fibonacci_lines_draw_on_the_chart_with_and_without_a_volume_panel():
         fig = price_chart(hist, "X.NS", "X")
         add_fibonacci(fig, ind.fibonacci_levels(hist, 126))
         zoom_to_window(fig, hist, 126).to_json()
-        assert len(fig.layout.shapes) == 7 and len(fig.layout.annotations) == 7          # five levels plus the high and the low
+        assert len(fig.layout.shapes) == 10 and len(fig.layout.annotations) == 9          # 5 retracements + 2 extensions + high + low, and the shaded zone

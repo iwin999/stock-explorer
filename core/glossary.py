@@ -19,10 +19,10 @@ TERMS = {
         formula="Compare the average volume of the last 5 sessions with the average of the 20 sessions before them. Ratio of 1.15 or more = above-average volume; 0.85 or less = thin. Days with no volume figure are ignored.",
         read="Yes: the price moved more than 1% over 5 sessions on above-average volume, so the move has backing. No: it moved on below-average volume, so it is less convincing. Mixed: volume was about normal, or the price barely moved. It describes the past and does not predict."),
     "fibonacci": dict(
-        title="Fibonacci retracement",
-        use="Marks price levels where a rise or fall might pause or turn, based on how far the price has already travelled. Traders watch these levels for possible support (after a rise) or resistance (after a fall).",
-        formula="Swing = highest price minus lowest price in the period. After a rise, level = high - ratio x swing; after a fall, level = low + ratio x swing. Ratios used: 23.6%, 38.2%, 50%, 61.8% and 78.6%.",
-        read="Dashed lines show the levels. The 38.2%, 50% and 61.8% lines are the ones people watch most. A price that stalls near a line is not a promise: the levels are a guide, the choice of period changes them, and many analysts doubt them. It describes the past and does not predict."),
+        title="Fibonacci retracement and extension",
+        use="Marks levels where a rise or fall might pause (retracement) and where it might run to next (extension), measured from the period's highest and lowest price.",
+        formula="Swing = high - low. After a rise: retracement = high - ratio x swing (23.6%, 38.2%, 50%, 61.8%, 78.6%); extension = low + ratio x swing (127.2%, 161.8%). After a fall the same ratios are measured up from the low and down past it.",
+        read="Grey, orange and red lines are retracements (shaded zone: 38.2% to 61.8%); green lines are extensions, possible targets past the swing. They are a guide, depend on the period chosen, and do not predict."),
     # ---------------- key signals ----------------
     "rsi": dict(
         title="RSI (Relative Strength Index)",

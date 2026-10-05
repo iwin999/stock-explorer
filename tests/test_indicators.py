@@ -107,3 +107,16 @@ def test_fibonacci_needs_enough_history_and_a_real_swing():
     flat["High"] = flat["Low"] = flat["Close"]
     assert ind.fibonacci_levels(flat, 40) is None
     assert "not enough" in ind.describe_fibonacci(None)
+
+
+def test_fibonacci_extensions_go_past_the_swing():
+    import numpy as np
+    from core import indicators as ind
+    up = ind.fibonacci_levels(_swing_frame(np.linspace(100, 200, 60)), 60)               # low 99, high 201, swing 102
+    ext = dict(up["extensions"])
+    assert abs(ext[1.272] - (99 + 1.272 * 102)) < 1e-9 and abs(ext[1.618] - (99 + 1.618 * 102)) < 1e-9
+    assert ext[1.272] > up["high"] and ext[1.618] > ext[1.272]                          # above the high after a rise
+    down = ind.fibonacci_levels(_swing_frame(np.linspace(200, 100, 60)), 60)
+    dext = dict(down["extensions"])
+    assert dext[1.272] < down["low"] and dext[1.618] < dext[1.272]                      # below the low after a fall
+    assert "Extension" in ind.describe_fibonacci(up) and "127.2%" in ind.describe_fibonacci(up)

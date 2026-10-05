@@ -175,6 +175,7 @@ def describe_volume(hist):
 
 # ---------------- Fibonacci retracement ----------------
 FIB_RATIOS = (0.236, 0.382, 0.5, 0.618, 0.786)
+FIB_EXTENSIONS = (1.272, 1.618)       # how far past the swing the price might run (targets)
 
 
 def fibonacci_levels(hist, days):
@@ -183,7 +184,8 @@ def fibonacci_levels(hist, days):
     The swing is the highest high and the lowest low in the window. If the high came AFTER the low the price has been
     rising, so the levels measure how far it might pull back down from the high (price = high - ratio x swing). If the
     high came BEFORE the low the price has been falling, so the levels measure how far it might bounce up from the low
-    (price = low + ratio x swing). Returns None when there is not enough history or no swing.
+    (price = low + ratio x swing). Extensions (127.2% and 161.8% of the swing) are projected past the end of the swing.
+    Returns None when there is not enough history or no swing.
     """
     if hist is None or len(hist) < 20:
         return None
@@ -195,19 +197,23 @@ def fibonacci_levels(hist, days):
     rising = high_date > low_date
     swing = high - low
     levels = [(r, high - r * swing if rising else low + r * swing) for r in FIB_RATIOS]
+    # Extensions project the swing beyond its end: above the high after a rise, below the low after a fall.
+    extensions = [(r, low + r * swing if rising else high - r * swing) for r in FIB_EXTENSIONS]
     return {"high": high, "low": low, "high_date": high_date, "low_date": low_date,
-            "direction": "up" if rising else "down", "levels": levels,
+            "direction": "up" if rising else "down", "levels": levels, "extensions": extensions,
             "last": float(view["Close"].iloc[-1])}
 
 
 def describe_fibonacci(fib):
-    """A plain-English sentence about where the price stands against the levels."""
+    """A plain-English explanation of the retracement and extension lines for this period."""
     if fib is None:
         return "There is not enough price history in this period to draw Fibonacci levels."
     price, high, low = fib["last"], fib["high"], fib["low"]
-    pulled = (high - price) / (high - low) if fib["direction"] == "up" else (price - low) / (high - low)
-    word = "pulled back" if fib["direction"] == "up" else "bounced"
-    start = "high" if fib["direction"] == "up" else "low"
-    return (f"In this period the price went {'up' if fib['direction'] == 'up' else 'down'}, from Rs {low if fib['direction'] == 'up' else high:,.2f} "
-            f"to Rs {high if fib['direction'] == 'up' else low:,.2f}. It has {word} about {abs(pulled) * 100:.0f}% of that move "
-            f"from the {start}.")
+    up = fib["direction"] == "up"
+    pulled = (high - price) / (high - low) if up else (price - low) / (high - low)
+    ext = dict(fib["extensions"])
+    return (f"In this period the price went {'up' if up else 'down'}, from Rs {low if up else high:,.2f} to Rs {high if up else low:,.2f}. "
+            f"It has {'pulled back' if up else 'bounced'} about {abs(pulled) * 100:.0f}% of that move. "
+            f"**Retracement lines** (grey, orange and red, with the shaded 38.2% to 61.8% zone) show where it might pause while "
+            f"{'pulling back' if up else 'bouncing'}. **Extension lines** (green: 127.2% at Rs {ext[1.272]:,.0f} and 161.8% at "
+            f"Rs {ext[1.618]:,.0f}) show where it might run to if it {'breaks above the high' if up else 'breaks below the low'}.")
