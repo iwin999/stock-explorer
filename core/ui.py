@@ -120,6 +120,11 @@ h3 { font-size: 1.35rem !important; font-weight: 600 !important; }
 .brand-crest { height: 4.2rem; width: auto; flex: 0 0 auto; }
 @media (max-width: 640px) { .brand-crest { height: 3rem; } .brand h1 { font-size: 1.9rem !important; } }
 
+/* the Key signals cards wrap on narrow screens instead of clipping their words */
+.st-key-signals_row [data-testid="stHorizontalBlock"] { flex-wrap: wrap !important; }
+.st-key-signals_row [data-testid="stColumn"] { min-width: 200px !important; flex: 1 1 200px !important; }
+.st-key-signals_row [data-testid="stMetricValue"], .st-key-signals_row [data-testid="stMetricValue"] * { font-size: 1.75rem !important; }
+
 /* less empty space above the title */
 .stApp [data-testid="stMainBlockContainer"], .stApp .block-container { padding-top: 2.2rem !important; }
 
@@ -183,7 +188,7 @@ LAYMAN = {
     "calmar": "Reward compared with the worst fall", "treynor": "Reward for riding the market's ups and downs",
     "beta": "Does it swing more than the market?", "alpha": "Extra return beyond the market",
     "information": "Did it beat the market steadily?", "correlation": "Does it move together with the market?",
-    "total_return": "Total gain or loss", "win_rate": "How often a trade made money",
+    "total_return": "Total gain or loss", "volume_confirmation": "Are lots of people behind this move?", "win_rate": "How often a trade made money",
     "avg_win": "Typical winning trade", "avg_loss": "Typical losing trade", "expectancy": "Average gain per trade",
 }
 

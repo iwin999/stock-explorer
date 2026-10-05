@@ -100,3 +100,74 @@ def describe_volatility(close):
         meaning = "highly active"
     return f"{vol:.0f}%", (f"In a typical year the price moves about {vol:.0f}% up or down. "
                            f"That makes it {meaning}.")
+
+
+# ---------------- volume ----------------
+VOLUME_RECENT_DAYS = 5          # the recent move we look at
+VOLUME_BASE_DAYS = 20           # the usual level of volume it is compared with (the 20 days before that)
+VOLUME_STRONG, VOLUME_WEAK = 1.15, 0.85      # recent volume at least 15% above usual = "backed"; 15% below = "thin"
+VOLUME_MIN_MOVE = 0.01          # a price change smaller than 1% over the 5 days is not a move worth confirming
+
+
+def clean_volume(hist):
+    """The Volume column with zero (a missing day) treated as unknown, or None if there is no usable volume."""
+    if hist is None or "Volume" not in hist:
+        return None
+    vol = hist["Volume"].astype(float).replace(0.0, np.nan)
+    window = vol.iloc[-(VOLUME_RECENT_DAYS + VOLUME_BASE_DAYS):]
+    if len(window) < VOLUME_RECENT_DAYS + VOLUME_BASE_DAYS or window.notna().sum() < 0.6 * len(window):
+        return None
+    return vol
+
+
+def volume_stats(hist):
+    """The numbers behind the volume verdict, or None if volume is not available.
+
+    ratio  - average volume of the last 5 sessions / average volume of the 20 sessions before them
+    move   - the price change over those 5 sessions
+    buyers - the share of the last 20 sessions' volume that came on days the price rose
+    verdict - "Yes" (the move had above-average volume), "No" (below-average volume), "Mixed" (about normal, or no move)
+    """
+    vol = clean_volume(hist)
+    if vol is None:
+        return None
+    close = hist["Close"].astype(float)
+    recent = vol.iloc[-VOLUME_RECENT_DAYS:].mean()
+    base = vol.iloc[-(VOLUME_RECENT_DAYS + VOLUME_BASE_DAYS):-VOLUME_RECENT_DAYS].mean()
+    if not (recent == recent and base == base and base > 0):
+        return None
+    ratio = float(recent / base)
+    move = float(close.iloc[-1] / close.iloc[-VOLUME_RECENT_DAYS - 1] - 1)
+    ret = close.pct_change().iloc[-20:]
+    v20 = vol.iloc[-20:]
+    up, down = v20[ret > 0].sum(), v20[ret < 0].sum()
+    buyers = float(up / (up + down)) if (up + down) > 0 else None
+    direction = "up" if move > VOLUME_MIN_MOVE else "down" if move < -VOLUME_MIN_MOVE else "flat"
+    if direction == "flat":
+        verdict = "Mixed"
+    else:
+        verdict = "Yes" if ratio >= VOLUME_STRONG else "No" if ratio <= VOLUME_WEAK else "Mixed"
+    return {"ratio": ratio, "move": move, "buyers": buyers, "direction": direction, "verdict": verdict,
+            "latest": float(vol.dropna().iloc[-1])}
+
+
+def describe_volume(hist):
+    """(value, plain-English meaning) for the 'Volume' card: Yes, No, Mixed or n/a."""
+    s = volume_stats(hist)
+    if s is None:
+        return "n/a", "Volume figures are not available for this company right now."
+    way = {"up": "rose", "down": "fell", "flat": "barely moved"}[s["direction"]]
+    head = (f"In the last {VOLUME_RECENT_DAYS} sessions the price {way}"
+            + (f" {abs(s['move']) * 100:.1f}%" if s["direction"] != "flat" else "")
+            + f", on {s['ratio']:.1f}x the usual volume. ")
+    if s["direction"] == "flat":
+        tail = "There is no clear move to confirm."
+    elif s["verdict"] == "Yes":
+        tail = ("More people took part, so the move is better backed."
+                if s["direction"] == "up" else "More people were selling, so the fall is serious.")
+    elif s["verdict"] == "No":
+        tail = ("Fewer people took part, so the rise is less convincing."
+                if s["direction"] == "up" else "Fewer people were selling, so the fall is less convincing.")
+    else:
+        tail = "Volume is normal, so it neither backs nor weakens the move."
+    return s["verdict"], head + tail

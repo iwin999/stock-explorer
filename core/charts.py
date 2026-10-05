@@ -1,5 +1,6 @@
 """Plotly charts. Plotly charts are interactive: hover, zoom, drag, double-click to reset."""
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 from core import indicators as ind
 from core import simulation as sim
@@ -10,7 +11,7 @@ UP_COLOUR, DOWN_COLOUR = "#2a9d6f", "#c8553d"
 
 
 def price_chart(hist, symbol, name):
-    """Candlesticks + 50/200-day averages + Bollinger Bands.
+    """Candlesticks + 50/200-day averages + Bollinger Bands, with volume bars underneath when volume is available.
 
     `hist` must contain enough earlier history for the averages to be warmed up;
     the caller decides how much to *show* via x-axis range (see app.py).
@@ -18,27 +19,42 @@ def price_chart(hist, symbol, name):
     close = hist["Close"]
     ma50, ma200 = ind.sma(close, 50), ind.sma(close, 200)
     _, upper, lower = ind.bollinger(close)
+    volume = ind.clean_volume(hist)
+    with_volume = volume is not None
 
-    fig = go.Figure()
+    if with_volume:
+        fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.76, 0.24], vertical_spacing=0.03)
+        place = dict(row=1, col=1)
+    else:
+        fig, place = go.Figure(), {}
 
     # Bollinger Bands: draw the lower line first, then the upper line filled down to it.
     fig.add_trace(go.Scatter(x=hist.index, y=lower, line=dict(width=0),
-                             showlegend=False, hoverinfo="skip"))
+                             showlegend=False, hoverinfo="skip"), **place)
     fig.add_trace(go.Scatter(x=hist.index, y=upper, line=dict(width=0), fill="tonexty",
                              fillcolor="rgba(120,130,145,0.16)", name="Usual price range",
-                             hoverinfo="skip"))
+                             hoverinfo="skip"), **place)
 
     fig.add_trace(go.Candlestick(x=hist.index, open=hist["Open"], high=hist["High"],
                                  low=hist["Low"], close=close, name="Price",
-                                 increasing_line_color=UP_COLOUR, decreasing_line_color=DOWN_COLOUR))
+                                 increasing_line_color=UP_COLOUR, decreasing_line_color=DOWN_COLOUR), **place)
     fig.add_trace(go.Scatter(x=hist.index, y=ma50, name="50-day average",
-                             line=dict(color=AMBER, width=2.5)))
+                             line=dict(color=AMBER, width=2.5)), **place)
     fig.add_trace(go.Scatter(x=hist.index, y=ma200, name="200-day average",
-                             line=dict(color=NAVY, width=2.5)))
+                             line=dict(color=NAVY, width=2.5)), **place)
+
+    if with_volume:
+        up_day = close.diff() >= 0
+        colours = [UP_COLOUR if u else DOWN_COLOUR for u in up_day]
+        fig.add_trace(go.Bar(x=hist.index, y=volume, name="Volume", marker_color=colours, marker_opacity=0.6,
+                             hovertemplate="%{y:,.0f} shares<extra>Volume</extra>"), row=2, col=1)
+        fig.add_trace(go.Scatter(x=hist.index, y=volume.rolling(20, min_periods=10).mean(), name="20-day average volume",
+                                 line=dict(color=GREY, width=2)), row=2, col=1)
+        fig.update_yaxes(title_text="Volume", row=2, col=1)
 
     fig.update_layout(
         title=dict(text=f"{name} ({symbol.replace('.NS', '')})", font=dict(size=22)),
-        height=560,
+        height=640 if with_volume else 560,
         font=dict(size=16),
         xaxis_rangeslider_visible=False,
         yaxis=dict(title="Price (Rs)", tickprefix="Rs "),
@@ -46,6 +62,7 @@ def price_chart(hist, symbol, name):
         margin=dict(l=10, r=10, t=60, b=10),
         hovermode="x unified",
     )
+    fig.update_xaxes(rangeslider_visible=False)
     return fig
 
 
@@ -148,7 +165,12 @@ def zoom_to_window(fig, hist, days):
     high = max(v for v in highs if v == v)
     pad = (high - low) * 0.05
     fig.update_xaxes(range=[hist.index[-n], hist.index[-1]])
-    fig.update_yaxes(range=[low - pad, high + pad])
+    fig.update_layout(yaxis=dict(range=[low - pad, high + pad]))             # the price axis (the first one)
+    volume = ind.clean_volume(hist)
+    if volume is not None and fig.layout.yaxis2.domain:                      # the volume panel, fitted to the same window
+        top = volume.iloc[view].max()
+        if top == top:
+            fig.update_layout(yaxis2=dict(range=[0, float(top) * 1.1]))
     return fig
 
 

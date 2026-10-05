@@ -13,6 +13,11 @@ TERMS = {
         use="A map of many companies at once, used to spot the strongest industries before looking at single companies.",
         formula="Tile size = market capitalisation (share price x number of shares). Tile colour = performance (today, or the gap from the 50-day or 200-day average). An industry's colour is the market-cap-weighted average of its companies.",
         read="Large green tiles are big companies or industries that are doing well; red means falling. Look for strong industries first, then strong companies inside them. It describes the past and does not predict."),
+    "volume_confirmation": dict(
+        title="Volume backing",
+        use="Shows whether the recent price move had real participation behind it. Volume is how many shares changed hands; a move that many people joined is more trustworthy than one that few did.",
+        formula="Compare the average volume of the last 5 sessions with the average of the 20 sessions before them. Ratio of 1.15 or more = above-average volume; 0.85 or less = thin. Days with no volume figure are ignored.",
+        read="Yes: the price moved more than 1% over 5 sessions on above-average volume, so the move has backing. No: it moved on below-average volume, so it is less convincing. Mixed: volume was about normal, or the price barely moved. It describes the past and does not predict."),
     # ---------------- key signals ----------------
     "rsi": dict(
         title="RSI (Relative Strength Index)",

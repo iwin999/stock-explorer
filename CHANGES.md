@@ -280,5 +280,12 @@ The About page Gratitude note now gives Mr. Prashant Kulshrestha a special menti
 | The list comes from Yahoo's screener, saved with the app so suggestions are instant and work offline. Run `scripts/download_company_universe.py` now and then to add newly listed companies | `scripts/download_company_universe.py`, `data/offline/company_universe.json` |
 | A small "Cannot find a company? Search Yahoo Finance live" box remains for anything newer than the saved list | `stock_page.py` |
 
+## New in Step 30 (volume)
+| Change | Where |
+|---|---|
+| The price chart now has **volume bars** underneath (green on days the price rose, red when it fell) with a grey line for the usual 20-day level. Shown only when volume exists (not for indexes) | `core/charts.py` |
+| A new **Volume backing** card in Key signals says **Yes / No / Mixed**: Yes = the price moved more than 1% over the last 5 sessions on at least 15% above the usual volume; No = on at least 15% below; Mixed = about normal or no real move; n/a when volume is missing. Days with no volume figure are ignored | `core/indicators.py` (`volume_stats`, `describe_volume`) |
+| "?" bubble, hover translation, plain-English text and bot notes for it. The five Key signals cards wrap on narrow screens instead of clipping words | `core/glossary.py`, `core/ui.py`, `data/bot_notes.json`, `stock_page.py` |
+
 ## Status
 All 8 features are built.

@@ -153,21 +153,24 @@ with tab_overview:
     st.plotly_chart(fig, width="stretch")
     st.caption("Each bar is one trading day. The amber and navy lines are the average price over the last 50 and "
                "200 days; they smooth out day-to-day noise. The grey band is the price's usual range, and it "
-               "widens when the price is moving more.")
+               "widens when the price is moving more. The bars underneath are volume, the number of shares traded each day "
+               "(green on days the price rose, red when it fell); the grey line is the usual level. Tall bars mean a busy day.")
 
     # ---------- key signals ----------
     st.header("Key signals")
-    st.caption("Four commonly used measures. They describe the past; they do not predict. Hold your pointer over a term for two seconds to see it in plain words.")
+    st.caption("Five commonly used measures. They describe the past; they do not predict. Hold your pointer over a term for two seconds to see it in plain words.")
     panel = [
         ("RSI", "rsi", *ind.describe_rsi(close)),
         ("MACD", "macd", *ind.describe_macd(close)),
         ("Trend", "trend", *ind.describe_trend(close)),
         ("Volatility", "volatility", *ind.describe_volatility(close.iloc[-252:])),  # last year, same window as the simulation
+        ("Volume backing", "volume_confirmation", *ind.describe_volume(hist)),
     ]
-    for column, (title, term, value, meaning) in zip(st.columns(4), panel):
-        with column:
-            metric_with_help(title, value, term)
-            st.markdown(f'<div class="meaning">{meaning}</div>', unsafe_allow_html=True)
+    with st.container(key="signals_row"):          # on narrow screens the cards wrap onto a second row instead of clipping
+        for column, (title, term, value, meaning) in zip(st.columns(5), panel):
+            with column:
+                metric_with_help(title, value, term)
+                st.markdown(f'<div class="meaning">{meaning}</div>', unsafe_allow_html=True)
     plain_english(
         "**Recent strength (RSI)** is a score from 0 to 100 of how fast the price has been rising or falling lately. "
         "Above 70 the stock may have run up too fast; below 30 it may have fallen too fast.\n\n"
@@ -175,7 +178,10 @@ with tab_overview:
         "gaining speed upward; if lower, downward.\n\n"
         "**Trend direction** looks at whether the price is above or below its 50-day and 200-day average prices.\n\n"
         "**Price swings (volatility)** is how much the price typically moves up or down over a year. "
-        "A higher number means a bumpier ride.")
+        "A higher number means a bumpier ride.\n\n"
+        "**Volume backing** asks: were lots of people behind the recent move? Volume is how many shares changed hands. "
+        "A rise on busy trading is more believable than a rise on quiet trading. *Yes* means the recent move came with "
+        "above-average volume, *No* means below-average, *Mixed* means about normal.")
 
     # ---------- risk and return ratios ----------
     st.header("Risk and return")

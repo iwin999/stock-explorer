@@ -475,7 +475,7 @@
      "age_10": "Volume is how many shares changed hands in a day, like counting how many people bought tickets at a cinema. A big crowd means lots of interest.",
      "age_15": "Volume is the number of shares traded in a period. Price moves on high volume are taken more seriously than moves on low volume, because more people took part.",
      "adult": "Volume confirms price moves: breakouts on rising volume are more reliable, and falling volume during a trend can warn of fading participation.",
-     "in_this_app": "The current app charts price only, not volume.",
+     "in_this_app": "The price chart has volume bars underneath (green on up days, red on down days, with a grey line for the usual level), and the Key signals card 'Volume backing' says Yes, No or Mixed: whether the recent move came with above-average volume.",
      "related": ["candlestick", "liquidity"]},
     {"id": "market_cap", "term": "Market capitalisation (market cap)", "category": "Market",
      "keywords": ["market cap", "market capitalisation", "market capitalization", "free float", "large cap", "small cap", "mid cap", "large-cap", "large-caps", "mid-cap", "small-cap", "free-float"],

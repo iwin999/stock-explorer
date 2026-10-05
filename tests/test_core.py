@@ -226,3 +226,20 @@ def test_order_times_are_indian_time():
     order = pf.buy("A.NS", 1, 10.0)
     stamp = datetime.fromisoformat(order["timestamp"])
     assert stamp.tzinfo is None and abs((stamp - datetime.now(IST).replace(tzinfo=None)).total_seconds()) < 5
+
+
+def test_price_chart_has_volume_bars_only_when_volume_exists_and_zooms_without_errors():
+    import numpy as np
+    import pandas as pd
+    from core.charts import price_chart, zoom_to_window
+    idx = pd.date_range("2025-01-01", periods=400)
+    price = 100 + np.cumsum(np.random.default_rng(1).normal(0, 1, 400))
+    hist = pd.DataFrame({"Open": price, "High": price + 1, "Low": price - 1, "Close": price,
+                         "Volume": np.random.default_rng(2).integers(1000, 5000, 400).astype(float)}, index=idx)
+    fig = zoom_to_window(price_chart(hist, "X.NS", "X"), hist, 126)
+    names = [t.name for t in fig.data]
+    assert "Volume" in names and "20-day average volume" in names and fig.layout.yaxis2.domain
+    fig.to_json()
+    flat = zoom_to_window(price_chart(hist.assign(Volume=0.0), "^IDX", "Index"), hist.assign(Volume=0.0), 126)
+    assert "Volume" not in [t.name for t in flat.data]                          # an index with no volume: price panel only
+    flat.to_json()
