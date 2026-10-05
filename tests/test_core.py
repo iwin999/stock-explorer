@@ -243,3 +243,19 @@ def test_price_chart_has_volume_bars_only_when_volume_exists_and_zooms_without_e
     flat = zoom_to_window(price_chart(hist.assign(Volume=0.0), "^IDX", "Index"), hist.assign(Volume=0.0), 126)
     assert "Volume" not in [t.name for t in flat.data]                          # an index with no volume: price panel only
     flat.to_json()
+
+
+def test_fibonacci_lines_draw_on_the_chart_with_and_without_a_volume_panel():
+    import numpy as np
+    import pandas as pd
+    from core import indicators as ind
+    from core.charts import add_fibonacci, price_chart, zoom_to_window
+    idx = pd.date_range("2025-01-01", periods=300)
+    price = np.linspace(100, 180, 300) + np.sin(np.arange(300))
+    base = pd.DataFrame({"Open": price, "High": price + 1, "Low": price - 1, "Close": price}, index=idx)
+    for volume in (np.full(300, 5000.0), np.zeros(300)):                               # with and without a volume panel
+        hist = base.assign(Volume=volume)
+        fig = price_chart(hist, "X.NS", "X")
+        add_fibonacci(fig, ind.fibonacci_levels(hist, 126))
+        zoom_to_window(fig, hist, 126).to_json()
+        assert len(fig.layout.shapes) == 7 and len(fig.layout.annotations) == 7          # five levels plus the high and the low

@@ -11,7 +11,7 @@ import pandas as pd
 import streamlit as st
 
 from core import about, assistant_ui, carpet_ui, universe, market_strip, backtest as bt, fusion_ui, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
-from core.charts import (backtest_chart, fan_chart, outlook_gauge, outcome_histogram, price_chart,
+from core.charts import (add_fibonacci, backtest_chart, fan_chart, outlook_gauge, outcome_histogram, price_chart,
                          zoom_to_window)
 from core.formatting import format_inr
 from core.errors import guard
@@ -19,7 +19,7 @@ from core.live import live_quote
 from core.market_data import get_company_name, get_history_with_source
 from core.market_hours import is_market_open, now_ist, status_message
 from core.strategies import FUSION_RULE, STRATEGIES, fusion_rule_for
-from core.ui import (ratio_scale, callout, know_how_button, metric_with_help, notice, plain_english, setup_page,
+from core.ui import (help_bubble, ratio_scale, callout, know_how_button, metric_with_help, notice, plain_english, setup_page,
                      show_disclaimer, term_row)
 
 setup_page("Stock Explorer")
@@ -147,10 +147,22 @@ tab_overview, tab_carpet, tab_outcomes, tab_strategy, tab_fusion, tab_trade, tab
 with tab_overview:
     st.markdown("**In short:** the chart shows what the price did. The cards below say whether it is speeding up or slowing down, how bumpy it is, and whether the risk was worth the reward.")
     st.header("Price history")
-    period = st.radio("Period", list(PERIODS), index=1, horizontal=True)
+    p1, p2, p3 = st.columns([5, 3, 1])
+    period = p1.radio("Period", list(PERIODS), index=1, horizontal=True)
+    show_fib = p2.checkbox("Show Fibonacci levels", key="show_fib",
+                           help="Draws the classic retracement lines (23.6%, 38.2%, 50%, 61.8%, 78.6%) between the highest and lowest price in the period you are viewing.")
+    with p3:
+        help_bubble("fibonacci")
 
-    fig = zoom_to_window(price_chart(hist, symbol, name), hist, PERIODS[period])
+    fig = price_chart(hist, symbol, name)
+    fib = ind.fibonacci_levels(hist, PERIODS[period]) if show_fib else None
+    if show_fib:
+        add_fibonacci(fig, fib)
+    fig = zoom_to_window(fig, hist, PERIODS[period])
     st.plotly_chart(fig, width="stretch")
+    if show_fib:
+        st.info(ind.describe_fibonacci(fib) + " The dashed lines are Fibonacci levels where traders watch for a pause or turn. "
+                "They depend on the period chosen and are a visual guide, not a prediction.")
     st.caption("Each bar is one trading day. The amber and navy lines are the average price over the last 50 and "
                "200 days; they smooth out day-to-day noise. The grey band is the price's usual range, and it "
                "widens when the price is moving more. The bars underneath are volume, the number of shares traded each day "

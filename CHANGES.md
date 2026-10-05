@@ -287,5 +287,8 @@ The About page Gratitude note now gives Mr. Prashant Kulshrestha a special menti
 | A new **Volume backing** card in Key signals says **Yes / No / Mixed**: Yes = the price moved more than 1% over the last 5 sessions on at least 15% above the usual volume; No = on at least 15% below; Mixed = about normal or no real move; n/a when volume is missing. Days with no volume figure are ignored | `core/indicators.py` (`volume_stats`, `describe_volume`) |
 | "?" bubble, hover translation, plain-English text and bot notes for it. The five Key signals cards wrap on narrow screens instead of clipping words | `core/glossary.py`, `core/ui.py`, `data/bot_notes.json`, `stock_page.py` |
 
+## New in Step 31 (Fibonacci levels)
+A **Show Fibonacci levels** tick-box above the price chart draws the five retracement lines (23.6%, 38.2%, 50%, 61.8%, 78.6%) plus the swing high and low, labelled with prices, over the period being viewed. The swing is found automatically: after a rise the levels measure the pullback from the high, after a fall the bounce from the low. A plain sentence explains where the price stands, and a "?" bubble gives the formula and a caution that the levels are subjective. `core/indicators.py` (`fibonacci_levels`), `core/charts.py` (`add_fibonacci`), `stock_page.py`; the bot knows it.
+
 ## Status
 All 8 features are built.

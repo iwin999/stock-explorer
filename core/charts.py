@@ -66,6 +66,23 @@ def price_chart(hist, symbol, name):
     return fig
 
 
+def add_fibonacci(fig, fib):
+    """Draw the Fibonacci levels as dashed horizontal lines on the price panel, each labelled with its ratio and price."""
+    if fib is None:
+        return fig
+    on_price = dict(row=1, col=1) if getattr(fig, "_grid_ref", None) is not None else {}
+    palette = {0.236: "#9aa6b2", 0.382: "#d98e04", 0.5: "#6b7785", 0.618: "#c8553d", 0.786: "#9aa6b2"}
+    for ratio, price in fib["levels"]:
+        fig.add_hline(y=price, line=dict(color=palette.get(ratio, GREY), width=1.6, dash="dash"),
+                      annotation_text=f"{ratio * 100:.1f}%  Rs {price:,.0f}", annotation_position="top right",
+                      annotation_font=dict(size=13, color=palette.get(ratio, GREY)), **on_price)
+    for price, text in ((fib["high"], "High"), (fib["low"], "Low")):             # the two ends of the swing
+        fig.add_hline(y=price, line=dict(color="#444444", width=1.2, dash="dot"),
+                      annotation_text=f"{text}  Rs {price:,.0f}", annotation_position="bottom right",
+                      annotation_font=dict(size=13, color="#444444"), **on_price)
+    return fig
+
+
 def fan_chart(hist, paths, calendar_days, symbol, name):
     """Fan chart: recent real prices, then shaded bands that widen into the future.
 

@@ -72,3 +72,38 @@ def test_zero_volume_days_are_ignored_not_counted_as_quiet_days():
     frame = _volume_frame(1800, 0.05)
     frame.iloc[-10:-7, frame.columns.get_loc("Volume")] = 0.0                  # three missing days in the comparison period
     assert ind.describe_volume(frame)[0] == "Yes"
+
+
+# ---------------- Fibonacci ----------------
+def _swing_frame(prices):
+    import pandas as pd
+    p = pd.Series(prices, dtype=float, index=pd.date_range("2026-01-01", periods=len(prices)))
+    return pd.DataFrame({"Open": p, "High": p + 1, "Low": p - 1, "Close": p, "Volume": 1000.0})
+
+
+def test_fibonacci_levels_after_a_rise_measure_the_pullback_from_the_high():
+    import numpy as np
+    from core import indicators as ind
+    fib = ind.fibonacci_levels(_swing_frame(np.linspace(100, 200, 60)), 60)         # low 99, high 201: swing 102
+    assert fib["direction"] == "up" and fib["high"] == 201 and fib["low"] == 99
+    levels = dict(fib["levels"])
+    assert abs(levels[0.5] - 150.0) < 1e-9 and abs(levels[0.618] - (201 - 0.618 * 102)) < 1e-9
+    assert levels[0.236] > levels[0.382] > levels[0.5] > levels[0.618] > levels[0.786]       # pulling back further = lower
+
+
+def test_fibonacci_levels_after_a_fall_measure_the_bounce_from_the_low():
+    import numpy as np
+    from core import indicators as ind
+    fib = ind.fibonacci_levels(_swing_frame(np.linspace(200, 100, 60)), 60)
+    assert fib["direction"] == "down"
+    levels = dict(fib["levels"])
+    assert abs(levels[0.5] - 150.0) < 1e-9 and levels[0.236] < levels[0.382] < levels[0.5] < levels[0.618] < levels[0.786]
+
+
+def test_fibonacci_needs_enough_history_and_a_real_swing():
+    from core import indicators as ind
+    assert ind.fibonacci_levels(_swing_frame([100.0] * 10), 10) is None
+    flat = _swing_frame([100.0] * 40)
+    flat["High"] = flat["Low"] = flat["Close"]
+    assert ind.fibonacci_levels(flat, 40) is None
+    assert "not enough" in ind.describe_fibonacci(None)

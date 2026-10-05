@@ -171,3 +171,43 @@ def describe_volume(hist):
     else:
         tail = "Volume is normal, so it neither backs nor weakens the move."
     return s["verdict"], head + tail
+
+
+# ---------------- Fibonacci retracement ----------------
+FIB_RATIOS = (0.236, 0.382, 0.5, 0.618, 0.786)
+
+
+def fibonacci_levels(hist, days):
+    """Fibonacci retracement levels for the last `days` trading days, found automatically.
+
+    The swing is the highest high and the lowest low in the window. If the high came AFTER the low the price has been
+    rising, so the levels measure how far it might pull back down from the high (price = high - ratio x swing). If the
+    high came BEFORE the low the price has been falling, so the levels measure how far it might bounce up from the low
+    (price = low + ratio x swing). Returns None when there is not enough history or no swing.
+    """
+    if hist is None or len(hist) < 20:
+        return None
+    view = hist.iloc[-min(days, len(hist)):]
+    high, low = float(view["High"].max()), float(view["Low"].min())
+    if not (high > low):
+        return None
+    high_date, low_date = view["High"].idxmax(), view["Low"].idxmin()
+    rising = high_date > low_date
+    swing = high - low
+    levels = [(r, high - r * swing if rising else low + r * swing) for r in FIB_RATIOS]
+    return {"high": high, "low": low, "high_date": high_date, "low_date": low_date,
+            "direction": "up" if rising else "down", "levels": levels,
+            "last": float(view["Close"].iloc[-1])}
+
+
+def describe_fibonacci(fib):
+    """A plain-English sentence about where the price stands against the levels."""
+    if fib is None:
+        return "There is not enough price history in this period to draw Fibonacci levels."
+    price, high, low = fib["last"], fib["high"], fib["low"]
+    pulled = (high - price) / (high - low) if fib["direction"] == "up" else (price - low) / (high - low)
+    word = "pulled back" if fib["direction"] == "up" else "bounced"
+    start = "high" if fib["direction"] == "up" else "low"
+    return (f"In this period the price went {'up' if fib['direction'] == 'up' else 'down'}, from Rs {low if fib['direction'] == 'up' else high:,.2f} "
+            f"to Rs {high if fib['direction'] == 'up' else low:,.2f}. It has {word} about {abs(pulled) * 100:.0f}% of that move "
+            f"from the {start}.")
