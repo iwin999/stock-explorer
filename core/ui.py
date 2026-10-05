@@ -210,21 +210,28 @@ def metric_with_help(title, value, key, delta=None):
     st.metric(title, value, delta, label_visibility="collapsed")
 
 
+def scale_html(rating):
+    """A coloured bar with a pointer and a one-word verdict. `rating` is a dict with pos (0 to 1), label, ends, and a kind:
+    "grade" (red to green), "neutral" (blue) or "zones" (the dict carries its own `bar` colours)."""
+    pos = rating["pos"]
+    kind = rating.get("kind") or ("neutral" if rating.get("better") == "neutral" else "grade")
+    if kind == "neutral":
+        colour, bar, style = "#2f6496", "scale-bar neutral", ""
+    elif kind == "zones":
+        colour, bar, style = "#4a5461", "scale-bar", f' style="background:{rating["bar"]}"'
+    else:
+        colour, bar, style = f"hsl({int(pos * 125)}, 60%, 33%)", "scale-bar", ""
+    left, right = rating["ends"]
+    return (f'<div class="scale"><div class="{bar}"{style}><span class="scale-pin" style="left:{pos * 100:.1f}%"></span></div>'
+            f'<div class="scale-ends"><span>{left}</span><span>{right}</span></div>'
+            f'<div class="scale-verdict" style="color:{colour}">{rating["label"]}</div></div>')
+
+
 def ratio_scale(key, value):
     """A colour scale (red to green) with a pointer showing how good or bad this ratio is. Empty if there is no scale."""
     from core import ratios
     rating = ratios.rate(key, value)
-    if rating is None:
-        return ""
-    pos = rating["pos"]
-    if rating["better"] == "neutral":
-        colour, bar = "#2f6496", "scale-bar neutral"
-    else:
-        colour, bar = f"hsl({int(pos * 125)}, 60%, 33%)", "scale-bar"
-    left, right = rating["ends"]
-    return (f'<div class="scale"><div class="{bar}"><span class="scale-pin" style="left:{pos * 100:.1f}%"></span></div>'
-            f'<div class="scale-ends"><span>{left}</span><span>{right}</span></div>'
-            f'<div class="scale-verdict" style="color:{colour}">{rating["label"]}</div></div>')
+    return "" if rating is None else scale_html(rating)
 
 
 def term_row(term, key, *cells, header=False):

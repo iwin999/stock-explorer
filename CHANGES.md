@@ -293,5 +293,8 @@ A **Show Fibonacci levels** tick-box above the price chart draws the five retrac
 ## New in Step 32 (Fibonacci extensions, clearer lines)
 Ticking **Show Fibonacci levels** now shows both the **retracement** lines (grey, orange and red, with the 38.2% to 61.8% zone shaded) and the **extension** lines (green, 127.2% and 161.8%, possible targets past the swing: above the high after a rise, below the low after a fall). Lines are thicker with bold labels, and the chart is stretched so the extension lines stay in view. `core/indicators.py`, `core/charts.py`, `stock_page.py`.
 
+## New in Step 33 (trackers under Key signals)
+Each Key signals card now has a coloured tracker under its value, like the ones under Risk and return: **RSI** (green oversold zone, grey balanced, red overbought, with the pointer at today's score), **MACD** (falling to rising), **Trend** (downtrend to uptrend, by how far the price is from its 200-day average), **Volatility** (very bumpy to calm) and **Volume backing** (thin to busy volume). Each has a one-word verdict that agrees with its card. `core/signal_scales.py`, `core/ui.py` (`scale_html`), `stock_page.py`.
+
 ## Status
 All 8 features are built.

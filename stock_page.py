@@ -19,7 +19,8 @@ from core.live import live_quote
 from core.market_data import get_company_name, get_history_with_source
 from core.market_hours import is_market_open, now_ist, status_message
 from core.strategies import FUSION_RULE, STRATEGIES, fusion_rule_for
-from core.ui import (help_bubble, ratio_scale, callout, know_how_button, metric_with_help, notice, plain_english, setup_page,
+from core.signal_scales import rate_signals
+from core.ui import (help_bubble, ratio_scale, scale_html, callout, know_how_button, metric_with_help, notice, plain_english, setup_page,
                      show_disclaimer, term_row)
 
 setup_page("Stock Explorer")
@@ -170,7 +171,7 @@ with tab_overview:
 
     # ---------- key signals ----------
     st.header("Key signals")
-    st.caption("Five commonly used measures. They describe the past; they do not predict. Hold your pointer over a term for two seconds to see it in plain words.")
+    st.caption("Five commonly used measures. The bar under each shows where it stands today (the dark pointer). They describe the past; they do not predict. Hold your pointer over a term for two seconds to see it in plain words.")
     panel = [
         ("RSI", "rsi", *ind.describe_rsi(close)),
         ("MACD", "macd", *ind.describe_macd(close)),
@@ -179,9 +180,12 @@ with tab_overview:
         ("Volume backing", "volume_confirmation", *ind.describe_volume(hist)),
     ]
     with st.container(key="signals_row"):          # on narrow screens the cards wrap onto a second row instead of clipping
+        scales = rate_signals(hist)
         for column, (title, term, value, meaning) in zip(st.columns(5), panel):
             with column:
                 metric_with_help(title, value, term)
+                if term in scales:
+                    st.markdown(scale_html(scales[term]), unsafe_allow_html=True)
                 st.markdown(f'<div class="meaning">{meaning}</div>', unsafe_allow_html=True)
     plain_english(
         "**Recent strength (RSI)** is a score from 0 to 100 of how fast the price has been rising or falling lately. "
