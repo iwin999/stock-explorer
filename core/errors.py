@@ -12,6 +12,7 @@ so they pass straight through this file untouched.
 """
 import contextlib
 import errno
+import html
 import logging
 import socket
 import uuid
@@ -75,14 +76,16 @@ def _card(title, body_html, tone="info"):
                 unsafe_allow_html=True)
 
 
-def show(kind, reference=None):
-    """Draw the friendly message for an error kind."""
+def show(kind, reference=None, detail=None):
+    """Draw the friendly message for an error kind. `detail` (the technical reason) is shown in small print for the
+    'being updated' screen, so that a problem that does not clear up by itself can be diagnosed."""
     mail = admin_email()
     link = f'<a href="mailto:{mail}">{mail}</a>'
     if kind == UPDATING:
         _card("The app is being updated",
               f"<p>This usually takes about 2 minutes. Thank you for your patience!</p>"
-              f"<p class='small'>(If it takes much longer, please contact the admin at {link}.)</p>")
+              f"<p class='small'>(If it takes much longer, please contact the admin at {link}.)</p>"
+              + (f"<p class='small'>Reference: <b>{reference}</b>. Technical detail: {detail}</p>" if reference else ""))
     elif kind == NETWORK:
         _card("Network issue",
               "<p>We could not connect to the internet or to our data services. "
@@ -113,6 +116,13 @@ def guard():
         if kind == UNEXPECTED:
             reference = "E-" + uuid.uuid4().hex[:6].upper()
             log.exception("Unexpected error %s", reference)       # full details go to the server log only
-        else:
-            log.warning("%s problem: %r", kind, exc)
+            show(kind, reference)
+            return
+        if kind == UPDATING:                                   # usually clears by itself; if not, the detail says why
+            reference = "E-" + uuid.uuid4().hex[:6].upper()
+            log.exception("App update problem %s", reference)
+            detail = html.escape(f"{type(exc).__name__}: {exc}"[:220])
+            show(kind, reference, detail)
+            return
+        log.warning("%s problem: %r", kind, exc)
         show(kind, reference)

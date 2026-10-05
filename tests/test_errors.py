@@ -36,3 +36,15 @@ def test_everything_else_is_unexpected():
 def test_streamlit_control_signals_are_not_swallowed():
     from streamlit.runtime.scriptrunner_utils.exceptions import RerunException, StopException
     assert not issubclass(RerunException, Exception) and not issubclass(StopException, Exception)
+
+
+def test_the_being_updated_screen_shows_a_reference_and_the_technical_reason():
+    from unittest import mock
+    from core import errors
+    shown = []
+    with mock.patch.object(errors, "_card", lambda title, body, tone="info": shown.append((title, body))):
+        with errors.guard():
+            raise ImportError("cannot import name 'thing' from 'core.stuff'")
+    title, body = shown[0]
+    assert title == "The app is being updated" and "Reference: <b>E-" in body
+    assert "ImportError: cannot import name" in body and "&#x27;thing&#x27;" in body          # the reason is shown (and escaped)
