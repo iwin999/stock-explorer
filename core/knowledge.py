@@ -39,9 +39,10 @@ MANUAL = [
       "Your Portfolio: build and track your own portfolio and see the leaderboard. Ask the bot: this assistant."),
     E("start_here", USING, "Where should I start?",
       ["where do i start", "what should i try first", "how do i begin", "getting started", "first steps", "what should i do first"],
-      "A good order: 1) Pick a company at the top and read the Overview. 2) Look at Possible outcomes to see a range of "
-      "futures. 3) Try Strategy tests to see whether a simple rule beat buy-and-hold. 4) Go to Your Portfolio, build a "
-      "portfolio with the sliders, and come back later to see how it did."),
+      "The easiest way: use the 'New here? Three easy steps' box at the top of the page. 1) Pick a company (or press 'Show me a "
+      "strong company'). 2) Read the coloured signal bars; if a finance term is new, switch on 'Plain words' at the top and every "
+      "term turns into everyday words. 3) Try a practice trade in the Paper trading tab. If you just want to look around, use "
+      "'Try a demo account' on the first screen: it opens with a ready-made practice portfolio."),
     E("real_money", USING, "Is this real money?",
       ["is this real money", "will i lose real money", "is it safe", "is anything real", "do i need to pay", "is it free",
        "is my money at risk", "is this a real trading app", "do i invest real money"],

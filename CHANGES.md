@@ -296,5 +296,14 @@ Ticking **Show Fibonacci levels** now shows both the **retracement** lines (grey
 ## New in Step 33 (trackers under Key signals)
 Each Key signals card now has a coloured tracker under its value, like the ones under Risk and return: **RSI** (green oversold zone, grey balanced, red overbought, with the pointer at today's score), **MACD** (falling to rising), **Trend** (downtrend to uptrend, by how far the price is from its 200-day average), **Volatility** (very bumpy to calm) and **Volume backing** (thin to busy volume). Each has a one-word verdict that agrees with its card. `core/signal_scales.py`, `core/ui.py` (`scale_html`), `stock_page.py`.
 
+## New in Step 34 (easier to use)
+| Change | Where |
+|---|---|
+| **"New here? Three easy steps" guide** at the top: 1) Pick a company (button: *Show me a strong company*, which picks a top-group company from the Fusion ratings), 2) Read the signals (button: *Ask the bot what a term means*), 3) Try a practice trade (button: *Go to Paper trading*). The buttons switch tabs. It can be hidden and shown again | `core/guide.py`, `stock_page.py` |
+| **Try a demo account** on the first screen: opens a Guest-#### account with a ready-made practice portfolio (about 60% invested). Guests are kept off the leaderboard and out of the returning-user list | `core/trading_ui.py` (`_start_demo`), `core/portfolio_ui.py`, `core/accounts.py` |
+| **Sticky company bar**: name, price and change on one line (with an arrow for up or down) stays at the top while you scroll | `stock_page.py`, `core/ui.py` |
+| **Plain words switch** next to *Switch user*: every finance term (Sharpe ratio, Max drawdown, RSI...) becomes everyday words with the finance term in small brackets. Without it, translatable terms carry a small (i) and still slide into plain words on hover or tap | `core/ui.py` (`jargon`), `core/trading_ui.py` |
+| Tabs keep their place and can be switched by buttons (`on_change="rerun"`); the bot's *Where should I start?* answer describes all of this | `stock_page.py`, `core/knowledge.py` |
+
 ## Status
 All 8 features are built.

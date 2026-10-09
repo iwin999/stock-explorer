@@ -47,6 +47,7 @@ class Portfolio:
         self.created_at = created_at      # when the account was first made (UTC text), or None for older accounts
         self.balance = float(balance)
         self.deposited = float(balance)  # total money put in; profit = total value - deposited
+        self.demo = False                # a "Try a demo" guest account (kept off the leaderboard)
         # holdings looks like: {"RELIANCE.NS": {"quantity": 10, "avg_price": 2450.5}}
         self.holdings = {}
         # Open futures and options. Each is a dict with an "id", "type" ("FUT"/"OPT"), the underlying,
@@ -212,7 +213,7 @@ class Portfolio:
 
     # ---------------- saving (fixes: "not saved between sessions") ----------------
     def to_dict(self):
-        return {"name": self.name, "created_at": self.created_at, "balance": self.balance, "deposited": self.deposited, "holdings": self.holdings,
+        return {"name": self.name, "created_at": self.created_at, "demo": self.demo, "balance": self.balance, "deposited": self.deposited, "holdings": self.holdings,
                 "derivatives": self.derivatives, "order_history": self.order_history}
 
     @classmethod
@@ -220,6 +221,7 @@ class Portfolio:
         p = cls(balance=data.get("balance", DEFAULT_BALANCE), name=data.get("name", ""),
                 created_at=data.get("created_at"))
         p.deposited = data.get("deposited", DEFAULT_BALANCE)
+        p.demo = bool(data.get("demo", False))
         p.holdings = data.get("holdings", {})
         p.derivatives = data.get("derivatives", [])
         p.order_history = data.get("order_history", [])
