@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from core import about, assistant_ui, carpet_ui, guide, universe, market_strip, backtest as bt, fusion_ui, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
+from core import about, assistant_ui, carpet_ui, universe, market_strip, backtest as bt, fusion_ui, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
 from core.charts import (add_fibonacci, backtest_chart, fan_chart, outlook_gauge, outcome_histogram, price_chart,
                          zoom_to_window)
 from core.formatting import format_inr
@@ -60,7 +60,6 @@ about.title_row("Stock Explorer")
 st.caption("Price history, key signals and a range of possible outcomes for Indian companies listed on the NSE and the BSE.")
 market_strip.render(lambda: trading_ui.snapshot_now(trading_ui._get_portfolio()), portfolio_ui.my_rank)
 trading_ui.user_bar()
-guide.render()
 trading_ui.housekeeping()      # settle expired futures/options, close busted futures
 trading_ui.show_flash()        # result of the last click, wherever it came from
 trading_ui.show_events()       # e.g. 'your future expired and was settled'
@@ -112,27 +111,23 @@ latest, previous = float(close.iloc[-1]), float(close.iloc[-2])  # last two dail
 
 @guard()
 def show_headline():
-    """The company bar: name, price and change on one line. It stays at the top of the screen while you scroll, and while
-    the market is open it refreshes itself every few seconds."""
+    """Big price at the top. While the market is open this block refreshes itself every few seconds."""
     quote = None if source == "offline" else live_quote(symbol)
     price = quote["price"] if quote else latest
     prev_close = (quote or {}).get("previous_close") or previous
     change = price - prev_close
-    pct = change / prev_close * 100
-    word = "live" if quote and is_market_open() else "last close"
-    up = change >= 0
-    note = (f"{word}, updated {now_ist():%H:%M:%S} IST" if word == "live" else
-            "saved data, not live" if source == "offline" else word)
-    st.markdown(f'<div class="cbar"><span class="cbar-name">{name}</span><span class="cbar-price">{format_inr(price)}</span>'
-                f'<span class="cbar-chg {"up" if up else "down"}">{"▲" if up else "▼"} {format_inr(abs(change))} ({pct:+.2f}%)</span>'
-                f'<span class="cbar-note">{note}</span></div>', unsafe_allow_html=True)
+    st.metric(f"{name}: {'current price' if quote and is_market_open() else 'last close'}",
+              format_inr(price), f"{format_inr(change)} ({change / prev_close * 100:+.2f}%) vs previous close")
+    if source == "offline":
+        st.caption("Saved data is being shown, so the price is not live.")
+    elif is_market_open():
+        st.caption(f"{status_message()}. Updating automatically. Last updated {now_ist():%H:%M:%S} IST. "
+                   "Prices may be delayed by a few minutes.")
+    else:
+        st.caption(f"{status_message()}. Showing the last closing price.")
 
 
-with st.container(key="company_bar"):
-    st.fragment(run_every=15 if (is_market_open() and source != "offline") else None)(show_headline)()
-st.caption(f"{status_message()}. " + ("Prices may be delayed by a few minutes." if is_market_open() else "Showing the last closing price.")
-           + (" Saved data is being shown, so the price is not live." if source == "offline" else ""))
-
+st.fragment(run_every=15 if (is_market_open() and source != "offline") else None)(show_headline)()
 
 
 # The market index (Nifty 50 for an NSE listing, Sensex for a BSE listing), used to compare the stock against the market
@@ -145,7 +140,7 @@ STRATEGY_KEYS = list(STRATEGIES)
 
 tab_overview, tab_carpet, tab_outcomes, tab_strategy, tab_fusion, tab_trade, tab_portfolio, tab_bot = st.tabs(
     ["Overview", "Market carpet", "Possible outcomes", "Strategy tests", "Fusion analysis", "Paper trading", "Your Portfolio", "Ask the bot"],
-    key="main_tabs", on_change="rerun")   # a key keeps the chosen tab selected after a click, and lets buttons switch tabs
+    key="main_tabs")           # a key keeps the chosen tab selected when the page refreshes after a click
 
 # =====================================================================
 # TAB 1: OVERVIEW - price chart, key signals, risk and return ratios

@@ -43,14 +43,6 @@ def clean_name(raw):
     return name
 
 
-GUEST_PREFIX = "Guest-"
-
-
-def is_guest_name(name):
-    """Demo accounts are called Guest-1234; they are kept out of the leaderboard and the returning-user list."""
-    return str(name).startswith(GUEST_PREFIX)
-
-
 def make_key(name):
     return re.sub(r"\s+", " ", name.strip()).casefold()
 

@@ -122,36 +122,6 @@ def _sign_out():
 
 
 # ---------------- first screen ----------------
-# A ready-made practice portfolio for visitors who just want to look around: about 60% invested, the rest cash.
-DEMO_BASKET = [("RELIANCE.NS", 0.15), ("TCS.NS", 0.15), ("HDFCBANK.NS", 0.12), ("INFY.NS", 0.10), ("GOLDBEES.NS", 0.10)]
-DEMO_CAPITAL = 100000
-
-
-def _start_demo():
-    """Make a Guest-#### account with a ready-made portfolio and sign in to it."""
-    import random
-    store = get_store()
-    pf = None
-    for _ in range(8):
-        try:
-            pf = acc.create_account(store, f"{acc.GUEST_PREFIX}{random.randint(1000, 9999)}", DEMO_CAPITAL)
-            break
-        except acc.StorageError:
-            continue                                   # name taken by another guest: try another number
-    if pf is None:
-        st.session_state["gate_notice"] = "We could not set up a demo just now. Please try again, or choose a name below."
-        return
-    pf.demo = True
-    for symbol, share in DEMO_BASKET:
-        price = spot_price(symbol)
-        if price:
-            qty = int(DEMO_CAPITAL * share // price)
-            if qty >= 1:
-                pf.buy(symbol, qty, round(price, 2))
-    _save(pf)
-    _sign_in(pf)
-
-
 def capital_gate():
     """Choose a name and starting capital, or open an existing account."""
     store = get_store()
@@ -182,7 +152,7 @@ def capital_gate():
                 st.error(str(e))
     else:
         try:
-            names = [n for n in store.names() if not acc.is_guest_name(n)]
+            names = store.names()
         except acc.StorageError as e:
             st.error(str(e))
             names = []
@@ -200,12 +170,6 @@ def capital_gate():
                         st.rerun()
                 except acc.StorageError as e:
                     st.error(str(e))
-    st.divider()
-    st.markdown("**Just looking?** Try a demo: it opens with a ready-made practice portfolio, so you can see the app working "
-                "straight away. You can still buy and sell.")
-    if st.button("Try a demo account", key="gate_demo", width="stretch"):
-        _start_demo()
-        st.rerun()
     st.caption(f"Portfolios are saved in: {store.label}.")
     show_disclaimer()
 
@@ -213,10 +177,8 @@ def capital_gate():
 def user_bar():
     """'Signed in as ...' with a Switch user button."""
     pf = _get_portfolio()
-    left, middle, right = st.columns([4, 2, 1.4])
-    left.markdown(f"Signed in as **{pf.name}**" + ("  (demo)" if pf.demo else ""))
-    middle.toggle("Plain words", key="plain_words",
-                  help="Show every finance term in everyday words (for example 'Reward for the risk taken' instead of 'Sharpe ratio').")
+    left, right = st.columns([5, 1])
+    left.markdown(f"Signed in as **{pf.name}**")
     if right.button("Switch user", key="switch_user"):
         _sign_out()
         st.rerun()

@@ -181,8 +181,6 @@ def _builder(pf):
 def _ranked(records):
     rows = []
     for rec in records:
-        if rec["data"].get("demo"):                      # "Try a demo" guests are not ranked
-            continue
         try:
             pf = Portfolio.from_dict(rec["data"])
             snap = val.snapshot(pf, spot_price, vol_estimate)

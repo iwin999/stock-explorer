@@ -125,27 +125,6 @@ h3 { font-size: 1.35rem !important; font-weight: 600 !important; }
 .st-key-signals_row [data-testid="stColumn"] { min-width: 200px !important; flex: 1 1 200px !important; }
 .st-key-signals_row [data-testid="stMetricValue"], .st-key-signals_row [data-testid="stMetricValue"] * { font-size: 1.75rem !important; }
 
-/* small (i) on terms that turn into plain words, and the 'Plain words' mode */
-.swap .tip { display: inline-block; width: 1.05em; height: 1.05em; line-height: 1.05em; text-align: center; border: 1px solid #8a96a3;
-             border-radius: 50%; font-size: 0.72em; font-style: italic; font-weight: 700; color: #6b7785; vertical-align: 0.1em; }
-.plain-label { color: #1d5c42; font-weight: 600; }
-.fin-small { font-size: 0.85em; color: #8a96a3; }
-
-/* the company bar stays in view while scrolling */
-.stApp [data-testid="stLayoutWrapper"]:has(> .st-key-company_bar), .stApp [data-testid="stElementContainer"]:has(> .st-key-company_bar),
-.stApp div:has(> .st-key-company_bar) { position: sticky; top: 3.6rem; z-index: 990; }
-.st-key-company_bar { background: #ffffff; border: 1px solid #e1e5ec; border-radius: 10px; padding: 0.55rem 1rem;
-                      box-shadow: 0 2px 10px rgba(20, 30, 50, 0.08); }
-.cbar { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 1.1rem; }
-.cbar-name { font-weight: 700; font-size: 1.15rem; color: #1b2430; }
-.cbar-price { font-weight: 700; font-size: 1.6rem; color: #1b2430; }
-.cbar-chg { font-weight: 600; font-size: 1.05rem; padding: 0.1rem 0.6rem; border-radius: 999px; }
-.cbar-chg.up { color: #1d6b4a; background: #e6f2ec; }
-.cbar-chg.down { color: #a8412e; background: #fbeae6; }
-.cbar-note { font-size: 0.9rem; color: #6b7785; }
-/* the start guide */
-.st-key-guide_box { border: 1px solid #cfe0f1; background: #f3f8fd; border-radius: 12px; padding: 0.8rem 1.2rem 0.6rem 1.2rem; margin: 0.4rem 0 1rem 0; }
-
 /* less empty space above the title */
 .stApp [data-testid="stMainBlockContainer"], .stApp .block-container { padding-top: 2.2rem !important; }
 
@@ -215,15 +194,11 @@ LAYMAN = {
 
 
 def jargon(text, key):
-    """HTML for a label. By default: the finance term with a small (i), sliding into plain words after a two-second hover
-    (or a tap). With the 'Plain words' switch on: the plain words, with the finance term in brackets."""
+    """HTML for a label: the finance term, sliding into plain words on hover. Plain text if there is no translation."""
     plain = LAYMAN.get(key)
     if not plain:
         return text
-    if st.session_state.get("plain_words"):
-        return f'<span class="plain-label">{plain}</span> <span class="fin-small">({text})</span>'
-    return (f'<span class="swap" tabindex="0"><span class="fin">{text} <span class="tip">i</span></span>'
-            f'<span class="lay">{plain}</span></span>')
+    return f'<span class="swap" tabindex="0"><span class="fin">{text}</span><span class="lay">{plain}</span></span>'
 
 
 def metric_with_help(title, value, key, delta=None):
