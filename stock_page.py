@@ -90,6 +90,10 @@ if typed_or_picked not in company_options:               # something was typed a
     suggestions = universe.rank(typed_or_picked, 8)
     if suggestions:
         symbol = suggestions[0]
+        old = universe.renamed(typed_or_picked)
+        if old:
+            st.info(f"“{typed_or_picked}” is an old name. The company is now listed as "
+                    f"**{companies.NAME_BY_SYMBOL.get(suggestions[0], suggestions[0])}**.")
         st.caption(f"Closest matches for “{typed_or_picked}”, best first. Showing the first one; tap another to switch.")
         for i in range(0, len(suggestions), 2):
             cols = st.columns(2)

@@ -49,10 +49,12 @@ def _words(text):
     return re.findall(r"[a-z0-9]+", (text or "").lower().replace("&", " and "))
 
 
+_NICKNAMES = {sym: extra for _, sym, extra in companies.COMPANIES}      # e.g. 'zomato blinkit' for Eternal
 for _r in ROWS:
-    _w = _words(_r["n"]) + _words(_r["s"].rsplit(".", 1)[0])
+    _w = (_words(_r["n"]) + _words(companies.NAME_BY_SYMBOL.get(_r["s"], "")) + _words(_r["s"].rsplit(".", 1)[0])
+          + _words(_NICKNAMES.get(_r["s"], "")))
     _TOKENS[_r["s"]] = _w
-    _JOINED[_r["s"]] = "".join(_words(_r["n"]))
+    _JOINED[_r["s"]] = "".join(_words(companies.NAME_BY_SYMBOL.get(_r["s"], _r["n"])))
     for _t in set(_w):
         _INDEX.setdefault(_t, set()).add(_r["s"])
 _VOCAB = list(_INDEX)
@@ -99,3 +101,39 @@ def rank(query, limit=8):
     ranked = sorted((s for s, v in score.items() if v >= 0.65),
                     key=lambda s: (-round(score[s], 2), _RANK_OF.get(s, 10**6), len(companies.NAME_BY_SYMBOL.get(s, ""))))
     return ranked[:limit]
+
+
+# Old names: companies that were renamed, merged or taken over. Typing the old name finds the company as it is now.
+OLD_NAMES = {
+    "hdfc ltd": "HDFCBANK.NS", "hdfc limited": "HDFCBANK.NS", "housing development finance": "HDFCBANK.NS",
+    "centurion bank of punjab": "HDFCBANK.NS", "ing vysya": "KOTAKBANK.NS",
+    "cadila healthcare": "ZYDUSLIFE.NS", "cadila": "ZYDUSLIFE.NS", "bharti infratel": "INDUSTOWER.NS", "infratel": "INDUSTOWER.NS",
+    "adani transmission": "ADANIENSOL.NS", "adani gas": "ATGL.NS", "inox leisure": "PVRINOX.NS", "pvr": "PVRINOX.NS",
+    "burger king india": "RBA.NS", "motherson sumi": "MOTHERSON.NS", "indiabulls housing": "SAMMAANCAP.NS",
+    "indiabulls housing finance": "SAMMAANCAP.NS", "gmr infrastructure": "GMRAIRPORT.NS", "gmr infra": "GMRAIRPORT.NS",
+    "essel propack": "EPL.NS", "andhra bank": "UNIONBANK.NS", "corporation bank": "UNIONBANK.NS", "syndicate bank": "CANBK.NS",
+    "allahabad bank": "INDIANB.NS", "oriental bank of commerce": "PNB.NS", "united bank of india": "PNB.NS",
+    "vijaya bank": "BANKBARODA.NS", "dena bank": "BANKBARODA.NS", "gruh finance": "BANDHANBNK.NS",
+    "tata global beverages": "TATACONSUM.NS", "tata global": "TATACONSUM.NS", "idfc bank": "IDFCFIRSTB.NS",
+    "ranbaxy": "SUNPHARMA.NS", "hero honda": "HEROMOTOCO.NS", "crompton greaves": "CGPOWER.NS",
+}
+
+
+def renamed(query):
+    """(old name, symbols of the company as it is now) if the query is a former company name, else None."""
+    q = " ".join(_words(query))
+    for old, sym in OLD_NAMES.items():
+        if q == old or (len(q) >= 5 and (q in old.split() or q == old.replace(" ", ""))) or (len(old) >= 5 and old in q):
+            if sym in _TOKENS:
+                return old, companies.listings(sym)
+    return None
+
+
+_plain_rank = rank
+
+
+def rank(query, limit=8):                                         # noqa: F811  (adds old-name handling to the search above)
+    """Best matches first. A former company name puts the company's current listing(s) at the top."""
+    hit = renamed(query)
+    first = [s for s in hit[1] if s in _TOKENS] if hit else []
+    return (first + [s for s in _plain_rank(query, limit) if s not in first])[:limit]

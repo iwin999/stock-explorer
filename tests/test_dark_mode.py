@@ -120,3 +120,13 @@ def test_contracts_say_which_way_they_bet():
     assert "CALL" in val.contract_name(call) and "rise" in val.contract_name(call)
     assert "PUT" in val.contract_name(put) and "fall" in val.contract_name(put)
     assert "fall" in val.contract_name(short)
+
+
+def test_old_company_names_find_the_company_as_it_is_now():
+    from core import universe
+    assert universe.rank("zomato")[0] == "ETERNAL.NS"
+    assert universe.rank("cadila healthcare")[0] == "ZYDUSLIFE.NS"
+    assert universe.rank("hdfc ltd")[0] == "HDFCBANK.NS"
+    assert universe.rank("syndicate bank")[0] == "CANBK.NS"
+    assert universe.renamed("relience") is None
+    assert all(sym in universe.OPTIONS for sym in universe.OLD_NAMES.values())

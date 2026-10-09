@@ -305,5 +305,8 @@ Selling no longer means hunting through the Stocks / Futures / Options tabs. Und
 ## New in Step 36 (forgiving search, plain option names)
 **Search:** type a company name with a spelling slip ('relience', 'hdfc bnk', 'tatamotors') and press Enter: the closest companies are listed **best match first**, the first one is shown straight away, and one tap switches to another. **Options and futures** now always say which way they bet, for example 'Reliance CALL option (bet on a rise)' or 'Nifty 50 future (bet on a fall)', in the holdings table, the sell box, the open-positions list and the exit-all report.
 
+## New in Step 37 (old company names)
+Typing a company's **old name** now finds it as it is today, with a note saying so: Zomato (Eternal), Cadila Healthcare (Zydus Lifesciences), HDFC Ltd (HDFC Bank), Bharti Infratel (Indus Towers), Adani Transmission (Adani Energy Solutions), Syndicate Bank (Canara Bank), Hero Honda (Hero MotoCorp), Tata Global Beverages (Tata Consumer Products) and about 30 more. The list is `OLD_NAMES` in `core/universe.py`.
+
 ## Status
 All 8 features are built.
