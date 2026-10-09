@@ -1,6 +1,7 @@
 """The 'How each holding is doing' section, shown in Paper trading and Your Portfolio."""
 import plotly.graph_objects as go
 import streamlit as st
+from core.charts import show as show_chart
 
 from core import holdings as hd
 from core import indicators as ind
@@ -68,7 +69,7 @@ def render(pf, snap, key):
             "Contribution": st.column_config.NumberColumn("Effect on total", format="%+.2f pts"),
             "Days held": st.column_config.NumberColumn("Days held", format="%d"),
         })
-    st.plotly_chart(contribution_chart(df), width="stretch", key=f"contrib_{key}")
+    show_chart(contribution_chart(df), key=f"contrib_{key}")
 
     pick = st.selectbox("Look closer at one holding", list(df.index),
                         format_func=lambda i: f"{df.loc[i, 'Instrument']}  ({df.loc[i, 'Details']})", key=f"pick_{key}")
@@ -90,7 +91,7 @@ def render(pf, snap, key):
         return
     first = hd.first_buy_dates(pf).get(row["Symbol"])
     avg = pf.holdings[row["Symbol"]]["avg_price"]
-    st.plotly_chart(since_buy_chart(closes, first, avg, row["Instrument"]), width="stretch", key=f"since_{key}")
+    show_chart(since_buy_chart(closes, first, avg, row["Instrument"]), key=f"since_{key}")
     trend, trend_note = ind.describe_trend(closes)
     rsi_value, rsi_note = ind.describe_rsi(closes)
     t1, t2 = st.columns(2)

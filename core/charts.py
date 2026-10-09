@@ -1,5 +1,6 @@
 """Plotly charts. Plotly charts are interactive: hover, zoom, drag, double-click to reset."""
 import plotly.graph_objects as go
+import streamlit as st
 from plotly.subplots import make_subplots
 
 from core import indicators as ind
@@ -266,3 +267,58 @@ def stage_bar(counts):
     fig.update_layout(barmode="stack", height=170, font=dict(size=15), margin=dict(l=0, r=0, t=0, b=0),
                       xaxis=dict(visible=False), legend=dict(orientation="h", y=-0.5), showlegend=True)
     return fig
+
+
+# ---------------- dark skin ("market terminal" look) ----------------
+TERMINAL_BG, TERMINAL_GRID, TERMINAL_TEXT = "#0b1220", "#1f2a3d", "#e6edf7"
+_LIGHTER = {NAVY: "#8ab4ff", "#333333": "#e6edf7", "#444444": "#cfd8e6", "black": "#e6edf7", "#000000": "#e6edf7"}
+
+
+def _lift(colour):
+    return _LIGHTER.get(str(colour).lower(), colour) if colour is not None else colour
+
+
+def skin(fig, dark=True):
+    """Re-colour a finished chart for a dark background (dark navy 'terminal' panel). Light charts are returned as they are."""
+    if not dark:
+        return fig
+    fig.update_layout(paper_bgcolor=TERMINAL_BG, plot_bgcolor=TERMINAL_BG, font=dict(color=TERMINAL_TEXT),
+                      legend=dict(font=dict(color=TERMINAL_TEXT), bgcolor="rgba(0,0,0,0)"))
+    fig.update_xaxes(gridcolor=TERMINAL_GRID, zerolinecolor=TERMINAL_GRID, linecolor=TERMINAL_GRID)
+    fig.update_yaxes(gridcolor=TERMINAL_GRID, zerolinecolor=TERMINAL_GRID, linecolor=TERMINAL_GRID)
+    for tr in fig.data:
+        line = getattr(tr, "line", None)
+        if line is not None and "color" in line and isinstance(line.color, str):
+            line.color = _lift(line.color)
+        mk = getattr(tr, "marker", None)
+        if mk is not None:
+            if "color" in mk and isinstance(mk.color, str):
+                mk.color = _lift(mk.color)
+            if "colors" in mk and mk.colors is not None and not isinstance(mk.colors[0] if len(mk.colors) else 0, (int, float)):
+                mk.colors = [_lift(c) for c in mk.colors]
+            if isinstance(tr, go.Treemap):
+                mk.line.color = TERMINAL_BG
+                mk.colorscale = [[0.0, "#d0402f"], [0.35, "#7c3330"], [0.5, "#2a3245"], [0.65, "#24694c"], [1.0, "#22b573"]]
+        if isinstance(tr, go.Indicator):
+            tr.number.font.color = TERMINAL_TEXT
+            if tr.gauge is not None and tr.gauge.bar is not None:
+                tr.gauge.bar.color = _lift(tr.gauge.bar.color)
+    for shape in fig.layout.shapes:
+        if shape.line is not None and shape.line.color:
+            shape.line.color = _lift(shape.line.color)
+    for ann in fig.layout.annotations:
+        if ann.font is not None and ann.font.color:
+            ann.font.color = _lift(ann.font.color)
+    if fig.layout.title is not None and fig.layout.title.text:
+        fig.update_layout(title_font_color=TERMINAL_TEXT)
+    return fig
+
+
+def show(fig, dark=None, **kwargs):
+    """Draw a chart. It follows the site's Dark mode switch unless `dark` is given."""
+    site_dark = bool(st.session_state.get("dark_site"))
+    if dark is None:
+        dark = site_dark
+    if site_dark and not dark:                    # a light chart on a dark page sits on a white panel so it stays readable
+        fig.update_layout(paper_bgcolor="#ffffff", plot_bgcolor="#ffffff", margin_pad=4)
+    return st.plotly_chart(skin(fig, dark), width="stretch", **kwargs)

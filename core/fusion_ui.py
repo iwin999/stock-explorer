@@ -8,7 +8,7 @@ from core import backtest as bt
 from core import fundamentals as fd
 from core import fusion as fu
 from core import ratios
-from core.charts import fusion_chart, stage_bar
+from core.charts import show as show_chart, fusion_chart, stage_bar
 from core.companies import to_nse
 from core.errors import guard
 from core.formatting import format_inr
@@ -223,7 +223,7 @@ def _screen(asof):
     cols[4].metric("Not rated", int(len(table) - len(judged)), help="Not enough published results to rank the fundamentals.")
 
     st.subheader("How many companies are in each trend stage?")
-    st.plotly_chart(stage_bar(table["stage_name"].value_counts().to_dict()), width="stretch")
+    show_chart(stage_bar(table["stage_name"].value_counts().to_dict()))
     up = int((table["stage"] >= 2).sum())
     st.caption(f"{up} of {len(table)} companies ({up / len(table) * 100:.0f}%) are in a clear uptrend or the base of one. "
                "The chapter uses this kind of count to judge how healthy the market's trend is.")
@@ -279,7 +279,7 @@ def _model_test():
             f"({g1['total_return'] * 100:+.1f}%), against {format_inr(allc['final_value'], 0)} ({allc['total_return'] * 100:+.1f}%) "
             f"for owning all the companies equally, and {format_inr(nifty['final_value'], 0)} ({nifty['total_return'] * 100:+.1f}%) "
             "for the Nifty 50.")
-    st.plotly_chart(fusion_chart(res["curves"]), width="stretch")
+    show_chart(fusion_chart(res["curves"]))
 
     names = ["Group 1 only", "Groups 1 and 2", "All companies (equal weight)", "Nifty 50"]
     term_row("Measure", None, *names, header=True)

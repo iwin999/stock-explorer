@@ -296,5 +296,8 @@ Ticking **Show Fibonacci levels** now shows both the **retracement** lines (grey
 ## New in Step 33 (trackers under Key signals)
 Each Key signals card now has a coloured tracker under its value, like the ones under Risk and return: **RSI** (green oversold zone, grey balanced, red overbought, with the pointer at today's score), **MACD** (falling to rising), **Trend** (downtrend to uptrend, by how far the price is from its 200-day average), **Volatility** (very bumpy to calm) and **Volume backing** (thin to busy volume). Each has a one-word verdict that agrees with its card. `core/signal_scales.py`, `core/ui.py` (`scale_html`), `stock_page.py`.
 
+## New in Step 34 (Dark mode and Dark chart)
+A **Dark mode** switch beside the About icon gives the whole site a dark trading-screen look (cards, tabs, tables, dialogs, boxes, trackers, charts). A separate **Dark chart** switch above the price chart darkens just that chart; turning Dark mode on or off also sets it to match, and it can then be changed on its own. A light chart on the dark site sits on a white panel so it stays readable. Charts are drawn through `core.charts.show`, which applies the dark skin.
+
 ## Status
 All 8 features are built.

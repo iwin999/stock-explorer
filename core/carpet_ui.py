@@ -2,6 +2,7 @@
 from datetime import datetime
 
 import streamlit as st
+from core.charts import show as show_chart
 
 from core import market_carpet as mc
 from core.errors import guard
@@ -116,7 +117,7 @@ def render():
             st.session_state["carpet_open"] = pick
             st.session_state["carpet_nonce"] = nonce + 1
             st.rerun()
-        event = st.plotly_chart(mc.carpet(data, metric), width="stretch", on_select="rerun", selection_mode="points",
+        event = show_chart(mc.carpet(data, metric), on_select="rerun", selection_mode="points",
                                 key=f"carpet_main_{nonce}")
         clicked = _clicked_sector(event, data)
         if clicked:
@@ -142,7 +143,7 @@ def render():
         st.caption(f"{len(info['companies'])} companies shown (NSE and BSE together, no company twice) of "
                    f"{info['listed']['NSE']} listed on the NSE and {info['listed']['BSE']} on the BSE. Size = market value; "
                    f"colour = performance {label}. The whole industry is {perf:+.1f}% {label}. BSE-only companies are marked (BSE).")
-        st.plotly_chart(mc.carpet(data, metric, opened), width="stretch", key=f"carpet_ind_{opened}_{metric}")
+        show_chart(mc.carpet(data, metric, opened), key=f"carpet_ind_{opened}_{metric}")
         companies = mc.company_table(data, opened, metric)
         st.dataframe(companies, hide_index=True, width="stretch", column_config={
             "Price": st.column_config.NumberColumn(format="Rs %.2f"),

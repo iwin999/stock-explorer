@@ -207,11 +207,18 @@ def _crest_html():
     return f'<img class="brand-crest" src="data:image/png;base64,{data}" alt="Mayo College Girls School crest">'
 
 
+def _dark_changed():
+    """Switching the whole site dark or light also sets the price chart to match (it has its own switch to change after)."""
+    st.session_state["dark_chart"] = st.session_state["dark_site"]
+
+
 def title_row(title="Stock Explorer"):
     """The page title, with the Mayo College Girls School crest beside it and the About icon at the far right."""
-    left, right = st.columns([14, 1])
+    left, mid, right = st.columns([9, 2, 1])
     with left:
         st.markdown(f'<span class="about-row-marker"></span><div class="brand">{_crest_html()}<h1>{title}</h1></div>',
                     unsafe_allow_html=True)
+    with mid:
+        st.toggle("Dark mode", key="dark_site", on_change=_dark_changed)
     with right:
         icon()

@@ -9,7 +9,7 @@ from core import builder
 from core import derivatives as dv
 from core import instruments as ins
 from core import valuation as val
-from core.charts import allocation_donut
+from core.charts import show as show_chart, allocation_donut
 from core.formatting import format_inr, format_ist
 from core.live import spot_price, vol_estimate
 from core.market_hours import now_ist
@@ -79,7 +79,7 @@ def _dashboard():
     with left:
         st.subheader("Where your money is")
         if snap["total"] > 0:
-            st.plotly_chart(allocation_donut(snap["by_class"]), width="stretch")
+            show_chart(allocation_donut(snap["by_class"]))
     with right:
         st.subheader("What you hold")
         styled = positions_table(snap)
@@ -258,7 +258,7 @@ def _lookup():
     left, right = st.columns([1, 1.6])
     with left:
         if snap["total"] > 0:
-            st.plotly_chart(allocation_donut(snap["by_class"]), width="stretch", key="lookup_donut")
+            show_chart(allocation_donut(snap["by_class"]), key="lookup_donut")
     with right:
         styled = positions_table(snap)
         if styled is None:

@@ -11,7 +11,7 @@ import pandas as pd
 import streamlit as st
 
 from core import about, assistant_ui, carpet_ui, universe, market_strip, backtest as bt, fusion_ui, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
-from core.charts import (add_fibonacci, backtest_chart, fan_chart, outlook_gauge, outcome_histogram, price_chart,
+from core.charts import (show as show_chart, add_fibonacci, backtest_chart, fan_chart, outlook_gauge, outcome_histogram, price_chart,
                          zoom_to_window)
 from core.formatting import format_inr
 from core.errors import guard
@@ -148,10 +148,12 @@ tab_overview, tab_carpet, tab_outcomes, tab_strategy, tab_fusion, tab_trade, tab
 with tab_overview:
     st.markdown("**In short:** the chart shows what the price did. The cards below say whether it is speeding up or slowing down, how bumpy it is, and whether the risk was worth the reward.")
     st.header("Price history")
-    p1, p2, p3 = st.columns([5, 3, 1])
+    p1, p2, p4, p3 = st.columns([5, 3, 2, 1])
     period = p1.radio("Period", list(PERIODS), index=1, horizontal=True)
     show_fib = p2.checkbox("Show Fibonacci levels", key="show_fib",
                            help="Draws the Fibonacci retracement lines (23.6%, 38.2%, 50%, 61.8%, 78.6%) and the extension lines (127.2%, 161.8%) from the highest and lowest price in the period you are viewing.")
+    dark_chart = p4.toggle("Dark chart", key="dark_chart",
+                           help="Turns just this price chart into a dark trading screen, whatever the rest of the site looks like.")
     with p3:
         help_bubble("fibonacci")
 
@@ -161,7 +163,7 @@ with tab_overview:
         add_fibonacci(fig, fib)
     extra = [price for _, price in fib["extensions"]] if fib else ()      # keep the extension lines inside the chart
     fig = zoom_to_window(fig, hist, PERIODS[period], include=extra)
-    st.plotly_chart(fig, width="stretch")
+    show_chart(fig, dark=dark_chart)
     if show_fib:
         st.info(ind.describe_fibonacci(fib) + " They depend on the period chosen and are a visual guide, not a prediction.")
     st.caption("Each bar is one trading day. The amber and navy lines are the average price over the last 50 and "
@@ -332,7 +334,7 @@ with tab_outcomes:
 
         gauge_col, split_col = st.columns([1.1, 1])
         with gauge_col:
-            st.plotly_chart(outlook_gauge(chances["up"], horizon), width="stretch")
+            show_chart(outlook_gauge(chances["up"], horizon))
         with split_col:
             st.subheader("How the simulated outcomes split")
             m1, m2 = st.columns(2)
@@ -345,7 +347,7 @@ with tab_outcomes:
             st.caption("These are the shares of the 2,000 simulated futures that ended each way. They reflect the "
                        "past year, so a stock that has been falling will lean towards 'lower'.")
 
-        st.plotly_chart(fan_chart(hist, paths, horizon, symbol, name), width="stretch")
+        show_chart(fan_chart(hist, paths, horizon, symbol, name))
         st.caption("The darker the shading, the more of the simulated futures pass through that area: the darkest holds "
                    "half of them and the lightest holds 90%. Real prices can land outside it, because the "
                    "simulation cannot see news, company results or sudden shocks.")
@@ -400,9 +402,8 @@ with tab_outcomes:
                     ("Beats holding", "beats_holding", f"{out['chance_beats_hold'] * 100:.0f}%")]):
                 with col:
                     metric_with_help(title, value, term)
-            st.plotly_chart(outcome_histogram(out["strategy"], out["hold"], rule.name,
-                                              f"How the {rule.name.lower()} would fare across 2,000 simulated futures"),
-                            width="stretch")
+            show_chart(outcome_histogram(out["strategy"], out["hold"], rule.name,
+                                              f"How the {rule.name.lower()} would fare across 2,000 simulated futures"))
             st.caption(f"Time spent in the stock: {out['invested'] * 100:.0f}% of the days. 'Beats holding' is the share "
                        "of simulated futures where the rule did better than simply holding the stock.")
             plain_english(
@@ -455,7 +456,7 @@ with tab_strategy:
                 continue
             callout(bt.verdict(result) + f" The rule switched between stock and cash {result['trades']} times and "
                     f"was invested {result['days_invested_pct']:.0f}% of the time.")
-            st.plotly_chart(backtest_chart(result), width="stretch")
+            show_chart(backtest_chart(result))
 
             s, b = result["stats"]["Strategy"], result["stats"]["Buy and hold"]
             c1, c2 = st.columns(2)
@@ -536,9 +537,8 @@ with tab_strategy:
                     ("Beats holding", "beats_holding", f"{(sf > hf).mean() * 100:.0f}%")]):
                 with col:
                     metric_with_help(title, value, term)
-            st.plotly_chart(outcome_histogram(sf, hf, STRATEGIES[pick].name,
-                                              "5-year results across 2,000 reshuffled histories", "5-year return"),
-                            width="stretch")
+            show_chart(outcome_histogram(sf, hf, STRATEGIES[pick].name,
+                                              "5-year results across 2,000 reshuffled histories", "5-year return"))
             st.caption(f"Worst fall from a peak: typically {np.median(mc['strategy_worst']) * 100:.0f}%, and "
                        f"{np.percentile(mc['strategy_worst'], 5) * 100:.0f}% or worse in 1 history out of 20 (buy-and-hold: "
                        f"{np.median(mc['hold_worst']) * 100:.0f}% typical).")
