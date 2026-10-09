@@ -73,13 +73,32 @@ def _use_found_company(symbol):
     st.session_state["company"] = symbol
 
 
+def _pick_company(symbol):
+    """Button callback: choose one of the suggested companies."""
+    st.session_state["company"] = symbol
+
+
 company_options = list(st.session_state.get("extra_companies", [])) + universe.OPTIONS
-if st.session_state.get("company") not in company_options:
-    st.session_state["company"] = company_options[0]
-symbol = st.selectbox("Search any NSE or BSE company (start typing a name)", company_options,
-                      format_func=companies.label, key="company",
-                      help=f"{len(universe.OPTIONS):,} companies listed on the NSE and the BSE. Type part of a name, "
-                           "for example 'tata', 'suzlon' or 'bank', and pick from the suggestions.")
+st.session_state.setdefault("company", company_options[0])
+typed_or_picked = st.selectbox("Search any NSE or BSE company (start typing a name)", company_options,
+                               format_func=companies.label, key="company", accept_new_options=True,
+                               help=f"{len(universe.OPTIONS):,} companies listed on the NSE and the BSE. Type part of a name, "
+                                    "for example 'tata', 'suzlon' or 'bank'. A small spelling slip is fine: type the name, "
+                                    "press Enter, and the closest matches are listed best first.")
+symbol = typed_or_picked
+if typed_or_picked not in company_options:               # something was typed and entered: find the closest companies
+    suggestions = universe.rank(typed_or_picked, 8)
+    if suggestions:
+        symbol = suggestions[0]
+        st.caption(f"Closest matches for “{typed_or_picked}”, best first. Showing the first one; tap another to switch.")
+        for i in range(0, len(suggestions), 2):
+            cols = st.columns(2)
+            for col, sug in zip(cols, suggestions[i:i + 2]):
+                col.button(("1. " if sug == suggestions[0] else "") + companies.label(sug), key=f"sug_{sug}", width="stretch",
+                           type="primary" if sug == suggestions[0] else "secondary", on_click=_pick_company, args=(sug,))
+    else:
+        symbol = company_options[0]
+        st.warning(f"No company looks like “{typed_or_picked}”. Try another spelling, or search Yahoo Finance below.")
 with st.expander("Cannot find a company? Search Yahoo Finance live"):
     live_query = st.text_input("Company name", key="live_query", placeholder="e.g. a company that listed very recently")
     if live_query.strip():

@@ -27,6 +27,15 @@ def mark_option(pos, spot, sigma, now=None):
     return {"price": price, "pnl": (price - pos["premium"]) * units, "value": price * units}
 
 
+def contract_name(pos):
+    """A contract in plain words that also says which way it bets, because people forget call from put and long from short:
+    'Reliance CALL option (bet on a rise)', 'Nifty 50 future (bet on a fall)'."""
+    under = ins.name_of(pos["underlying"])
+    if pos["type"] == "FUT":
+        return f"{under} future ({'bet on a rise' if pos['side'].upper() in ('LONG', 'BUY') else 'bet on a fall'})"
+    return f"{under} {pos['kind']} option ({'bet on a rise' if pos['kind'] == 'CALL' else 'bet on a fall'})"
+
+
 def snapshot(pf, spot_fn, sigma_fn, now=None):
     """Value everything the account holds.
 
@@ -55,7 +64,7 @@ def snapshot(pf, spot_fn, sigma_fn, now=None):
             cost = pos["margin"]
             by_class[ins.FUTURES] += m["value"]
             detail = f"{pos['side']}, {pos['lots']} lot(s) x {pos['lot_size']}, exp {pos['expiry']}"
-            rows.append({"Class": ins.FUTURES, "Instrument": f"{under} future", "Details": detail,
+            rows.append({"Class": ins.FUTURES, "Instrument": contract_name(pos), "Details": detail,
                          "Bought at": pos["entry"], "Now": m["price"], "Value": m["value"], "P&L": m["pnl"],
                          "P&L %": m["pnl"] / cost * 100 if cost else 0.0, "Symbol": pos["underlying"]})
         else:
@@ -65,7 +74,7 @@ def snapshot(pf, spot_fn, sigma_fn, now=None):
             cost = pos["premium"] * pos["lot_size"] * pos["lots"]
             by_class[ins.OPTIONS] += m["value"]
             detail = f"{pos['strike']:g} {pos['kind']}, {pos['lots']} lot(s) x {pos['lot_size']}, exp {pos['expiry']}"
-            rows.append({"Class": ins.OPTIONS, "Instrument": f"{under} option", "Details": detail,
+            rows.append({"Class": ins.OPTIONS, "Instrument": contract_name(pos), "Details": detail,
                          "Bought at": pos["premium"], "Now": m["price"], "Value": m["value"], "P&L": m["pnl"],
                          "P&L %": m["pnl"] / cost * 100 if cost else 0.0, "Symbol": pos["underlying"]})
 
@@ -141,9 +150,9 @@ def exit_all(pf, spot_fn, sigma_fn, now=None):
             continue
         if pos["type"] == "FUT":
             price = mark_future(pos, spot, now)["price"]
-            lines.append((f"{name} future ({pos['side'].lower()})", pf.close_future(pos["id"], price)))
+            lines.append((contract_name(pos), pf.close_future(pos["id"], price)))
         else:
             sigma = sigma_fn(pos["underlying"]) or 0.25
             price = mark_option(pos, spot, sigma, now)["price"]
-            lines.append((f"{name} {pos['strike']:g} {pos['kind'].lower()}", pf.sell_option(pos["id"], price)))
+            lines.append((f"{contract_name(pos)}, strike {pos['strike']:g}", pf.sell_option(pos["id"], price)))
     return {"count": len(lines), "realised": sum(pnl for _, pnl in lines), "lines": lines, "skipped": skipped}

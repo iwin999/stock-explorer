@@ -101,3 +101,22 @@ def test_sell_panel_can_sell_an_option():
         app.button(key="sellgo_trade").click().run()
         assert not app.exception
     assert acc.load_account(store, "Optioner").derivatives == []
+
+
+def test_search_forgives_spelling_and_lists_best_first():
+    from core import universe
+    assert universe.rank("relience")[0] == "RELIANCE.NS"
+    assert universe.rank("infosis")[0] == "INFY.NS"
+    assert universe.rank("hdfc bnk")[0] == "HDFCBANK.NS"
+    assert universe.rank("tatamotors")[0] in ("TMPV.NS", "TMCV.NS")
+    assert universe.rank("qqqqzzzz") == []
+
+
+def test_contracts_say_which_way_they_bet():
+    from core import valuation as val
+    call = {"type": "OPT", "underlying": "RELIANCE.NS", "kind": "CALL"}
+    put = {"type": "OPT", "underlying": "RELIANCE.NS", "kind": "PUT"}
+    short = {"type": "FUT", "underlying": "RELIANCE.NS", "side": "SHORT"}
+    assert "CALL" in val.contract_name(call) and "rise" in val.contract_name(call)
+    assert "PUT" in val.contract_name(put) and "fall" in val.contract_name(put)
+    assert "fall" in val.contract_name(short)

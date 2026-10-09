@@ -336,11 +336,11 @@ def _sell_choices(pf):
         under = ins.name_of(pos["underlying"])
         if pos["type"] == "FUT":
             pnl = val.mark_future(pos, spot)["pnl"] if spot else 0.0
-            label = f"{under} future ({pos['side'].lower()}, {pos['lots']} lot(s))"
+            label = f"{val.contract_name(pos)}, {pos['lots']} lot(s)"
         else:
             sigma = vol_estimate(pos["underlying"])
             pnl = val.mark_option(pos, spot, sigma)["pnl"] if spot and sigma else 0.0
-            label = f"{under} {pos['strike']:g} {pos['kind'].lower()} option ({pos['lots']} lot(s))"
+            label = f"{val.contract_name(pos)}, strike {pos['strike']:g}, {pos['lots']} lot(s)"
         out.append((f"d:{pos['id']}", label, pnl, pos["type"], pos))
     return sorted(out, key=lambda r: r[2])
 
@@ -684,14 +684,14 @@ def _open_derivatives(kind):
         under = ins.name_of(pos["underlying"])
         if kind == "FUT":
             mark = val.mark_future(pos, spot) if spot else {"price": pos["entry"], "pnl": 0.0, "value": pos["margin"]}
-            text = f"{under} future, {pos['side'].lower()}, {pos['lots']} lot(s), expires {pos['expiry']}"
+            text = f"{val.contract_name(pos)}, {pos['lots']} lot(s), expires {pos['expiry']}"
             detail = f"Entry {format_inr(pos['entry'])}  |  Now {format_inr(mark['price'])}"
             label = "Close position"
         else:
             sigma = vol_estimate(pos["underlying"])
             mark = (val.mark_option(pos, spot, sigma) if spot and sigma else
                     {"price": pos["premium"], "pnl": 0.0, "value": pos["premium"] * pos["lot_size"] * pos["lots"]})
-            text = f"{under} {pos['strike']:g} {pos['kind'].lower()}, {pos['lots']} lot(s), expires {pos['expiry']}"
+            text = f"{val.contract_name(pos)}, strike {pos['strike']:g}, {pos['lots']} lot(s), expires {pos['expiry']}"
             detail = f"Paid {format_inr(pos['premium'])}  |  Now {format_inr(mark['price'])} per unit"
             label = "Sell"
         c1, c2, c3 = st.columns([4, 2, 1.3])

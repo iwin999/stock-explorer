@@ -302,5 +302,8 @@ A **Dark mode** switch beside the About icon gives the whole site a dark trading
 ## New in Step 35 (sell from the holdings screen)
 Selling no longer means hunting through the Stocks / Futures / Options tabs. Under **Everything you hold** (Paper trading) and in **Your Portfolio**, a **Want to sell something?** box lists every holding, share, future and option, with the **weakest one chosen first**. Pick how much (all, half, quarter; contracts close whole) and press one button.
 
+## New in Step 36 (forgiving search, plain option names)
+**Search:** type a company name with a spelling slip ('relience', 'hdfc bnk', 'tatamotors') and press Enter: the closest companies are listed **best match first**, the first one is shown straight away, and one tap switches to another. **Options and futures** now always say which way they bet, for example 'Reliance CALL option (bet on a rise)' or 'Nifty 50 future (bet on a fall)', in the holdings table, the sell box, the open-positions list and the exit-all report.
+
 ## Status
 All 8 features are built.
