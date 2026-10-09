@@ -299,5 +299,8 @@ Each Key signals card now has a coloured tracker under its value, like the ones 
 ## New in Step 34 (Dark mode and Dark chart)
 A **Dark mode** switch beside the About icon gives the whole site a dark trading-screen look (cards, tabs, tables, dialogs, boxes, trackers, charts). A separate **Dark chart** switch above the price chart darkens just that chart; turning Dark mode on or off also sets it to match, and it can then be changed on its own. A light chart on the dark site sits on a white panel so it stays readable. Charts are drawn through `core.charts.show`, which applies the dark skin.
 
+## New in Step 35 (sell from the holdings screen)
+Selling no longer means hunting through the Stocks / Futures / Options tabs. Under **Everything you hold** (Paper trading) and in **Your Portfolio**, a **Want to sell something?** box lists every holding, share, future and option, with the **weakest one chosen first**. Pick how much (all, half, quarter; contracts close whole) and press one button.
+
 ## Status
 All 8 features are built.

@@ -324,6 +324,74 @@ def _holdings_view():
     holdings_ui.render(pf, snapshot_now(pf), key="trade")
 
 
+def _sell_choices(pf):
+    """Everything that can be sold, worst performer first: [(id, label, profit or loss, kind, payload)]."""
+    out = []
+    for sym, h in pf.holdings.items():
+        price = spot_price(sym) or h["avg_price"]
+        pnl = (price - h["avg_price"]) * h["quantity"]
+        out.append((f"s:{sym}", f"{ins.name_of(sym)}: {h['quantity']} units", pnl, "cash", sym))
+    for pos in pf.derivatives:
+        spot = spot_price(pos["underlying"])
+        under = ins.name_of(pos["underlying"])
+        if pos["type"] == "FUT":
+            pnl = val.mark_future(pos, spot)["pnl"] if spot else 0.0
+            label = f"{under} future ({pos['side'].lower()}, {pos['lots']} lot(s))"
+        else:
+            sigma = vol_estimate(pos["underlying"])
+            pnl = val.mark_option(pos, spot, sigma)["pnl"] if spot and sigma else 0.0
+            label = f"{under} {pos['strike']:g} {pos['kind'].lower()} option ({pos['lots']} lot(s))"
+        out.append((f"d:{pos['id']}", label, pnl, pos["type"], pos))
+    return sorted(out, key=lambda r: r[2])
+
+
+def sell_panel(key):
+    """Sell (or close) any one thing you hold, from the holdings screen. The weakest holding is chosen to begin with."""
+    pf = _get_portfolio()
+    choices = _sell_choices(pf)
+    if not choices:
+        return
+    by_id = {c[0]: c for c in choices}
+    with st.container(border=True):
+        st.markdown("**Want to sell something?** Pick it, choose how much, press the button. The weakest one is chosen to begin with.")
+        pick = st.selectbox("What do you want to sell?", list(by_id), key=f"sellpick_{key}",
+                            format_func=lambda i: f"{by_id[i][1]}   |   {'gain' if by_id[i][2] >= 0 else 'loss'} {format_inr(abs(by_id[i][2]), 0)}")
+        _, label, pnl, kind, payload = by_id[pick]
+        share, qty = 1.0, None
+        if kind == "cash":
+            owned = pf.holdings[payload]["quantity"]
+            part = st.radio("How much?", ["All of it", "Half", "Quarter"], horizontal=True, key=f"sellpart_{key}_{payload}")
+            share = {"All of it": 1.0, "Half": 0.5, "Quarter": 0.25}[part]
+            qty = max(1, int(owned * share))
+            st.caption(f"You will sell {qty} of your {owned} units, locking in about "
+                       f"{format_inr(abs(pnl * qty / owned), 0)} {'profit' if pnl >= 0 else 'loss'}.")
+        else:
+            st.caption(f"This closes the whole position, locking in about {format_inr(abs(pnl), 0)} {'profit' if pnl >= 0 else 'loss'}.")
+        if st.button("Sell now" if kind == "cash" else "Close this position", type="primary", key=f"sellgo_{key}"):
+            try:
+                if kind == "cash":
+                    fresh = get_latest_price(payload) or spot_price(payload)
+                    if not fresh:
+                        raise TradingError("No price is available for this right now. Please try again in a moment.")
+                    order = pf.sell(payload, int(qty), round(fresh, 2))
+                    pnl_done, text = order["pnl"], f"Sold {qty} of {ins.name_of(payload)} at {format_inr(round(fresh, 2))}."
+                else:
+                    fresh = get_latest_price(payload["underlying"]) or spot_price(payload["underlying"])
+                    if not fresh:
+                        raise TradingError("No price is available for this right now. Please try again in a moment.")
+                    if kind == "FUT":
+                        pnl_done = pf.close_future(payload["id"], val.mark_future(payload, fresh)["price"])
+                    else:
+                        sigma = vol_estimate(payload["underlying"]) or 0.25
+                        pnl_done = pf.sell_option(payload["id"], val.mark_option(payload, fresh, sigma)["price"])
+                    text = f"Closed {label}."
+                _save(pf)
+                st.session_state.flash = ("ok", f"{text} Profit/loss: {format_inr(pnl_done)}.")
+            except TradingError as e:
+                st.session_state.flash = ("error", str(e))
+            st.rerun()
+
+
 def _do_exit_all():
     """Sell everything and close every contract (see valuation.exit_all). The starting capital is never touched."""
     pf = _get_portfolio()

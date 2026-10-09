@@ -57,6 +57,9 @@ def render(pf, snap, key):
         callout(f"Helping most: <b>{best['Instrument']}</b> ({best['Contribution']:+.2f} points). "
                 f"Hurting most: <b>{worst['Instrument']}</b> ({worst['Contribution']:+.2f} points).")
 
+    from core import trading_ui
+    trading_ui.sell_panel(key)
+
     show = df[["Instrument", "Class", "Details", "Value", "P&L", "P&L %", "Today %", "Weight %", "Contribution", "Days held"]]
     st.dataframe(
         show, hide_index=True, width="stretch",

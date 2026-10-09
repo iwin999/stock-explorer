@@ -59,3 +59,45 @@ def test_site_switch_turns_dark_css_on_and_sets_the_chart_switch():
         assert app.toggle(key="dark_chart").value is True
         app.toggle(key="dark_chart").set_value(False).run()          # the chart can then be changed on its own
         assert not app.exception and app.toggle(key="dark_site").value is True
+
+
+def test_sell_panel_sells_the_weakest_holding_from_the_holdings_screen():
+    store = acc.FileStore(tempfile.mkdtemp())
+    pf = acc.create_account(store, "Seller", 100000)
+    pf.buy("RELIANCE.NS", 10, 1000.0)
+    pf.buy("TCS.NS", 5, 3000.0)
+    acc.save_account(store, pf)
+    prices = {"RELIANCE.NS": 800.0, "TCS.NS": 3100.0}           # Reliance is the loser
+    app = AppTest.from_file(APP, default_timeout=240)
+    app.query_params["user"] = "Seller"
+    with mock.patch("core.trading_ui.get_store", lambda: store), mock.patch("core.portfolio_ui.get_store", lambda: store), \
+            mock.patch("core.trading_ui.spot_price", lambda s: prices.get(s)), \
+            mock.patch("core.trading_ui.get_latest_price", lambda s: prices.get(s)):
+        app.run()
+        assert not app.exception
+        pick = app.selectbox(key="sellpick_trade")
+        assert pick.value == "s:RELIANCE.NS"                  # the weakest holding is chosen to begin with
+        app.button(key="sellgo_trade").click().run()
+        assert not app.exception
+    after = acc.load_account(store, "Seller")
+    assert "RELIANCE.NS" not in after.holdings and "TCS.NS" in after.holdings
+
+
+def test_sell_panel_can_sell_an_option():
+    from core import derivatives as dv
+    store = acc.FileStore(tempfile.mkdtemp())
+    pf = acc.create_account(store, "Optioner", 500000)
+    expiry = dv.expiry_dates()[0]
+    pf.buy_option("RELIANCE.NS", expiry, 1300.0, "CALL", 1, 20.0, 150)
+    acc.save_account(store, pf)
+    app = AppTest.from_file(APP, default_timeout=240)
+    app.query_params["user"] = "Optioner"
+    with mock.patch("core.trading_ui.get_store", lambda: store), mock.patch("core.portfolio_ui.get_store", lambda: store), \
+            mock.patch("core.trading_ui.spot_price", lambda s: 1250.0), mock.patch("core.trading_ui.vol_estimate", lambda s: 0.25), \
+            mock.patch("core.trading_ui.get_latest_price", lambda s: 1250.0):
+        app.run()
+        assert not app.exception
+        assert app.selectbox(key="sellpick_trade").value.startswith("d:")
+        app.button(key="sellgo_trade").click().run()
+        assert not app.exception
+    assert acc.load_account(store, "Optioner").derivatives == []
