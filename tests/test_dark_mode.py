@@ -130,3 +130,21 @@ def test_old_company_names_find_the_company_as_it_is_now():
     assert universe.rank("syndicate bank")[0] == "CANBK.NS"
     assert universe.renamed("relience") is None
     assert all(sym in universe.OPTIONS for sym in universe.OLD_NAMES.values())
+
+
+def test_a_stale_module_left_in_memory_after_an_update_heals_itself():
+    import core.charts as charts
+    saved = charts.show
+    del charts.show                                    # what a server holding the old charts.py would look like
+    try:
+        store = acc.FileStore(tempfile.mkdtemp())
+        acc.create_account(store, "Stale", 100000)
+        app = AppTest.from_file(APP, default_timeout=240)
+        app.query_params["user"] = "Stale"
+        with mock.patch("core.trading_ui.get_store", lambda: store), mock.patch("core.portfolio_ui.get_store", lambda: store):
+            app.run()
+        assert not app.exception
+        assert not any("Reference: E-" in m.value for m in app.markdown)
+    finally:
+        import sys
+        sys.modules["core.charts"].show = getattr(sys.modules["core.charts"], "show", saved)

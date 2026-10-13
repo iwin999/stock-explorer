@@ -308,5 +308,8 @@ Selling no longer means hunting through the Stocks / Futures / Options tabs. Und
 ## New in Step 37 (old company names)
 Typing a company's **old name** now finds it as it is today, with a note saying so: Zomato (Eternal), Cadila Healthcare (Zydus Lifesciences), HDFC Ltd (HDFC Bank), Bharti Infratel (Indus Towers), Adani Transmission (Adani Energy Solutions), Syndicate Bank (Canara Bank), Hero Honda (Hero MotoCorp), Tata Global Beverages (Tata Consumer Products) and about 30 more. The list is `OLD_NAMES` in `core/universe.py`.
 
+## New in Step 38 (updates no longer need a manual reboot)
+After a push the live server could keep an old copy of a file in memory while the page was already new, giving "cannot import name ..." (error E-3DF4CD). `app.py` now spots that, reloads our modules and carries on. If it ever appears anyway, Manage app, Reboot app fixes it.
+
 ## Status
 All 8 features are built.
