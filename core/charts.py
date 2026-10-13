@@ -270,8 +270,9 @@ def stage_bar(counts):
 
 
 # ---------------- dark skin ("market terminal" look) ----------------
-TERMINAL_BG, TERMINAL_GRID, TERMINAL_TEXT = "#0b1220", "#1f2a3d", "#e6edf7"
-_LIGHTER = {NAVY: "#8ab4ff", "#333333": "#e6edf7", "#444444": "#cfd8e6", "black": "#e6edf7", "#000000": "#e6edf7"}
+TERMINAL_BG, TERMINAL_GRID, TERMINAL_TEXT = "#131722", "#2a2e39", "#d1d4dc"      # TradingView dark
+_LIGHTER = {NAVY: "#5b9cf6", "#333333": "#d1d4dc", "#444444": "#b2b5be", "black": "#d1d4dc", "#000000": "#d1d4dc",
+            UP_COLOUR: "#26a69a", DOWN_COLOUR: "#ef5350"}                # TradingView's teal and red
 
 
 def _lift(colour):
@@ -298,7 +299,12 @@ def skin(fig, dark=True):
                 mk.colors = [_lift(c) for c in mk.colors]
             if isinstance(tr, go.Treemap):
                 mk.line.color = TERMINAL_BG
-                mk.colorscale = [[0.0, "#d0402f"], [0.35, "#7c3330"], [0.5, "#2a3245"], [0.65, "#24694c"], [1.0, "#22b573"]]
+                mk.colorscale = [[0.0, "#f23645"], [0.35, "#8c2f39"], [0.5, "#42454f"], [0.65, "#1f6b60"], [1.0, "#089981"]]
+        if isinstance(tr, go.Candlestick):
+            tr.increasing.line.color, tr.decreasing.line.color = "#26a69a", "#ef5350"
+            tr.increasing.fillcolor, tr.decreasing.fillcolor = "#26a69a", "#ef5350"
+        if isinstance(tr, go.Bar) and tr.marker.color is not None and not isinstance(tr.marker.color, str):
+            tr.marker.color = [_lift(c) for c in tr.marker.color]
         if isinstance(tr, go.Indicator):
             tr.number.font.color = TERMINAL_TEXT
             if tr.gauge is not None and tr.gauge.bar is not None:

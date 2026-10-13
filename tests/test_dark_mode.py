@@ -36,7 +36,7 @@ def test_light_skin_changes_nothing():
 def test_carpet_gets_a_dark_colour_scale():
     data = mc.load_snapshot()
     fig = skin(mc.carpet(data, "day"), True)
-    assert fig.data[0].marker.colorscale[2][1] == "#2a3245"
+    assert fig.data[0].marker.colorscale[2][1] == "#42454f"
 
 
 def _signed_in():
@@ -52,10 +52,10 @@ def test_site_switch_turns_dark_css_on_and_sets_the_chart_switch():
     with mock.patch("core.trading_ui.get_store", lambda: store), mock.patch("core.portfolio_ui.get_store", lambda: store):
         app.run()
         assert not app.exception
-        assert not any("#0b1220 !important" in m.value for m in app.markdown)
+        assert not any("#131722 !important" in m.value for m in app.markdown)
         app.toggle(key="dark_site").set_value(True).run()
         assert not app.exception
-        assert any("#0b1220 !important" in m.value for m in app.markdown)
+        assert any("#131722 !important" in m.value for m in app.markdown)
         assert app.toggle(key="dark_chart").value is True
         app.toggle(key="dark_chart").set_value(False).run()          # the chart can then be changed on its own
         assert not app.exception and app.toggle(key="dark_site").value is True

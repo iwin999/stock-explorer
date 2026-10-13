@@ -311,5 +311,8 @@ Typing a company's **old name** now finds it as it is today, with a note saying 
 ## New in Step 38 (updates no longer need a manual reboot)
 After a push the live server could keep an old copy of a file in memory while the page was already new, giving "cannot import name ..." (error E-3DF4CD). `app.py` now spots that, reloads our modules and carries on. If it ever appears anyway, Manage app, Reboot app fixes it.
 
+## New in Step 39 (TradingView colours for Dark mode)
+Dark mode now uses TradingView's charcoal palette (background #131722, panels #1e222d, borders #2a2e39, text #d1d4dc, blue accent #2962ff) instead of dark blue. Dark charts use TradingView's teal and red candles and volume bars, charcoal grid lines, and a charcoal-red-teal market carpet.
+
 ## Status
 All 8 features are built.
