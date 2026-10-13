@@ -314,5 +314,8 @@ After a push the live server could keep an old copy of a file in memory while th
 ## New in Step 39 (TradingView colours for Dark mode)
 Dark mode now uses TradingView's charcoal palette (background #131722, panels #1e222d, borders #2a2e39, text #d1d4dc, blue accent #2962ff) instead of dark blue. Dark charts use TradingView's teal and red candles and volume bars, charcoal grid lines, and a charcoal-red-teal market carpet.
 
+## New in Step 40 (blank search box)
+The company search box now starts **blank** with a hint ("Type a company name, for example Tata, Suzlon or HDFC"). Clicking it still opens the dropdown list; typing and pressing Enter lists the closest matches underneath, best first. Until a company is chosen the page shows Reliance and says so.
+
 ## Status
 All 8 features are built.

@@ -79,14 +79,17 @@ def _pick_company(symbol):
 
 
 company_options = list(st.session_state.get("extra_companies", [])) + universe.OPTIONS
-st.session_state.setdefault("company", company_options[0])
 typed_or_picked = st.selectbox("Search any NSE or BSE company (start typing a name)", company_options,
-                               format_func=companies.label, key="company", accept_new_options=True,
+                               format_func=companies.label, key="company", accept_new_options=True, index=None,
+                               placeholder="Type a company name, for example Tata, Suzlon or HDFC",
                                help=f"{len(universe.OPTIONS):,} companies listed on the NSE and the BSE. Type part of a name, "
                                     "for example 'tata', 'suzlon' or 'bank'. A small spelling slip is fine: type the name, "
                                     "press Enter, and the closest matches are listed best first.")
 symbol = typed_or_picked
-if typed_or_picked not in company_options:               # something was typed and entered: find the closest companies
+if typed_or_picked is None:                                # nothing typed yet: start with a well-known company
+    symbol = company_options[0]
+    st.caption(f"Showing {companies.label(symbol)} to start with. Click the box to browse the list, or type a name to find another company.")
+elif typed_or_picked not in company_options:               # something was typed and entered: find the closest companies
     suggestions = universe.rank(typed_or_picked, 8)
     if suggestions:
         symbol = suggestions[0]
