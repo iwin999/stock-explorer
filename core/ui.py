@@ -129,6 +129,15 @@ h3 { font-size: 1.35rem !important; font-weight: 600 !important; }
 /* less empty space above the title */
 .stApp [data-testid="stMainBlockContainer"], .stApp .block-container { padding-top: 2.2rem !important; }
 
+/* The "you are looking at this company" bar: it stays at the top of the screen while you scroll */
+[data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] > *:has(.companybar) { position: sticky; top: 3.75rem; z-index: 990; }
+.companybar { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; background: #ffffff;
+  border: 2px solid #1d3557; border-radius: 12px; padding: 0.6rem 1rem; box-shadow: 0 4px 14px rgba(0,0,0,0.12); }
+.companybar-label { line-height: 1.2; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: #6b7785; }
+.companybar-name { font-size: 1.25rem; font-weight: 800; color: #1d3557; line-height: 1.2; }
+.companybar-code { font-size: 0.95rem; color: #5b6573; font-weight: 600; white-space: nowrap; }
+@media (max-width: 640px) { .companybar-name { font-size: 1.05rem; } }
+
 /* Footer disclaimer: small and quiet */
 .disclaimer { font-size: 0.82rem; color: #6b7480; line-height: 1.5; border-top: 1px solid #e1e5ec;
               padding-top: 0.9rem; margin-top: 2rem; }
@@ -201,6 +210,13 @@ def setup_page(title):
     st.markdown(STYLE_CSS, unsafe_allow_html=True)
     if st.session_state.get("dark_site"):
         st.markdown(DARK_CSS, unsafe_allow_html=True)
+
+
+def company_bar(name, code, tag=""):
+    """A bar that stays at the top of the screen, saying which company is being looked at. Call it once, near the top."""
+    st.markdown(f'<div class="companybar"><div><div class="companybar-label">You are looking at</div>'
+                f'<div class="companybar-name">{name}</div></div><div class="companybar-code">{code}{(" · " + tag) if tag else ""}</div></div>',
+                unsafe_allow_html=True)
 
 
 def callout(text):

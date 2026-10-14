@@ -15,7 +15,7 @@ from core.live import live_quote
 from core.market_data import get_history_with_source, load_offline
 from core.market_hours import is_market_open, now_ist
 from core.trading import TradingError
-from core.ui import STYLE_CSS, DARK_CSS, show_disclaimer
+from core.ui import STYLE_CSS, DARK_CSS, company_bar, show_disclaimer
 from core import trading_ui as tu
 
 PAGES = ["Home", "Company", "Portfolio", "Learn"]
@@ -211,7 +211,7 @@ def company():
     mv = day_move(symbol) or (float(hist["Close"].iloc[-1]), 0.0, 0.0)
     price, change, pct = mv
     text, kind = words.move_words(change, pct)
-    st.markdown(f"### {name}")
+    company_bar(name, companies.code_of(symbol))
     st.markdown(f'<div class="big-number">{format_inr(price)}</div><div>{span(text, kind)}</div>', unsafe_allow_html=True)
     if source == "offline":
         st.caption("Saved prices are being shown, so this may not be today's price.")

@@ -111,3 +111,19 @@ def test_searching_with_a_spelling_slip_opens_or_lists_the_company():
     assert action == "list" and found[0] == "RELIANCE.NS"
     assert words.resolve_search("zomato")[1] == "ETERNAL.NS"                    # an old name opens today's company
     assert words.resolve_search("qqqqzzzz") == ("none", [])
+
+
+def test_a_bar_names_the_company_being_looked_at_on_both_sites():
+    store, app = _app("Barfly")
+    a, b = _patches(store)
+    with a, b:
+        app.run()
+        app.session_state["scompany"] = "TCS.NS"
+        app.radio(key="spage").set_value("Company").run()
+        assert any("companybar-name" in m.value and "Tata Consultancy" in m.value for m in app.markdown)
+    full = AppTest.from_file(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "app.py"), default_timeout=240)
+    full.query_params["user"] = "Barfly"
+    with a, b:
+        full.run()
+        assert not full.exception
+        assert any("companybar-name" in m.value and "You are looking at" in m.value for m in full.markdown)

@@ -326,5 +326,8 @@ A new **Daily check** tab on the full site, and a short **Yesterday's signals vs
 ## New in Step 43 (Daily check: tested indicators, mostly pictures)
 We tested 18 indicators (the old five plus Stochastic RSI, MFI, ADX, Supertrend, Ichimoku, OBV, CMF, RSI(2), Donchian breakout, 1-day reversal, where the day closed and more) on about 200,000 company-days of NSE prices (138 companies, 2019 to 2026), picking on the first 70% of the dates and checking on the last 30%. Nearly all were a coin toss at calling the next day (48% to 51%). The old set scored about 49%. **Six now vote**: Trend, Bollinger band, Stochastic RSI, Money flow (MFI), Where the day closed and Yesterday's move; they scored about 51% to 52% on clear calls, a small real edge, not a crystal ball. RSI, MACD, ADX, Supertrend, Ichimoku and Volume are shown for context but do not vote. The tab is now mostly visual: a call badge with one dot per vote, Called vs What happened tiles, a range bar with yesterday's close and today's price, indicator cards with gauges, and a 60-day strip of green and red squares next to a 50% coin-toss bar. The words are kept for an expander.
 
+## New in Step 44 (the company bar that stays on screen)
+A bar reading **You are looking at: Tata Consultancy Services, TCS** now stays pinned to the top of the screen while you scroll, on the full site (under the search box) and on the simple site's Company page, so nobody loses track of which company they are working on. It follows Dark mode.
+
 ## Status
 All 8 features are built.

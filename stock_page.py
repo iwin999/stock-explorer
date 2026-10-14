@@ -20,7 +20,7 @@ from core.market_data import get_company_name, get_history_with_source
 from core.market_hours import is_market_open, now_ist, status_message
 from core.strategies import FUSION_RULE, STRATEGIES, fusion_rule_for
 from core.signal_scales import rate_signals
-from core.ui import (help_bubble, ratio_scale, scale_html, callout, know_how_button, metric_with_help, notice, plain_english, setup_page,
+from core.ui import (company_bar, help_bubble, ratio_scale, scale_html, callout, know_how_button, metric_with_help, notice, plain_english, setup_page,
                      show_disclaimer, term_row)
 
 setup_page("Stock Explorer")
@@ -119,6 +119,7 @@ with st.expander("Cannot find a company? Search Yahoo Finance live"):
 
 # ---------- load data ----------
 name = load_name(symbol)
+company_bar(name, companies.code_of(symbol), "BSE" if symbol.endswith(".BO") else "NSE")
 with st.spinner(f"Loading {name}..."):
     hist, source, last_date = load_history(symbol)
 
