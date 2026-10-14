@@ -72,7 +72,7 @@ def test_a_strong_uptrend_votes_up_and_a_strong_downtrend_votes_down():
         h = _hist(drift=drift)
         p = dc.plan(h, now, live_price=float(h["Close"].iloc[-1]), market_open=True)
         r = dc.evaluate(p["basis"], p)
-        trend = [v for n, _, v, _ in r["votes"] if n == "Trend"][0]
+        trend = [v["vote"] for v in r["votes"] if v["name"] == "Trend"][0]
         assert trend == (1 if expected == "Up" else -1)
 
 
@@ -80,6 +80,7 @@ def test_track_record_is_honest_and_uses_only_earlier_data():
     h = _hist()
     rec = dc.track_record(h)
     assert rec["n"] == 60 and 0 <= rec["accuracy"] <= 1 and 0.3 <= rec["baseline"] <= 1
+    assert rec["call_n"] <= rec["n"] and (rec["call_accuracy"] is None or 0 <= rec["call_accuracy"] <= 1)
     # changing the LAST day's price must not change the call that was made for the last day
     h2 = h.copy()
     h2.iloc[-1, h2.columns.get_loc("Close")] *= 1.2
@@ -112,4 +113,28 @@ def test_the_daily_check_tab_and_the_simple_card_show_without_errors():
             assert not app.exception
             assert not [m for m in app.markdown if "Reference: E-" in m.value]
             text = " ".join(m.value for m in app.markdown)
-            assert ("What the indicators said" in text) if path == APP else ("Yesterday's signals vs today" in text)
+            assert ("Leaning" in text) if path == APP else ("Yesterday's signals vs today" in text)
+
+
+def test_only_the_six_validated_indicators_vote():
+    h = _hist()
+    p = dc.plan(h, datetime(2026, 10, 14, 13, 0), live_price=100.0, market_open=True)
+    r = dc.evaluate(p["basis"], p)
+    voters = {v["name"] for v in r["votes"] if v["voting"]}
+    assert voters == {"Trend", "Bollinger band", "Stochastic RSI", "Money flow (MFI)", "Where it closed", "Yesterday's move"}
+    assert r["n"] == 6 and {"RSI (speed)", "MACD (momentum)", "Supertrend", "Ichimoku cloud"} <= {v["name"] for v in r["votes"] if not v["voting"]}
+    assert all(0.0 <= v["gauge"]["pos"] <= 1.0 for v in r["votes"])
+
+
+def test_the_pictures_build_without_errors():
+    from core import daily_visuals as vis
+    h = _hist()
+    p = dc.plan(h, datetime(2026, 10, 14, 13, 0), live_price=float(h["Close"].iloc[-1]) * 1.01, market_open=True)
+    r = dc.evaluate(p["basis"], p)
+    voters = [v for v in r["votes"] if v["voting"]]
+    assert "Leaning" in vis.hero(r["prediction"], r["score"], voters) and vis.hero("Up", 3, voters).count("dc-dot") >= 6
+    assert "dc-band" in vis.range_bar(r["range"][0], r["range"][1], r["prev_close"], r["actual"])
+    assert vis.cards(r["votes"]).count("dc-card") == len(r["votes"])
+    rec = dc.track_record(p["complete"])
+    assert vis.strip(rec["rows"]).count("dc-sq") == rec["n"] and "This rule" in vis.bars(55, 50)
+    assert "The call" in vis.versus("Up", "Down", False)

@@ -20,81 +20,163 @@ CLOSE_TIME = dtime(15, 30)
 
 
 # ---------------- indicators, worked out once for the whole history ----------------
+def _supertrend_direction(high, low, close, period=10, mult=3.0):
+    """+1 while the Supertrend line is below the price (uptrend), -1 while it is above (downtrend)."""
+    tr = pd.concat([high - low, (high - close.shift()).abs(), (low - close.shift()).abs()], axis=1).max(axis=1)
+    atr = tr.ewm(alpha=1 / period, adjust=False).mean()
+    mid = (high + low) / 2
+    upper, lower = (mid + mult * atr).values, (mid - mult * atr).values
+    c = close.values
+    final_up, final_lo, direction = upper.copy(), lower.copy(), np.ones(len(c))
+    for i in range(1, len(c)):
+        final_up[i] = upper[i] if (upper[i] < final_up[i - 1] or c[i - 1] > final_up[i - 1]) else final_up[i - 1]
+        final_lo[i] = lower[i] if (lower[i] > final_lo[i - 1] or c[i - 1] < final_lo[i - 1]) else final_lo[i - 1]
+        if direction[i - 1] == 1 and c[i] < final_lo[i - 1]:
+            direction[i] = -1
+        elif direction[i - 1] == -1 and c[i] > final_up[i - 1]:
+            direction[i] = 1
+        else:
+            direction[i] = direction[i - 1]
+    return pd.Series(direction, index=close.index)
+
+
 def indicator_frame(hist):
     """One row per day: the indicator values known at the END of that day (so a row can be used to predict the next day)."""
     close = hist["Close"].astype(float)
+    high = hist["High"].astype(float) if "High" in hist else close
+    low = hist["Low"].astype(float) if "Low" in hist else close
     line, sig, histo = ind.macd(close)
     mid, upper, lower = ind.bollinger(close)
-    frame = pd.DataFrame({"close": close, "sma50": ind.sma(close, 50), "sma200": ind.sma(close, 200), "rsi": ind.rsi(close),
-                          "macd_hist": histo, "bb_up": upper, "bb_lo": lower, "mom5": close / close.shift(5) - 1})
+    rsi14 = ind.rsi(close)
+    lo14, hi14 = rsi14.rolling(14).min(), rsi14.rolling(14).max()
+    frame = pd.DataFrame({"close": close, "sma50": ind.sma(close, 50), "sma200": ind.sma(close, 200), "rsi": rsi14,
+                          "macd_hist": histo, "bb_up": upper, "bb_lo": lower, "mom5": close / close.shift(5) - 1,
+                          "ret1": close.pct_change(), "stochrsi": (rsi14 - lo14) / (hi14 - lo14).replace(0, np.nan)})
+    frame["clv"] = ((close - low) - (high - close)) / (high - low).replace(0, np.nan)     # -1 closed on the low, +1 on the high
+    tr = pd.concat([high - low, (high - close.shift()).abs(), (low - close.shift()).abs()], axis=1).max(axis=1)
+    atr = tr.ewm(alpha=1 / 14, adjust=False).mean()
+    up_move, down_move = high.diff(), -low.diff()
+    plus = pd.Series(np.where((up_move > down_move) & (up_move > 0), up_move, 0.0), index=close.index)
+    minus = pd.Series(np.where((down_move > up_move) & (down_move > 0), down_move, 0.0), index=close.index)
+    frame["pdi"] = 100 * plus.ewm(alpha=1 / 14, adjust=False).mean() / atr
+    frame["mdi"] = 100 * minus.ewm(alpha=1 / 14, adjust=False).mean() / atr
+    dx = 100 * (frame["pdi"] - frame["mdi"]).abs() / (frame["pdi"] + frame["mdi"]).replace(0, np.nan)
+    frame["adx"] = dx.ewm(alpha=1 / 14, adjust=False).mean()
+    frame["supertrend"] = _supertrend_direction(high, low, close)
+    t9, k26 = (high.rolling(9).max() + low.rolling(9).min()) / 2, (high.rolling(26).max() + low.rolling(26).min()) / 2
+    span_a = ((t9 + k26) / 2).shift(26)
+    span_b = ((high.rolling(52).max() + low.rolling(52).min()) / 2).shift(26)
+    frame["cloud_top"], frame["cloud_bot"] = np.maximum(span_a, span_b), np.minimum(span_a, span_b)
     frame["daily_vol"] = close.pct_change().rolling(60, min_periods=20).std()
     vol = ind.clean_volume(hist)
     if vol is not None:
         frame["vol_ratio"] = vol.rolling(5).mean() / vol.shift(5).rolling(20).mean()
+        typical = (high + low + close) / 3
+        flow = typical * vol.fillna(0)
+        pos = flow.where(typical > typical.shift(), 0).rolling(14).sum()
+        neg = flow.where(typical < typical.shift(), 0).rolling(14).sum()
+        frame["mfi"] = 100 - 100 / (1 + pos / neg.replace(0, np.nan))
     else:
         frame["vol_ratio"] = np.nan
+        frame["mfi"] = np.nan
     return frame
 
 
+def _clip(x):
+    return float(min(1.0, max(0.0, x)))
+
+
+def _gauge(pos, label, left, right):
+    return {"pos": _clip(pos), "label": label, "ends": (left, right), "kind": "neutral"}
+
+
+def _entry(name, voting, vote, reading, why, gauge):
+    return {"name": name, "voting": voting, "vote": vote, "reading": reading, "why": why, "gauge": gauge}
+
+
 def votes(row):
-    """[(indicator, reading, vote, why)] for one day's row. A vote is +1 (Up), -1 (Down) or 0 (Neutral).
-    An indicator with no data is left out."""
+    """A list of dicts, one per indicator, from one day's row. Keys: name, voting (does it count towards the call?), vote
+    (+1 Up, -1 Down, 0 Neutral), reading (a few words), why (a short reason) and gauge (a 0 to 1 position for the picture).
+
+    The six VOTING indicators were chosen because they held up when tested on about 200,000 company-days of past NSE data;
+    the others are shown for context only (tested, and did not help next-day accuracy). An indicator with no data is left out."""
     out = []
-    c, s50, s200 = row["close"], row["sma50"], row["sma200"]
+    c = row["close"]
+    # ---- the six that vote ----
+    s50, s200 = row["sma50"], row["sma200"]
     if pd.notna(s50):
-        if pd.isna(s200):
-            up, down = c > s50, c < s50
-        else:
-            up, down = c > s50 > s200, c < s50 < s200
-        if up:
-            out.append(("Trend", "Price above its 50 and 200-day averages", 1, "A steady climb tends to continue more often than not."))
-        elif down:
-            out.append(("Trend", "Price below its 50 and 200-day averages", -1, "A steady slide tends to continue more often than not."))
-        else:
-            out.append(("Trend", "Price between its averages", 0, "No clear direction from the trend."))
+        up = c > s50 > s200 if pd.notna(s200) else c > s50
+        down = c < s50 < s200 if pd.notna(s200) else c < s50
+        gap = (c / s50 - 1) * 100
+        out.append(_entry("Trend", True, 1 if up else -1 if down else 0,
+                          "Rising" if up else "Falling" if down else "Mixed",
+                          "Above both averages: steady climb" if up else "Below both averages: steady slide" if down else "Between its averages",
+                          _gauge(0.5 + gap / 20, f"{gap:+.1f}% vs 50-day", "Below average", "Above average")))
+    if pd.notna(row["bb_up"]) and row["bb_up"] > row["bb_lo"]:
+        pct_b = (c - row["bb_lo"]) / (row["bb_up"] - row["bb_lo"])
+        vote = -1 if c >= row["bb_up"] else 1 if c <= row["bb_lo"] else 0
+        out.append(_entry("Bollinger band", True, vote, "Stretched high" if vote < 0 else "Stretched low" if vote > 0 else "Inside range",
+                          "Far above its usual range; tends to drift back" if vote < 0 else "Far below its usual range; tends to bounce" if vote > 0
+                          else "Nothing stretched", _gauge(pct_b, "Top of range" if pct_b > 0.8 else "Bottom of range" if pct_b < 0.2 else "Middle", "Bottom of range", "Top of range")))
+    if pd.notna(row["stochrsi"]):
+        v = row["stochrsi"]
+        vote = 1 if v < 0.2 else -1 if v > 0.8 else 0
+        out.append(_entry("Stochastic RSI", True, vote, "Oversold" if vote > 0 else "Overbought" if vote < 0 else "Balanced",
+                          "Pushed to a short-term low; often snaps back" if vote > 0 else "Pushed to a short-term high; often cools" if vote < 0 else "No extreme",
+                          _gauge(v, f"{v * 100:.0f} of 100", "Oversold", "Overbought")))
+    if pd.notna(row["mfi"]):
+        v = row["mfi"]
+        vote = 1 if v < 20 else -1 if v > 80 else 0
+        out.append(_entry("Money flow (MFI)", True, vote, "Drained" if vote > 0 else "Crowded" if vote < 0 else "Normal",
+                          "Heavy selling has run its course" if vote > 0 else "Heavy buying may be exhausted" if vote < 0 else "Money in and out is balanced",
+                          _gauge(v / 100, f"{v:.0f} of 100", "Money leaving", "Money entering")))
+    if pd.notna(row["clv"]):
+        v = row["clv"]
+        vote = 1 if v < -0.6 else -1 if v > 0.6 else 0
+        out.append(_entry("Where it closed", True, vote, "Near the day's low" if vote > 0 else "Near the day's high" if vote < 0 else "Mid-range",
+                          "Closing at the low often sees a bounce" if vote > 0 else "Closing at the high often sees a pause" if vote < 0 else "Closed away from the extremes",
+                          _gauge((v + 1) / 2, "Day's low" if v < -0.2 else "Day's high" if v > 0.2 else "Middle", "Day's low", "Day's high")))
+    if pd.notna(row["ret1"]):
+        r1 = row["ret1"]
+        vote = 1 if r1 < -0.015 else -1 if r1 > 0.015 else 0
+        out.append(_entry("Yesterday's move", True, vote, f"{r1 * 100:+.1f}%",
+                          "A sharp fall is often followed by a rebound" if vote > 0 else "A sharp jump is often followed by a pullback" if vote < 0 else "No big move to react to",
+                          _gauge(0.5 + r1 / 0.06, f"{r1 * 100:+.1f}%", "Big fall", "Big rise")))
+    # ---- shown for context, not counted ----
     if pd.notna(row["rsi"]):
         r = row["rsi"]
-        if r >= 70:
-            out.append(("RSI (speed)", f"{r:.0f}, very high", -1, "A very fast rise often cools off, so this leans down."))
-        elif r <= 30:
-            out.append(("RSI (speed)", f"{r:.0f}, very low", 1, "A very fast fall often bounces, so this leans up."))
-        else:
-            out.append(("RSI (speed)", f"{r:.0f}, normal", 0, "The speed of recent moves is ordinary."))
+        out.append(_entry("RSI (speed)", False, -1 if r >= 70 else 1 if r <= 30 else 0, f"{r:.0f}", "Speed of recent moves",
+                          _gauge(r / 100, f"{r:.0f} of 100", "Oversold (30)", "Overbought (70)")))
     if pd.notna(row["macd_hist"]):
         h = row["macd_hist"]
-        out.append(("MACD (momentum)", "Short-term momentum above its signal" if h > 0 else "Short-term momentum below its signal",
-                    1 if h > 0 else -1, "Rising momentum leans up." if h > 0 else "Fading momentum leans down."))
-    if pd.notna(row["bb_up"]):
-        if c >= row["bb_up"]:
-            out.append(("Bollinger band", "At or above the top of its usual range", -1, "Prices stretched this far often drift back."))
-        elif c <= row["bb_lo"]:
-            out.append(("Bollinger band", "At or below the bottom of its usual range", 1, "Prices stretched this far often drift back."))
-        else:
-            out.append(("Bollinger band", "Inside its usual range", 0, "Nothing stretched about the price."))
-    if pd.notna(row["mom5"]):
-        m = row["mom5"]
-        if m > 0.01:
-            out.append(("Last 5 days", f"Up {m * 100:.1f}%", 1, "Recent strength often carries on for a day or two."))
-        elif m < -0.01:
-            out.append(("Last 5 days", f"Down {abs(m) * 100:.1f}%", -1, "Recent weakness often carries on for a day or two."))
-        else:
-            out.append(("Last 5 days", f"Little change ({m * 100:+.1f}%)", 0, "No real move to follow."))
+        out.append(_entry("MACD (momentum)", False, 1 if h > 0 else -1, "Rising" if h > 0 else "Fading", "Short-term vs longer-term momentum",
+                          _gauge(0.5 + h / c * 40, "Above signal" if h > 0 else "Below signal", "Fading", "Rising")))
+    if pd.notna(row["adx"]):
+        total = row["pdi"] + row["mdi"]
+        lean = row["pdi"] / total if total else 0.5
+        out.append(_entry("Trend strength (ADX)", False, (1 if lean > 0.5 else -1) if row["adx"] > 20 else 0,
+                          f"Strength {row['adx']:.0f}", "Above 20 means a real trend, either way",
+                          _gauge(lean, "Buyers lead" if lean > 0.5 else "Sellers lead", "Sellers", "Buyers")))
+    out.append(_entry("Supertrend", False, int(row["supertrend"]), "Up" if row["supertrend"] > 0 else "Down", "A trailing line that flips on a reversal",
+                      _gauge(0.85 if row["supertrend"] > 0 else 0.15, "Price above the line" if row["supertrend"] > 0 else "Price below the line", "Down", "Up")))
+    if pd.notna(row["cloud_top"]):
+        where = 1 if c > row["cloud_top"] else -1 if c < row["cloud_bot"] else 0
+        out.append(_entry("Ichimoku cloud", False, where, "Above the cloud" if where > 0 else "Below the cloud" if where < 0 else "Inside the cloud",
+                          "Price against its support and resistance cloud", _gauge(0.5 + where * 0.35, "Above" if where > 0 else "Below" if where < 0 else "Inside", "Below", "Above")))
     if pd.notna(row["vol_ratio"]) and pd.notna(row["mom5"]):
         vr, m = row["vol_ratio"], row["mom5"]
-        if vr >= ind.VOLUME_STRONG and m > 0.01:
-            out.append(("Volume", "Busy trading behind the rise", 1, "A rise with many shares changing hands is more believable."))
-        elif vr >= ind.VOLUME_STRONG and m < -0.01:
-            out.append(("Volume", "Busy trading behind the fall", -1, "A fall with many shares changing hands is more believable."))
-        else:
-            out.append(("Volume", "Nothing special", 0, "Volume does not add to the picture."))
+        vote = 1 if vr >= ind.VOLUME_STRONG and m > 0.01 else -1 if vr >= ind.VOLUME_STRONG and m < -0.01 else 0
+        out.append(_entry("Volume", False, vote, f"{vr:.1f}x usual", "Busy trading makes a move more believable",
+                          _gauge(0.5 + (vr - 1) / 2, "Busy" if vr >= 1.15 else "Thin" if vr <= 0.85 else "Normal", "Thin", "Busy")))
     return out
 
 
 def call_from(vote_list):
-    """(prediction, score, number of indicators). Prediction is 'Up', 'Down' or 'Sideways'."""
-    score = sum(v for _, _, v, _ in vote_list)
+    """(prediction, score, number of voting indicators). Only the voting indicators count."""
+    voters = [v for v in vote_list if v["voting"]]
+    score = sum(v["vote"] for v in voters)
     prediction = UP if score >= VOTE_UP else DOWN if score <= VOTE_DOWN else SIDEWAYS
-    return prediction, score, len(vote_list)
+    return prediction, score, len(voters)
 
 
 def flat_band(daily_vol):
@@ -185,7 +267,13 @@ def track_record(complete, days=60):
         return None
     hits = sum(r["matched"] for r in rows)
     counts = pd.Series([r["actual"] for r in rows]).value_counts()
-    return {"rows": rows, "n": len(rows), "hits": hits, "accuracy": hits / len(rows), "baseline": float(counts.iloc[0] / len(rows))}
+    # "clear calls": days the rule said Up or Down and the day really moved (not sideways). A coin toss gets 50%.
+    clear = [r for r in rows if r["predicted"] != SIDEWAYS and r["actual"] != SIDEWAYS]
+    call_hits = sum(r["matched"] for r in clear)
+    ups = sum(1 for r in clear if r["actual"] == UP)
+    return {"rows": rows, "n": len(rows), "hits": hits, "accuracy": hits / len(rows), "baseline": float(counts.iloc[0] / len(rows)),
+            "call_n": len(clear), "call_hits": call_hits, "call_accuracy": call_hits / len(clear) if clear else None,
+            "call_baseline": max(ups, len(clear) - ups) / len(clear) if clear else None}
 
 
 # ---------------- words ----------------

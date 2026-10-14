@@ -1,17 +1,15 @@
-"""The "Daily check" tab: yesterday's indicators, today's trend call, and how today is going against it."""
+"""The "Daily check" tab: yesterday's indicators, today's call, and how today is going against it (mostly pictures)."""
 import pandas as pd
 import streamlit as st
 
 from core import daily_check as dc
+from core import daily_visuals as vis
 from core.charts import daily_check_chart, show as show_chart
 from core.errors import guard
 from core.formatting import format_inr
 from core.live import REFRESH_SECONDS, live_quote
 from core.market_hours import is_market_open, now_ist
 from core.ui import plain_english
-
-COLOUR = {"Up": "#1f9d73", "Down": "#d6453d", "Sideways": "#6b7785"}
-VOTE_WORD = {1: ("Up", "#1f9d73"), -1: ("Down", "#d6453d"), 0: ("Neutral", "#6b7785")}
 
 
 def evaluate_now(symbol, hist, offline=False):
@@ -23,31 +21,18 @@ def evaluate_now(symbol, hist, offline=False):
     return dc.evaluate(info["basis"], info), info
 
 
-def _badge(text, colour):
-    return f'<span style="background:{colour};color:#fff;padding:0.15rem 0.7rem;border-radius:999px;font-weight:700">{text}</span>'
-
-
 def render(symbol, name, hist, offline=False):
+    st.markdown(vis.CSS, unsafe_allow_html=True)
     st.header("Daily check")
-    st.markdown("**In short:** using only the data up to yesterday, the indicators below vote on which way today's price will "
-                "lean. Then you can watch today's real price and see whether the call held up.")
-    st.caption("A rule of thumb for learning, not a forecast and not advice. A single day proves nothing, so the track record "
-               "further down shows how this rule has done over the last 60 trading days.")
+    st.caption("Yesterday's indicators vote on today's direction, then today's real price is held up against the call. "
+               "A learning tool, not a forecast or advice.")
     if offline:
         st.warning("Live prices are not available, so saved data is used and today's comparison may be out of date.")
     every = REFRESH_SECONDS if is_market_open() and not offline else None
     st.fragment(run_every=every)(_check)(symbol, name, hist, offline)
-    result, info = evaluate_now(symbol, hist, offline)
-    if result is None:
-        return
+    _, info = evaluate_now(symbol, hist, offline)
     _track(info["complete"])
-    plain_english(
-        "- Each **indicator** looks at yesterday's data and votes **Up**, **Down** or **Neutral**.\n"
-        "- The votes are added: **2 or more Up** means the call is Up, **2 or more Down** means Down, otherwise Sideways.\n"
-        "- The **expected range** is yesterday's close plus or minus a typical day's swing (about two days in three end inside it).\n"
-        "- A move smaller than a third of a typical swing counts as **sideways**, so tiny wobbles are not called up or down.\n"
-        "- The **track record** replays the same rule on past days using only what was known the day before. If it is not clearly "
-        "better than always guessing the usual outcome, that is the honest answer: day-to-day moves are very hard to call.")
+    _explain()
 
 
 @guard()
@@ -56,62 +41,81 @@ def _check(symbol, name, hist, offline):
     if result is None:
         st.info("There is not enough price history for this company to run the check.")
         return
-    target = result["target"]
-    st.subheader(f"{name}: {'today' if target == now_ist().date() else target.strftime('%d %b %Y')}")
+    today = now_ist().date()
+    target_word = "today" if result["target"] == today else result["target"].strftime("on %d %b")
     if info["note"]:
         st.info(info["note"])
+    voters = [v for v in result["votes"] if v["voting"]]
+    context = [v for v in result["votes"] if not v["voting"]]
 
-    # 1. the indicators, as of the day before
-    st.markdown(f"**1. What the indicators said** (data up to {result['basis_date']:%A %d %b}, close {format_inr(result['prev_close'])})")
-    rows = "".join(
-        f"<tr><td><b>{n}</b></td><td>{reading}</td><td>{_badge(*VOTE_WORD[v])}</td><td>{why}</td></tr>"
-        for n, reading, v, why in result["votes"])
-    st.markdown(f'<table style="width:100%;border-collapse:collapse"><tr><th align="left">Indicator</th><th align="left">Reading</th>'
-                f'<th align="left">Vote</th><th align="left">Why it matters</th></tr>{rows}</table>', unsafe_allow_html=True)
+    # the call, as one picture
+    st.markdown(vis.hero(result["prediction"], result["score"], voters, target_word), unsafe_allow_html=True)
+    st.caption(f"Based on data up to {result['basis_date']:%A %d %b} (close {format_inr(result['prev_close'])}).")
 
-    # 2. the call
-    p = result["prediction"]
-    st.markdown(f"**2. The call for {'today' if target == now_ist().date() else 'that day'}:** {_badge(p, COLOUR[p])} "
-                f"&nbsp; ({result['score']:+d} on a scale of {-result['n']} to {result['n']}, from {result['n']} indicators)",
-                unsafe_allow_html=True)
-    low, high = result["range"]
-    st.caption(f"Expected range: {format_inr(low)} to {format_inr(high)} (yesterday's close plus or minus a typical day's swing of "
-               f"{result['daily_vol'] * 100:.1f}%).")
-
-    # 3. against reality
-    st.markdown("**3. How it is going**")
+    # the call against reality
     if result["actual"] is None:
-        st.info("Today's price is not available yet. Come back once the market is open.")
+        st.info("Today's price is not available yet. Check back once the market is open.")
     else:
+        st.markdown(vis.versus(result["prediction"], result["actual_direction"], result["matched"]), unsafe_allow_html=True)
+        st.markdown(vis.range_bar(result["range"][0], result["range"][1], result["prev_close"], result["actual"],
+                                  "Now" if result["status"] == "live" else "Close"), unsafe_allow_html=True)
         c1, c2, c3 = st.columns(3)
-        c1.metric("Price now" if result["status"] == "live" else "Price", format_inr(result["actual"]),
-                  f"{result['change'] * 100:+.2f}% vs yesterday")
-        c2.metric("What happened", result["actual_direction"])
-        c3.metric("The call was", "Right" if result["matched"] else "Wrong")
-        st.markdown(dc.headline(result))
-        st.caption(("Inside" if result["in_range"] else "Outside") + " the expected range. "
-                   + ("The market is open, so this can still change." if result["status"] == "live" else ""))
+        c1.metric("Now" if result["status"] == "live" else "Close", format_inr(result["actual"]), f"{result['change'] * 100:+.2f}%")
+        c2.metric("Expected range", f"{result['range'][0]:,.0f} to {result['range'][1]:,.0f}")
+        c3.metric("Inside the range?", "Yes" if result["in_range"] else "No")
+        if result["status"] == "live":
+            st.caption("The market is open, so this can still change.")
 
-    show_chart(daily_check_chart(info["basis"]["Close"], result), key=f"dailychart_{symbol}")
+    with st.expander("Price chart: the last weeks, the expected range and today's price"):
+        show_chart(daily_check_chart(info["basis"]["Close"], result), key=f"dailychart_{symbol}")
+
+    # the indicators, as cards
+    st.subheader("The six indicators that vote")
+    st.markdown(vis.cards(voters), unsafe_allow_html=True)
+    with st.expander("More indicators, shown for context (not counted in the call)"):
+        st.markdown(vis.cards(context), unsafe_allow_html=True)
+        st.caption("RSI, MACD, ADX, Supertrend, Ichimoku and Volume are popular, but in our tests they did not make the call "
+                   "more accurate, so they are shown but do not vote.")
 
 
 @guard()
 def _track(complete):
-    st.markdown("**4. Track record (the last 60 trading days)**")
+    st.subheader("How reliable has this been? (last 60 trading days)")
     rec = dc.track_record(complete)
     if rec is None:
         st.caption("Not enough history for a track record.")
         return
-    c1, c2 = st.columns(2)
-    c1.metric("This rule was right", f"{rec['hits']} of {rec['n']} days", f"{rec['accuracy'] * 100:.0f}%", delta_color="off")
-    c2.metric("Always guessing the usual outcome", f"{rec['baseline'] * 100:.0f}%", "no-skill yardstick", delta_color="off")
-    if rec["accuracy"] > rec["baseline"] + 0.05:
-        st.success("Over this window the rule did better than the no-skill yardstick. That can still be luck, so treat it lightly.")
+    if rec["call_accuracy"] is not None:
+        st.markdown(vis.bars(rec["call_accuracy"] * 100, 50), unsafe_allow_html=True)
+        st.caption(f"Days the rule made a clear Up or Down call and the price really moved: right on {rec['call_hits']} of {rec['call_n']}.")
     else:
-        st.warning("Over this window the rule was not clearly better than the no-skill yardstick. That is normal: calling a single "
-                   "day's direction is very hard, and no indicator does it reliably.")
-    table = pd.DataFrame([{"Date": r["date"].strftime("%d %b"), "Called": r["predicted"], "What happened": r["actual"],
-                           "Move": f"{r['change'] * 100:+.2f}%", "Result": "Right" if r["matched"] else "Wrong"}
-                          for r in reversed(rec["rows"][-10:])])
-    st.caption("The last 10 days:")
-    st.dataframe(table, hide_index=True, width="stretch")
+        st.caption("The rule made no clear Up or Down calls in this window.")
+    st.markdown(vis.strip(rec["rows"]), unsafe_allow_html=True)
+    st.caption("Each square is one day: green = the call was right, red = wrong. Hover for the day.")
+    if rec["call_accuracy"] is None or rec["call_n"] < 30:
+        st.info("Only a handful of clear calls in this window, too few to say anything. The overall test across 138 companies "
+                "(see 'How this works' below) is a better guide.")
+    elif rec["call_accuracy"] > 0.5 + 0.08:
+        st.success("Better than a coin toss over this window. That can still be luck over a few weeks.")
+    else:
+        st.warning("Close to or below a coin toss over this window. That is normal: one day's direction is very hard to call.")
+    with st.expander("The last 10 days in detail"):
+        table = pd.DataFrame([{"Date": r["date"].strftime("%d %b"), "Called": r["predicted"], "What happened": r["actual"],
+                               "Move": f"{r['change'] * 100:+.2f}%", "Result": "Right" if r["matched"] else "Wrong"}
+                              for r in reversed(rec["rows"][-10:])])
+        st.dataframe(table, hide_index=True, width="stretch")
+
+
+def _explain():
+    plain_english(
+        "- **The call:** six indicators look only at data up to yesterday and each votes Up, Down or Neutral. Two or more net "
+        "Up votes means Up, two or more net Down means Down, anything else Sideways.\n"
+        "- **Expected range:** yesterday's close plus or minus a typical day's swing; about two days in three end inside it.\n"
+        "- **Sideways** means a move smaller than a third of a typical day's swing.\n"
+        "- **How the six were chosen:** we tested 18 well-known indicators on about 200,000 company-days of NSE prices "
+        "(138 companies, 2019 to 2026), choosing on the first 70% of the dates and checking on the last 30%. Most scored "
+        "49% to 51% at calling the next day, which is a coin toss. The six that voting uses (trend, Bollinger band, Stochastic "
+        "RSI, money flow, where the day closed, and yesterday's move) held up best, at about 51% to 52% on the days they made a clear call.\n"
+        "- **What that means:** a small edge, not a crystal ball. RSI, MACD, ADX, Supertrend, Ichimoku and Volume, popular as "
+        "they are, did not improve it, so they are shown for context only.\n"
+        "- **Not advice.** Past patterns do not guarantee anything.", label="How this works and how the indicators were chosen")

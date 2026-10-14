@@ -1,0 +1,117 @@
+"""HTML pieces for the Daily check: a call badge, vote dots, indicator cards, the range bar and the track-record strip.
+Pure functions that return HTML text (no Streamlit), so they can be tested."""
+import html
+
+from core.ui import scale_html
+
+UP_C, DOWN_C, FLAT_C = "#26a69a", "#ef5350", "#868993"
+GLYPH = {"Up": "▲", "Down": "▼", "Sideways": "▬"}
+COLOUR = {"Up": UP_C, "Down": DOWN_C, "Sideways": FLAT_C}
+VOTE_NAME = {1: "Up", -1: "Down", 0: "Sideways"}
+
+CSS = """<style>
+.dc-hero { display:flex; align-items:center; gap:1.1rem; padding:1rem 1.2rem; border-radius:16px; border:1px solid rgba(128,128,128,.35); margin:.4rem 0 .8rem 0; }
+.dc-badge { width:4.6rem; height:4.6rem; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:2.1rem; flex:0 0 auto; }
+.dc-call { font-size:1.9rem; font-weight:800; line-height:1.1; }
+.dc-sub { opacity:.75; font-size:1rem; margin-top:.15rem; }
+.dc-dots { display:flex; gap:.35rem; margin-top:.45rem; }
+.dc-dot { width:1.15rem; height:1.15rem; border-radius:50%; display:inline-block; }
+.dc-versus { display:grid; grid-template-columns:1fr auto 1fr; gap:.7rem; align-items:center; margin:.3rem 0 .6rem 0; }
+.dc-tile { text-align:center; border-radius:14px; padding:.7rem .4rem; color:#fff; }
+.dc-tile .t { font-size:.85rem; opacity:.9; } .dc-tile .v { font-size:1.6rem; font-weight:800; }
+.dc-result { width:3.2rem; height:3.2rem; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.7rem; font-weight:800; }
+.dc-range { position:relative; height:2.6rem; margin:1.4rem .3rem 1.8rem .3rem; }
+.dc-track { position:absolute; top:1.05rem; left:0; right:0; height:.5rem; border-radius:99px; background:rgba(128,128,128,.28); }
+.dc-band { position:absolute; top:.85rem; height:.9rem; border-radius:99px; background:rgba(41,98,255,.55); }
+.dc-tick { position:absolute; top:.55rem; width:3px; height:1.5rem; background:#868993; }
+.dc-pin { position:absolute; top:.35rem; width:1.5rem; height:1.5rem; margin-left:-.75rem; border-radius:50%; border:3px solid #fff; box-shadow:0 0 0 2px #333; }
+.dc-lbl { position:absolute; top:-1.15rem; font-size:.78rem; transform:translateX(-50%); white-space:nowrap; opacity:.85; }
+.dc-lbl.b { top:2.15rem; }
+.dc-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:.7rem; margin:.4rem 0 1rem 0; }
+.dc-card { border:1px solid rgba(128,128,128,.35); border-radius:14px; padding:.7rem .85rem .2rem .85rem; }
+.dc-card.ctx { opacity:.8; }
+.dc-name { font-weight:700; display:flex; justify-content:space-between; align-items:center; gap:.4rem; }
+.dc-chip { color:#fff; font-size:.78rem; font-weight:700; padding:.1rem .6rem; border-radius:99px; white-space:nowrap; }
+.dc-why { font-size:.88rem; opacity:.75; margin:.15rem 0 .2rem 0; }
+.dc-strip { display:flex; flex-wrap:wrap; gap:3px; margin:.4rem 0 .8rem 0; }
+.dc-sq { width:.95rem; height:.95rem; border-radius:3px; display:inline-block; }
+.dc-bars .row { display:flex; align-items:center; gap:.6rem; margin:.3rem 0; }
+.dc-bars .lab { width:8.5rem; font-size:.92rem; } .dc-bars .bar { flex:1; height:1.1rem; border-radius:99px; background:rgba(128,128,128,.25); position:relative; overflow:hidden; }
+.dc-bars .fill { height:100%; border-radius:99px; } .dc-bars .num { width:3.2rem; font-weight:700; text-align:right; }
+.dc-bars .half { position:absolute; left:50%; top:0; bottom:0; width:2px; background:rgba(0,0,0,.45); }
+@media (max-width:640px){ .dc-hero{gap:.7rem;padding:.8rem} .dc-badge{width:3.6rem;height:3.6rem;font-size:1.6rem} .dc-call{font-size:1.5rem} .dc-bars .lab{width:6rem} }
+</style>"""
+
+
+def e(text):
+    return html.escape(str(text))
+
+
+def hero(prediction, score, voters, target_word="today"):
+    """The big call badge with one dot per voting indicator (green = Up, red = Down, grey = Neutral)."""
+    colour = COLOUR[prediction]
+    ups = sum(1 for v in voters if v["vote"] > 0)
+    downs = sum(1 for v in voters if v["vote"] < 0)
+    dots = "".join(f'<span class="dc-dot" title="{e(v["name"])}: {VOTE_NAME[v["vote"]]}" '
+                   f'style="background:{COLOUR[VOTE_NAME[v["vote"]]]}"></span>' for v in voters)
+    word = {"Up": "Leaning UP", "Down": "Leaning DOWN", "Sideways": "Leaning SIDEWAYS"}[prediction]
+    return (f'<div class="dc-hero"><div class="dc-badge" style="background:{colour}">{GLYPH[prediction]}</div><div>'
+            f'<div class="dc-call" style="color:{colour}">{word} {e(target_word)}</div>'
+            f'<div class="dc-sub">{ups} up &middot; {downs} down &middot; {len(voters) - ups - downs} neutral</div>'
+            f'<div class="dc-dots">{dots}</div></div></div>')
+
+
+def versus(prediction, actual_direction, matched):
+    """Called vs Actual side by side, with a tick or a cross between them."""
+    mark_c, mark = (UP_C, "&#10003;") if matched else (DOWN_C, "&#10007;")
+    return (f'<div class="dc-versus"><div class="dc-tile" style="background:{COLOUR[prediction]}"><div class="t">The call</div>'
+            f'<div class="v">{GLYPH[prediction]} {prediction}</div></div>'
+            f'<div class="dc-result" style="background:{mark_c}">{mark}</div>'
+            f'<div class="dc-tile" style="background:{COLOUR[actual_direction]}"><div class="t">What happened</div>'
+            f'<div class="v">{GLYPH[actual_direction]} {actual_direction}</div></div></div>')
+
+
+def range_bar(low, high, prev_close, price, price_label="Now"):
+    """A horizontal bar: the expected range (blue band), yesterday's close (tick) and today's price (round pin)."""
+    lo = min(low, price if price else low) * 0.998
+    hi = max(high, price if price else high) * 1.002
+    span = (hi - lo) or 1.0
+    at = lambda x: f"{(x - lo) / span * 100:.1f}%"
+    pin = ""
+    if price:
+        inside = low <= price <= high
+        pin = (f'<div class="dc-pin" style="left:{at(price)};background:{UP_C if inside else DOWN_C}"></div>'
+               f'<div class="dc-lbl b" style="left:{at(price)}">{e(price_label)} {price:,.2f}</div>')
+    return (f'<div class="dc-range"><div class="dc-track"></div>'
+            f'<div class="dc-band" style="left:{at(low)};width:{(high - low) / span * 100:.1f}%"></div>'
+            f'<div class="dc-tick" style="left:{at(prev_close)}"></div>'
+            f'<div class="dc-lbl" style="left:{at(low)}">{low:,.0f}</div><div class="dc-lbl" style="left:{at(high)}">{high:,.0f}</div>'
+            f'<div class="dc-lbl b" style="left:{at(prev_close)}">Yesterday {prev_close:,.2f}</div>{pin}</div>')
+
+
+def indicator_card(entry):
+    name = VOTE_NAME[entry["vote"]]
+    chip = f'<span class="dc-chip" style="background:{COLOUR[name]}">{GLYPH[name]} {name if entry["voting"] else entry["reading"]}</span>'
+    if entry["voting"]:
+        chip = f'<span class="dc-chip" style="background:{COLOUR[name]}">{GLYPH[name]} {"Neutral" if name == "Sideways" else name}</span>'
+    return (f'<div class="dc-card{"" if entry["voting"] else " ctx"}"><div class="dc-name"><span>{e(entry["name"])}</span>{chip}</div>'
+            f'<div class="dc-why">{e(entry["why"])}</div>{scale_html(entry["gauge"])}</div>')
+
+
+def cards(entries):
+    return '<div class="dc-grid">' + "".join(indicator_card(x) for x in entries) + "</div>"
+
+
+def strip(rows):
+    """One square per past day: green when the rule was right, red when wrong (oldest first)."""
+    sq = "".join(f'<span class="dc-sq" title="{e(r["date"].strftime("%d %b"))}: called {e(r["predicted"])}, was {e(r["actual"])}" '
+                 f'style="background:{UP_C if r["matched"] else DOWN_C}"></span>' for r in rows)
+    return f'<div class="dc-strip">{sq}</div>'
+
+
+def bars(rule_pct, coin_pct):
+    """Two bars: how often the rule was right and the 50% coin-toss line."""
+    def row(label, pct, colour):
+        return (f'<div class="row"><div class="lab">{e(label)}</div><div class="bar"><div class="fill" style="width:{pct:.0f}%;background:{colour}"></div>'
+                f'<div class="half"></div></div><div class="num">{pct:.0f}%</div></div>')
+    return '<div class="dc-bars">' + row("This rule", rule_pct, "#2962ff") + row("Coin toss", coin_pct, FLAT_C) + "</div>"
