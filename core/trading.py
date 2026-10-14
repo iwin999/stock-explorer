@@ -53,6 +53,7 @@ class Portfolio:
         # expiry date (text), lots, lot size and the prices it was opened at.
         self.derivatives = []
         self.order_history = []
+        self.tour_seen = False            # has this person been offered the guided tour of the simple site?
 
     # ---------------- money ----------------
     def add_funds(self, amount):
@@ -213,7 +214,7 @@ class Portfolio:
     # ---------------- saving (fixes: "not saved between sessions") ----------------
     def to_dict(self):
         return {"name": self.name, "created_at": self.created_at, "balance": self.balance, "deposited": self.deposited, "holdings": self.holdings,
-                "derivatives": self.derivatives, "order_history": self.order_history}
+                "derivatives": self.derivatives, "order_history": self.order_history, "tour_seen": self.tour_seen}
 
     @classmethod
     def from_dict(cls, data):
@@ -223,6 +224,7 @@ class Portfolio:
         p.holdings = data.get("holdings", {})
         p.derivatives = data.get("derivatives", [])
         p.order_history = data.get("order_history", [])
+        p.tour_seen = bool(data.get("tour_seen", False))
         return p
 
     def save(self, path=DEFAULT_PATH):

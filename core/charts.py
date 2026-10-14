@@ -269,6 +269,22 @@ def stage_bar(counts):
     return fig
 
 
+def simple_line_chart(close, days, name):
+    """A plain filled line for the simple site: green if the price ended higher than it started, red if lower."""
+    data = close.iloc[-days:]
+    up = float(data.iloc[-1]) >= float(data.iloc[0])
+    colour = UP_COLOUR if up else DOWN_COLOUR
+    fig = go.Figure(go.Scatter(x=data.index, y=data.values, mode="lines", line=dict(color=colour, width=3),
+                               name=name,
+                               hovertemplate="%{x|%d %b %Y}: Rs %{y:,.2f}<extra></extra>"))
+    lo, hi = float(data.min()), float(data.max())
+    pad = (hi - lo) * 0.08 or 1
+    fig.update_layout(height=280, margin=dict(l=0, r=0, t=10, b=0), showlegend=False, font=dict(size=14),
+                      yaxis=dict(range=[lo - pad, hi + pad], tickprefix="Rs ", title=None),
+                      xaxis=dict(title=None), plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+    return fig
+
+
 # ---------------- dark skin ("market terminal" look) ----------------
 TERMINAL_BG, TERMINAL_GRID, TERMINAL_TEXT = "#131722", "#2a2e39", "#d1d4dc"      # TradingView dark
 _LIGHTER = {NAVY: "#5b9cf6", "#333333": "#d1d4dc", "#444444": "#b2b5be", "black": "#d1d4dc", "#000000": "#d1d4dc",

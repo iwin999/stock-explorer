@@ -317,5 +317,8 @@ Dark mode now uses TradingView's charcoal palette (background #131722, panels #1
 ## New in Step 40 (blank search box)
 The company search box now starts **blank** with a hint ("Type a company name, for example Tata, Suzlon or HDFC"). Clicking it still opens the dropdown list; typing and pressing Enter lists the closest matches underneath, best first. Until a company is chosen the page shows Reliance and says so.
 
+## New in Step 41 (the simple site, with a guided tour)
+A second entry point, `simple.py`, runs a phone-first version for parents and beginners (same accounts, prices and leaderboard). **Home** (search, practice money, popular companies), **Company** (plain line chart, "How is it doing?" in everyday words, buy and sell in rupees), **Portfolio** (what you own with a Sell button, allocation ring, leaderboard) and **Learn** (the bot at a simple level and big ideas in plain words), with a menu fixed along the bottom. First-time visitors are offered a **guided tour**: the page dims, one feature at a time is outlined, and a card says what it is and what happens when you use it (10 steps, Back / Next / Skip). Whether someone has been offered the tour is saved with their account. Code: `simple.py`, `simple_page.py`, `core/tour.py`, `core/simple_words.py`. See DEPLOY.md for publishing it as a second link.
+
 ## Status
 All 8 features are built.
