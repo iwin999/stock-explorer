@@ -285,6 +285,34 @@ def simple_line_chart(close, days, name):
     return fig
 
 
+def daily_check_chart(closes, result):
+    """The last few weeks of closing prices up to the day before, the predicted range for the target day (shaded), and the
+    actual price once it is known."""
+    recent = closes.iloc[-25:]
+    fig = go.Figure(go.Scatter(x=recent.index, y=recent.values, mode="lines+markers", line=dict(color=NAVY, width=2.5),
+                               marker=dict(size=5), name="Closing price",
+                               hovertemplate="%{x|%d %b}: Rs %{y:,.2f}<extra></extra>"))
+    import pandas as pd
+    day = pd.Timestamp(result["target"])
+    low, high = result["range"]
+    colour = {"Up": UP_COLOUR, "Down": DOWN_COLOUR, "Sideways": GREY}[result["prediction"]]
+    fig.add_shape(type="rect", x0=day - pd.Timedelta(hours=14), x1=day + pd.Timedelta(hours=14), y0=low, y1=high,
+                  fillcolor=colour, opacity=0.25, line=dict(width=0))
+    fig.add_annotation(x=day, y=high, text=f"Expected range<br>(prediction: {result['prediction']})", showarrow=False,
+                       yshift=24, font=dict(size=13, color=colour))
+    if result["actual"]:
+        fig.add_trace(go.Scatter(x=[day], y=[result["actual"]], mode="markers", name="Price now" if result["status"] == "live" else "Price",
+                                 marker=dict(size=15, symbol="star", color="#d98e04", line=dict(width=1.5, color="#333333")),
+                                 hovertemplate="Rs %{y:,.2f}<extra>Actual</extra>"))
+    lo = min(recent.min(), low, result["actual"] or low)
+    hi = max(recent.max(), high, result["actual"] or high)
+    pad = (hi - lo) * 0.12 or 1
+    fig.update_layout(height=340, margin=dict(l=0, r=0, t=30, b=0), yaxis=dict(range=[lo - pad, hi + pad], tickprefix="Rs "),
+                      legend=dict(orientation="h", y=-0.15), font=dict(size=14),
+                      plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+    return fig
+
+
 # ---------------- dark skin ("market terminal" look) ----------------
 TERMINAL_BG, TERMINAL_GRID, TERMINAL_TEXT = "#131722", "#2a2e39", "#d1d4dc"      # TradingView dark
 _LIGHTER = {NAVY: "#5b9cf6", "#333333": "#d1d4dc", "#444444": "#b2b5be", "black": "#d1d4dc", "#000000": "#d1d4dc",

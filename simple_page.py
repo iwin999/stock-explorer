@@ -5,6 +5,8 @@ import math
 import streamlit as st
 
 from core import instruments as ins
+from core import daily_check as dc
+from core import daily_ui
 from core import about, assistant_ui, companies, tour, universe
 from core import simple_words as words
 from core.charts import allocation_donut, show as show_chart, simple_line_chart
@@ -223,6 +225,18 @@ def company():
         for heading, sentence, colour in words.verdict(hist):
             st.markdown(f"{span(heading, colour)}: {sentence}", unsafe_allow_html=True)
         st.caption("This describes the past. It does not predict the future and is not advice.")
+
+    with st.container(key="dailycard"):
+        st.markdown("**Yesterday's signals vs today**")
+        res, _info = daily_ui.evaluate_now(symbol, hist, source == "offline")
+        if res is None:
+            st.caption("Not enough price history for this company yet.")
+        else:
+            st.markdown(dc.headline(res))
+            if res["matched"] is not None:
+                badge = "Call was right" if res["matched"] else "Call was wrong"
+                st.markdown(f'<span class="{"up" if res["matched"] else "down"}">{badge}</span>', unsafe_allow_html=True)
+            st.caption("A simple rule of thumb on yesterday's data, not a forecast and not advice. One day proves nothing.")
 
     owned = pf.holdings.get(symbol, {}).get("quantity", 0)
     with st.container(key="tour_trade"):

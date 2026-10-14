@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from core import about, assistant_ui, carpet_ui, universe, market_strip, backtest as bt, fusion_ui, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
+from core import about, assistant_ui, carpet_ui, daily_ui, universe, market_strip, backtest as bt, fusion_ui, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
 from core.charts import (show as show_chart, add_fibonacci, backtest_chart, fan_chart, outlook_gauge, outcome_histogram, price_chart,
                          zoom_to_window)
 from core.formatting import format_inr
@@ -164,8 +164,8 @@ bench_close = _bench["Close"] if _bench is not None else None
 PERIODS = {"6 months": 126, "1 year": 252, "2 years": 504, "5 years": 1260}
 STRATEGY_KEYS = list(STRATEGIES)
 
-tab_overview, tab_carpet, tab_outcomes, tab_strategy, tab_fusion, tab_trade, tab_portfolio, tab_bot = st.tabs(
-    ["Overview", "Market carpet", "Possible outcomes", "Strategy tests", "Fusion analysis", "Paper trading", "Your Portfolio", "Ask the bot"],
+tab_overview, tab_daily, tab_carpet, tab_outcomes, tab_strategy, tab_fusion, tab_trade, tab_portfolio, tab_bot = st.tabs(
+    ["Overview", "Daily check", "Market carpet", "Possible outcomes", "Strategy tests", "Fusion analysis", "Paper trading", "Your Portfolio", "Ask the bot"],
     key="main_tabs")           # a key keeps the chosen tab selected when the page refreshes after a click
 
 # =====================================================================
@@ -603,6 +603,12 @@ with tab_trade:
 # =====================================================================
 with tab_portfolio:
     portfolio_ui.render()
+
+# =====================================================================
+# TAB: DAILY CHECK - yesterday's indicators, today's call, and today's price against it
+# =====================================================================
+with tab_daily:
+    daily_ui.render(symbol, name, hist, offline=(source == "offline"))
 
 # =====================================================================
 # TAB 7: ASK THE BOT - answers from the site's own notes (free, no outside service)
