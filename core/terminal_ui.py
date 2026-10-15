@@ -27,8 +27,17 @@ CSS = """<style>
 .stApp [data-testid="stMainBlockContainer"], .stApp .block-container { padding-top: 3.2rem !important; max-width: 100% !important; }
 .tm-brand { display:flex; align-items:center; gap:.7rem; } .tm-brand img { height:2.6rem; width:auto; }
 .tm-brand .t { font-size:1.55rem; font-weight:800; line-height:1.1; }
-.tm-value { text-align:right; } .tm-value .l { font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; opacity:.7; }
+.tm-value { text-align:left; padding-left:1.1rem; border-left:1px solid rgba(128,128,128,.35); } .tm-value .l { font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; opacity:.7; }
 .tm-value .v { font-size:1.7rem; font-weight:800; line-height:1.1; }
+.st-key-tm_top { background:rgba(128,128,128,.10); border:1px solid rgba(128,128,128,.28); border-radius:16px; padding:.55rem 1.1rem !important; margin-bottom:.7rem; }
+.st-key-tm_top label p, .st-key-tm_chartbar label p { white-space:nowrap; font-size:.95rem !important; font-weight:600; }
+.st-key-tm_top [data-testid="stHorizontalBlock"] { gap:.6rem; flex-wrap:nowrap; }
+.st-key-tm_top [data-testid="stColumn"], .st-key-tm_chartbar [data-testid="stColumn"] { min-width:0 !important; }
+.st-key-tm_chartbar { margin:.3rem 0 .2rem 0; } .st-key-tm_chartbar [data-testid="stHorizontalBlock"] { flex-wrap:nowrap; gap:.8rem; }
+.st-key-tm_chartbar [data-testid="stButtonGroup"] button { padding:.25rem .8rem; min-height:2.1rem; font-size:.92rem !important; }
+.st-key-tm_chartbar button[data-variant="segmented_control"] { background:#1e222d !important; color:#d1d4dc !important; border:1px solid #363a45 !important; }
+.st-key-tm_chartbar button[data-variant="segmented_control"][data-selected="true"] { background:#2962ff !important; color:#ffffff !important; border:1px solid #2962ff !important; }
+.st-key-tm_chartbar button[data-variant="segmented_control"] * { color:inherit !important; }
 .tm-row { display:flex; justify-content:space-between; gap:.5rem; padding:.35rem 0; border-bottom:1px solid rgba(128,128,128,.25); font-size:.92rem; }
 .tm-row .s { opacity:.65; font-size:.8rem; } .tm-h { font-weight:800; font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin:.5rem 0 .2rem 0; }
 .dc-card.tm { padding:.5rem .7rem .05rem .7rem; margin-bottom:.45rem; cursor:help; }
@@ -173,14 +182,15 @@ def run():
     every = _every()
 
     # top bar
-    c_title, c_value, c_dark, c_term, c_info = st.columns([3, 2.6, 1.7, 2.1, 0.6], vertical_alignment="center")
-    c_title.markdown(f'<div class="tm-brand">{about._crest_html()}<div class="t">MCGS Stock Explorer</div></div>', unsafe_allow_html=True)
-    with c_value:
-        st.fragment(run_every=every)(_portfolio_value)()
-    c_dark.toggle("Dark mode", key="dark_site", on_change=about._dark_changed)
-    c_term.toggle("Dashboard view", key="terminal_view", on_change=switched)
-    with c_info:
-        about.icon()
+    with st.container(key="tm_top"):
+        c_title, c_value, c_dark, c_term, c_info = st.columns([3.1, 2.7, 1.5, 1.8, 0.5], vertical_alignment="center")
+        c_title.markdown(f'<div class="tm-brand">{about._crest_html()}<div class="t">MCGS Stock Explorer</div></div>', unsafe_allow_html=True)
+        with c_value:
+            st.fragment(run_every=every)(_portfolio_value)()
+        c_dark.toggle("Dark mode", key="dark_site", on_change=about._dark_changed)
+        c_term.toggle("Dashboard view", key="terminal_view", on_change=switched)
+        with c_info:
+            about.icon()
 
     left, mid, right = st.columns([1.2, 3.3, 1.45], gap="small")
 
@@ -207,7 +217,7 @@ def run():
             st.error("Price data for this company could not be loaded right now. Please choose another company.")
             return
         st.fragment(run_every=every)(_headline)(symbol, name, hist, offline)
-        price_panel.render(hist, symbol, name, header=False, height=420, explain=False)
+        price_panel.render(hist, symbol, name, header=False, height=420, explain=False, compact=True)
 
         price = float(live_quote(symbol)["price"]) if (not offline and live_quote(symbol)) else float(hist["Close"].iloc[-1])
         st.markdown('<div class="tm-h">Buttons for paper trading</div>', unsafe_allow_html=True)

@@ -335,5 +335,8 @@ The **simple site** (not the full site) has a **Dashboard view** switch that put
 ## New in Step 46 (one-row search on the second site)
 On the second site the search is one row: a single **SEARCH STOCK** box. The "Cannot find a company? Search Yahoo Finance live" drawer and the explanatory lines are gone; close matches for a typed name appear as one row of buttons. The real site's search is unchanged.
 
+## New in Step 47 (tidier top bar and chart controls on the second site)
+The top bar is now one rounded panel: school logo and title, a divider, the portfolio value with its percentage, then the Dark mode and Dashboard view switches and the About icon, all on one line. Above the chart the period is a row of pill buttons (6 months, 1 year, 2 years, 5 years; the chosen one in blue) with the Fibonacci and Dark chart switches beside it. The real site is unchanged.
+
 ## Status
 All 8 features are built.

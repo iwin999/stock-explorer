@@ -8,18 +8,27 @@ from core.ui import help_bubble
 PERIODS = {"6 months": 126, "1 year": 252, "2 years": 504, "5 years": 1260}
 
 
-def render(hist, symbol, name, header=True, height=None, explain=True):
-    """Draw the chart and its controls."""
+def render(hist, symbol, name, header=True, height=None, explain=True, compact=False):
+    """Draw the chart and its controls. compact=True puts the controls in one tidy bar (period buttons and two switches)."""
     if header:
         st.header("Price history")
-    p1, p2, p4, p3 = st.columns([5, 3, 2, 1])
-    period = p1.radio("Period", list(PERIODS), index=1, horizontal=True)
-    show_fib = p2.checkbox("Show Fibonacci levels", key="show_fib",
-                           help="Draws the Fibonacci retracement lines (23.6%, 38.2%, 50%, 61.8%, 78.6%) and the extension lines (127.2%, 161.8%) from the highest and lowest price in the period you are viewing.")
-    dark_chart = p4.toggle("Dark chart", key="dark_chart",
-                           help="Turns just this price chart into a dark trading screen, whatever the rest of the site looks like.")
-    with p3:
-        help_bubble("fibonacci")
+    if compact:
+        with st.container(key="tm_chartbar"):
+            c1, c2, c3 = st.columns([3.6, 1.5, 1.5], vertical_alignment="center")
+            choice = c1.segmented_control("Period", list(PERIODS), default="1 year", key="period_seg", label_visibility="collapsed")
+            period = choice or "1 year"
+            show_fib = c2.toggle("Fibonacci", key="show_fib",
+                                 help="Draws the Fibonacci retracement and extension lines from the highest and lowest price in the period you are viewing.")
+            dark_chart = c3.toggle("Dark chart", key="dark_chart", help="Turns just this chart dark, whatever the rest of the site looks like.")
+    else:
+        p1, p2, p4, p3 = st.columns([5, 3, 2, 1])
+        period = p1.radio("Period", list(PERIODS), index=1, horizontal=True)
+        show_fib = p2.checkbox("Show Fibonacci levels", key="show_fib",
+                               help="Draws the Fibonacci retracement lines (23.6%, 38.2%, 50%, 61.8%, 78.6%) and the extension lines (127.2%, 161.8%) from the highest and lowest price in the period you are viewing.")
+        dark_chart = p4.toggle("Dark chart", key="dark_chart",
+                               help="Turns just this price chart into a dark trading screen, whatever the rest of the site looks like.")
+        with p3:
+            help_bubble("fibonacci")
 
     fig = price_chart(hist, symbol, name)
     if height:
