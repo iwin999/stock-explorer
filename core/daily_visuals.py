@@ -39,6 +39,20 @@ CSS = """<style>
 .dc-bars .lab { width:8.5rem; font-size:.92rem; } .dc-bars .bar { flex:1; height:1.1rem; border-radius:99px; background:rgba(128,128,128,.25); position:relative; overflow:hidden; }
 .dc-bars .fill { height:100%; border-radius:99px; } .dc-bars .num { width:3.2rem; font-weight:700; text-align:right; }
 .dc-bars .half { position:absolute; left:50%; top:0; bottom:0; width:2px; background:rgba(0,0,0,.45); }
+.pb { background:var(--tm-panel,#fff); border:1px solid var(--tm-line,#dfe3ea); border-radius:12px; padding:.6rem 1.2rem .5rem 1.2rem; box-shadow:0 1px 3px rgba(16,24,40,.07); }
+.pb-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:.35rem; }
+.pb-title { font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--tm-muted,#6b7785); }
+.pb-status { font-size:.78rem; color:var(--tm-muted,#6b7785); }
+.pb-row { display:grid; grid-template-columns:1.15fr 1.15fr 1fr 2.2fr; align-items:center; }
+.pb-cell { padding:0 1.1rem; border-left:1px solid var(--tm-line,#dfe3ea); line-height:1.2; min-width:0; }
+.pb-cell:first-child { padding-left:0; border-left:0; }
+.pb-l { font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color:var(--tm-muted,#6b7785); margin-bottom:.15rem; }
+.pb-v { font-size:1.3rem; font-weight:700; white-space:nowrap; } .pb-g { font-size:.95rem; margin-right:.2rem; }
+.pb-s { font-size:.8rem; color:var(--tm-muted,#6b7785); margin-top:.1rem; white-space:nowrap; }
+.pb-dots { display:flex; gap:.25rem; margin-top:.25rem; } .pb-dots .dc-dot { width:.7rem; height:.7rem; }
+.pb-chip { display:inline-block; white-space:nowrap; color:#fff; font-weight:700; font-size:.95rem; padding:.2rem .8rem; border-radius:99px; }
+.pb .dc-range { margin:.9rem .2rem 1.35rem .2rem; height:2rem; }
+@media (max-width:900px){ .pb-row { grid-template-columns:1fr 1fr; row-gap:.6rem; } }
 @media (max-width:640px){ .dc-hero{gap:.7rem;padding:.8rem} .dc-badge{width:3.6rem;height:3.6rem;font-size:1.6rem} .dc-call{font-size:1.5rem} .dc-bars .lab{width:6rem} }
 </style>"""
 
@@ -144,3 +158,35 @@ def terminal_card(entry):
             f'<div class="dc-name"><span>{e(entry["name"])} <small style="opacity:.55;font-weight:500">{badge} &#9432;</small></span>'
             f'<span class="dc-chip" style="background:{COLOUR[name]}">{GLYPH[name]} {e(word)}</span></div>'
             f'{scale_html(entry["gauge"])}</div>')
+
+
+def prediction_bar(result, status_text=""):
+    """The prediction comparison as one tidy bar: THE CALL | WHAT HAPPENED | RESULT | EXPECTED RANGE, all on one line."""
+    p = result["prediction"]
+    voters = [v for v in result["votes"] if v["voting"]]
+    ups = sum(1 for v in voters if v["vote"] > 0)
+    downs = sum(1 for v in voters if v["vote"] < 0)
+    dots = "".join(f'<span class="dc-dot" title="{e(v["name"])}: {VOTE_NAME[v["vote"]]}" style="background:{COLOUR[VOTE_NAME[v["vote"]]]}"></span>'
+                   for v in voters)
+    call = (f'<div class="pb-cell"><div class="pb-l">The call</div><div class="pb-v" style="color:{COLOUR[p]}"><span class="pb-g">{GLYPH[p]}</span>{p}</div>'
+            f'<div class="pb-s">{ups} up &middot; {downs} down &middot; {len(voters) - ups - downs} neutral</div><div class="pb-dots">{dots}</div></div>')
+    if result["actual"] is None:
+        what = ('<div class="pb-cell"><div class="pb-l">What happened</div><div class="pb-v" style="color:#868993">Not yet</div>'
+                '<div class="pb-s">Waiting for today\'s price</div></div>')
+        outcome = '<div class="pb-cell"><div class="pb-l">Result</div><div class="pb-v" style="color:#868993">&ndash;</div></div>'
+        low, high = result["range"]
+        rng = (f'<div class="pb-cell"><div class="pb-l">Expected range</div>'
+               f'{range_bar(low, high, result["prev_close"], None)}</div>')
+    else:
+        a = result["actual_direction"]
+        what = (f'<div class="pb-cell"><div class="pb-l">What happened</div><div class="pb-v" style="color:{COLOUR[a]}"><span class="pb-g">{GLYPH[a]}</span>{a}</div>'
+                f'<div class="pb-s">{result["change"] * 100:+.2f}% &middot; Rs {result["actual"]:,.2f}</div></div>')
+        ok = result["matched"]
+        outcome = (f'<div class="pb-cell"><div class="pb-l">Result</div><span class="pb-chip" style="background:{UP_C if ok else DOWN_C}">'
+                   f'{"&#10003; Right" if ok else "&#10007; Wrong"}</span>'
+                   f'<div class="pb-s">{"Inside" if result["in_range"] else "Outside"} the range</div></div>')
+        low, high = result["range"]
+        rng = (f'<div class="pb-cell"><div class="pb-l">Expected range</div>'
+               f'{range_bar(low, high, result["prev_close"], result["actual"], "Now" if result["status"] == "live" else "Close")}</div>')
+    head = f'<div class="pb-head"><span class="pb-title">Prediction comparison for today</span><span class="pb-status">{e(status_text)}</span></div>'
+    return f'<div class="pb">{head}<div class="pb-row">{call}{what}{outcome}{rng}</div></div>'

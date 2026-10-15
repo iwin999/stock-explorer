@@ -344,5 +344,8 @@ The top bar is a white card with a hairline border: crest and title, a thin divi
 ## New in Step 49 (the second site's indicator panel uses the real site's scales)
 The indicators in the right-hand panel of the second site are now drawn like the real site's Key signals: every indicator uses the same red-to-green bar as Trend, with the verdict word under it (red on the left leans down, green on the right leans up). Indicators that tend to reverse from an extreme (Bollinger band, Stochastic RSI, Money flow, Where it closed, Yesterday's move, RSI) have the bar turned round, so the stretched-high end is red and the stretched-low end green. Volume leans by whether busy trading is behind a rise or a fall. A Volatility reading was added. The call itself is unchanged, and the real site's Daily check tab keeps its own look.
 
+## New in Step 51 (paper-trading bar and prediction bar on the second site)
+The Buy / Sell / Exit all buttons now sit in a bar styled like the top bar: a white card with a hairline border, a small label on the left ("Buttons for paper trading", with how many shares of the chosen company you own) and the three buttons on one line. The prediction comparison is one matching bar: THE CALL (with one dot per vote), WHAT HAPPENED (with the move and price), RESULT (right or wrong, inside or outside the range) and the EXPECTED RANGE with yesterday's close and today's price, with a status line at the top right (live, final or waiting for the market to open).
+
 ## Status
 All 8 features are built.

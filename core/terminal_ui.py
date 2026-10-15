@@ -40,12 +40,18 @@ def _theme_css(dark):
     panel, line = ("#1e222d", "#2a2e39") if dark else ("#ffffff", "#dfe3ea")
     pick, hover = ("#3b5b8c", "rgba(255,255,255,.07)") if dark else ("#1d3557", "rgba(29,53,87,.07)")
     return f"""<style>
-.st-key-tm_top {{ background:{panel}; border:1px solid {line}; border-radius:12px; padding:.6rem 1.2rem !important;
+:root {{ --tm-panel:{panel}; --tm-line:{line}; --tm-muted:{muted}; --tm-ink:{ink}; }}
+.st-key-tm_top, .st-key-tm_trade {{ background:{panel}; border:1px solid {line}; border-radius:12px; padding:.6rem 1.2rem !important;
   box-shadow:0 1px 3px rgba(16,24,40,.07); margin-bottom:.8rem; }}
-.st-key-tm_top [data-testid="stHorizontalBlock"] {{ align-items:center !important; gap:1rem; flex-wrap:nowrap; }}
-.st-key-tm_top [data-testid="stColumn"] {{ min-width:0 !important; }}
-.st-key-tm_top [data-testid="stVerticalBlock"] {{ gap:0 !important; }}
-.st-key-tm_top [data-testid="stElementContainer"] {{ margin:0 !important; padding:0 !important; }}
+.st-key-tm_trade {{ border:1px solid {line}; border-radius:12px; padding:.55rem 1.2rem !important; box-shadow:0 1px 3px rgba(16,24,40,.07); }}
+.st-key-tm_top [data-testid="stHorizontalBlock"], .st-key-tm_trade [data-testid="stHorizontalBlock"] {{ align-items:center !important; gap:1rem; flex-wrap:nowrap; }}
+.st-key-tm_top [data-testid="stColumn"], .st-key-tm_trade [data-testid="stColumn"] {{ min-width:0 !important; }}
+.st-key-tm_top [data-testid="stVerticalBlock"], .st-key-tm_trade [data-testid="stVerticalBlock"] {{ gap:0 !important; }}
+.st-key-tm_top [data-testid="stElementContainer"], .st-key-tm_trade [data-testid="stElementContainer"] {{ margin:0 !important; padding:0 !important; }}
+.st-key-tm_trade [data-testid="stMarkdownContainer"] {{ margin:0 !important; }}
+.st-key-tm_trade button {{ min-height:2.2rem !important; height:2.2rem !important; font-size:.92rem !important; font-weight:600; border-radius:8px; padding:0 .8rem; }}
+.tm-tl {{ font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:{muted}; }}
+.tm-ts {{ font-size:.92rem; color:{ink}; margin-top:.1rem; }}
 .st-key-tm_top [data-testid="stMarkdownContainer"] {{ margin:0 !important; }}
 .st-key-tm_top [data-testid="stColumn"] {{ margin:0 !important; }}
 .st-key-tm_top [data-testid="stToggle"] label {{ gap:.5rem; }}
@@ -155,21 +161,12 @@ def _headline(symbol, name, hist, offline):
 
 @guard()
 def _prediction(symbol, name, hist, offline):
-    st.markdown('<div class="tm-h">Prediction comparison for today</div>', unsafe_allow_html=True)
     result, info = daily_ui.evaluate_now(symbol, hist, offline)
     if result is None:
         st.caption("Not enough history for this company to make a call.")
         return
-    voters = [v for v in result["votes"] if v["voting"]]
-    word = "today" if result["target"] == now_ist().date() else result["target"].strftime("on %d %b")
-    left, right = st.columns([1.3, 1.7])
-    left.markdown(vis.hero(result["prediction"], result["score"], voters, word), unsafe_allow_html=True)
-    if result["actual"] is None:
-        right.info("Today's price is not available yet to compare.")
-    else:
-        right.markdown(vis.versus(result["prediction"], result["actual_direction"], result["matched"]), unsafe_allow_html=True)
-        right.markdown(vis.range_bar(result["range"][0], result["range"][1], result["prev_close"], result["actual"],
-                                     "Now" if result["status"] == "live" else "Close"), unsafe_allow_html=True)
+    status = {"live": "Live: market open, updating", "final": "Final for the day", "pending": "Waiting for the market to open"}[result["status"]]
+    st.markdown(vis.prediction_bar(result, status), unsafe_allow_html=True)
     if info["note"]:
         st.caption(info["note"])
 
@@ -241,16 +238,20 @@ def run():
         price_panel.render(hist, symbol, name, header=False, height=420, explain=False, compact=True)
 
         price = float(live_quote(symbol)["price"]) if (not offline and live_quote(symbol)) else float(hist["Close"].iloc[-1])
-        st.markdown('<div class="tm-h">Buttons for paper trading</div>', unsafe_allow_html=True)
-        b1, b2, b3, _ = st.columns([1, 1, 1, 2.2])
-        if b1.button("Buy", type="primary", key="term_buy_btn", width="stretch"):
-            _order_dialog("Buy", symbol, name, price, offline)
-        if b2.button("Sell", key="term_sell_btn", width="stretch", disabled=symbol not in pf.holdings,
-                     help="Sell some or all of this company. Greyed out when you do not own it."):
-            _order_dialog("Sell", symbol, name, price, offline)
-        if b3.button("Exit all", key="term_exit_btn", width="stretch", disabled=not (pf.holdings or pf.derivatives),
-                     help="Sell everything you hold in one go. Your starting capital is not reset."):
-            tu._exit_dialog()
+        with st.container(key="tm_trade"):
+            t_label, b1, b2, b3 = st.columns([3.2, 1, 1, 1.1], vertical_alignment="center")
+            owned = pf.holdings.get(symbol, {}).get("quantity", 0)
+            t_label.markdown(f'<div class="tm-tl">Buttons for paper trading</div><div class="tm-ts">{companies.code_of(symbol)}: '
+                             f'{"you own " + str(owned) + " share" + ("s" if owned != 1 else "") if owned else "you do not own it yet"}</div>',
+                             unsafe_allow_html=True)
+            if b1.button("Buy", type="primary", key="term_buy_btn", width="stretch"):
+                _order_dialog("Buy", symbol, name, price, offline)
+            if b2.button("Sell", key="term_sell_btn", width="stretch", disabled=symbol not in pf.holdings,
+                         help="Sell some or all of this company. Greyed out when you do not own it."):
+                _order_dialog("Sell", symbol, name, price, offline)
+            if b3.button("Exit all", key="term_exit_btn", width="stretch", disabled=not (pf.holdings or pf.derivatives),
+                         help="Sell everything you hold in one go. Your starting capital is not reset."):
+                tu._exit_dialog()
         st.fragment(run_every=every)(_prediction)(symbol, name, hist, offline)
 
     with right:
