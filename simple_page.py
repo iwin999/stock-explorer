@@ -21,13 +21,12 @@ from core import trading_ui as tu
 PAGES = ["Home", "Company", "Portfolio", "Learn"]
 POPULAR = ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS", "INFY.NS", "ITC.NS", "SBIN.NS"]
 
-# The second site opens straight into the wide one-screen Dashboard (laptop or exhibition display), in Dark mode. The phone layout
+# The second site opens straight into the wide one-screen Dashboard (laptop or exhibition display), in the normal light look
+# (Dark mode is one click away). The phone layout
 # is still in the code behind the "Dashboard view" switch, but it is on hold for now.
 if "dash_init" not in st.session_state:
     st.session_state["dash_init"] = True
     st.session_state.setdefault("terminal_view", True)
-    st.session_state.setdefault("dark_site", True)
-    st.session_state.setdefault("dark_chart", True)
 dashboard = bool(st.session_state.get("terminal_view"))          # the wide, one-screen Dashboard view
 st.set_page_config(page_title="Stock Explorer (simple)", layout="wide" if dashboard else "centered")
 st.markdown(STYLE_CSS, unsafe_allow_html=True)

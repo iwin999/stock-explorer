@@ -35,7 +35,7 @@ CSS = """<style>
 .st-key-tm_top [data-testid="stColumn"], .st-key-tm_chartbar [data-testid="stColumn"] { min-width:0 !important; }
 .st-key-tm_chartbar { margin:.3rem 0 .2rem 0; } .st-key-tm_chartbar [data-testid="stHorizontalBlock"] { flex-wrap:nowrap; gap:.8rem; }
 .st-key-tm_chartbar [data-testid="stButtonGroup"] button { padding:.25rem .8rem; min-height:2.1rem; font-size:.92rem !important; }
-.st-key-tm_chartbar button[data-variant="segmented_control"] { background:#1e222d !important; color:#d1d4dc !important; border:1px solid #363a45 !important; }
+.st-key-tm_chartbar button[data-variant="segmented_control"] { background:transparent !important; color:inherit !important; border:1px solid rgba(128,128,128,.45) !important; }
 .st-key-tm_chartbar button[data-variant="segmented_control"][data-selected="true"] { background:#2962ff !important; color:#ffffff !important; border:1px solid #2962ff !important; }
 .st-key-tm_chartbar button[data-variant="segmented_control"] * { color:inherit !important; }
 .tm-row { display:flex; justify-content:space-between; gap:.5rem; padding:.35rem 0; border-bottom:1px solid rgba(128,128,128,.25); font-size:.92rem; }
@@ -65,10 +65,7 @@ def _every():
 
 
 def switched():
-    """Callback of the 'Terminal view' switch: going into the Terminal view also turns Dark mode and the dark chart on."""
-    if st.session_state.get("terminal_view"):
-        st.session_state["dark_site"] = True
-        st.session_state["dark_chart"] = True
+    """Callback of the 'Dashboard view' switch. (Dark mode is left exactly as the visitor has it.)"""
 
 
 # ---------------- pieces ----------------
