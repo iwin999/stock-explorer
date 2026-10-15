@@ -127,3 +127,24 @@ def test_a_bar_names_the_company_being_looked_at_on_both_sites():
         full.run()
         assert not full.exception
         assert any("companybar-name" in m.value and "You are looking at" in m.value for m in full.markdown)
+
+
+def test_the_terminal_view_lays_everything_out_on_one_screen():
+    store, _ = _app("Termy")
+    app = AppTest.from_file(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "app.py"), default_timeout=240)
+    app.query_params["user"] = "Termy"
+    a, b = _patches(store)
+    with a, b:
+        app.run()
+        app.toggle(key="terminal_view").set_value(True).run()
+        assert not app.exception and not _errors(app)
+        text = " ".join(m.value for m in app.markdown)
+        assert "MCGS Stock Explorer" in text and "Portfolio value" in text
+        assert app.toggle(key="dark_site").value is True and app.toggle(key="dark_chart").value is True   # opens in the dark
+        assert [x for x in app.button if x.key == "term_buy_btn"] and [x for x in app.button if x.key == "term_exit_btn"]
+        assert [x for x in app.button if x.key == "term_exit_btn"][0].disabled is True            # nothing held yet
+        assert app.selectbox(key="term_refresh").value == "15 seconds"
+        app.selectbox(key="term_refresh").set_value("Off").run()
+        assert not app.exception
+        app.toggle(key="terminal_view").set_value(False).run()          # and back to the tabs
+        assert not app.exception and len(app.tabs) >= 9

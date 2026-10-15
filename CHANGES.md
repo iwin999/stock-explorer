@@ -329,5 +329,8 @@ We tested 18 indicators (the old five plus Stochastic RSI, MFI, ADX, Supertrend,
 ## New in Step 44 (the company bar that stays on screen)
 A bar reading **You are looking at: Tata Consultancy Services, TCS** now stays pinned to the top of the screen while you scroll, on the full site (under the search box) and on the simple site's Company page, so nobody loses track of which company they are working on. It follows Dark mode.
 
+## New in Step 45 (Terminal view)
+A **Terminal view** switch (under "Signed in as ...") puts the whole job on one screen, laid out from the hand-drawn sketch: a top bar with **MCGS Stock Explorer** and the **Portfolio value**; on the left the list of bought and sold stocks with quantity and profit or loss, the allocation ring, and the **refresh interval** setting (Off, 15 s, 30 s, 1 min); in the middle the stock search, the chart with its analysis tools (period, Fibonacci, dark chart), **Buy / Sell / Exit all** buttons (Buy and Sell open the order ticket in a pop-up) and the **prediction comparison for today**; on the right every indicator (the six that vote plus the context ones) with a gauge and a hover description. It opens in Dark mode. The tabbed view stays for the CMT Level III tools. Code: `core/terminal_ui.py`; the search box and the price chart were moved into `core/company_search.py` and `core/price_panel.py` so both views share them.
+
 ## Status
 All 8 features are built.

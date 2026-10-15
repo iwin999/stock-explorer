@@ -115,3 +115,32 @@ def bars(rule_pct, coin_pct):
         return (f'<div class="row"><div class="lab">{e(label)}</div><div class="bar"><div class="fill" style="width:{pct:.0f}%;background:{colour}"></div>'
                 f'<div class="half"></div></div><div class="num">{pct:.0f}%</div></div>')
     return '<div class="dc-bars">' + row("This rule", rule_pct, "#2962ff") + row("Coin toss", coin_pct, FLAT_C) + "</div>"
+
+
+# Pop-up (hover) descriptions for the Terminal view's indicator panel: what it is and how to read where it stands.
+EXPLAIN = {
+    "Trend": "Compares the price with its 50-day and 200-day average prices. Above both means a steady climb; below both a steady slide. The pointer shows how far the price is from its 50-day average.",
+    "Bollinger band": "A band around the 20-day average that holds most price moves. Far above the band the price looks stretched and often drifts back; far below it often bounces. The pointer shows where the price sits inside the band.",
+    "Stochastic RSI": "How the recent speed of price moves (RSI) compares with its own last 14 days. Near 0 is a short-term low that often snaps back; near 100 is a short-term high that often cools.",
+    "Money flow (MFI)": "RSI that also counts trading volume: the balance of money flowing in and out. Below 20 means selling pressure may be exhausted; above 80 means buying may be crowded.",
+    "Where it closed": "Where the last day ended between its low and its high. Closing at the very low often sees a bounce the next day; closing at the very high often sees a pause.",
+    "Yesterday's move": "How much the price moved yesterday. After a sharp fall prices often rebound a little; after a sharp jump they often pull back a little.",
+    "RSI (speed)": "A score from 0 to 100 of how fast the price has been rising or falling. Above 70 it has run up quickly; below 30 it has fallen quickly. Shown for context; it does not vote.",
+    "MACD (momentum)": "Compares a quick and a slow average of the price. Above its signal line the momentum is rising; below it, fading. Shown for context; it does not vote.",
+    "Trend strength (ADX)": "How strong a trend is, whichever way it points. Above 20 is a real trend. The pointer shows whether buyers or sellers are in the lead. Shown for context; it does not vote.",
+    "Supertrend": "A line that trails the price and flips when the trend reverses. Price above the line is an uptrend, below it a downtrend. Shown for context; it does not vote.",
+    "Ichimoku cloud": "A shaded zone built from past highs and lows that acts as support and resistance. Price above the cloud is bullish, below it bearish. Shown for context; it does not vote.",
+    "Volume": "Today's trading activity compared with the usual level. Busy trading makes a move more believable. Shown for context; it does not vote.",
+}
+
+
+def terminal_card(entry):
+    """A compact indicator card for the Terminal view's right panel. Hover it for the description."""
+    name = VOTE_NAME[entry["vote"]]
+    word = ("Neutral" if name == "Sideways" else name) if entry["voting"] else entry["reading"]
+    tip = EXPLAIN.get(entry["name"], entry["why"])
+    badge = "VOTES" if entry["voting"] else "context"
+    return (f'<div class="dc-card tm{"" if entry["voting"] else " ctx"}" title="{e(tip)}">'
+            f'<div class="dc-name"><span>{e(entry["name"])} <small style="opacity:.55;font-weight:500">{badge} &#9432;</small></span>'
+            f'<span class="dc-chip" style="background:{COLOUR[name]}">{GLYPH[name]} {e(word)}</span></div>'
+            f'{scale_html(entry["gauge"])}</div>')
