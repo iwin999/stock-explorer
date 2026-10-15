@@ -120,8 +120,10 @@ def _grade(pos, label, left, right):
 
 
 def key_signal_gauges(row):
-    """Gauges drawn exactly like the real site's Key signals (red to green grades, RSI-style zone bars, a blue volume bar),
-    by indicator name. Used by the second site's indicator panel."""
+    """Gauges drawn like the real site's Key signals: one red-to-green bar with a pointer and a verdict word under it, by
+    indicator name. Red on the left always means 'leans down', green on the right 'leans up'. For indicators that tend to
+    reverse from an extreme (Bollinger band, Stochastic RSI, money flow, where the day closed, yesterday's move, RSI) the bar
+    is turned round, so the stretched-high end is red and the stretched-low end is green. Used by the second site's panel."""
     out = {}
     c = row["close"]
     ma = row["sma200"] if pd.notna(row["sma200"]) else row["sma50"]
@@ -132,24 +134,23 @@ def key_signal_gauges(row):
         out["Trend"] = _grade(0.5 + gap / 0.5, "Uptrend" if up else "Downtrend" if down else "Sideways", "Downtrend", "Uptrend")
     if pd.notna(row["bb_up"]) and row["bb_up"] > row["bb_lo"]:
         b = (c - row["bb_lo"]) / (row["bb_up"] - row["bb_lo"])
-        out["Bollinger band"] = _zones(b, "Stretched high" if b >= 1 else "Stretched low" if b <= 0 else "Inside range",
-                                       "Bottom of range", "Top of range")
+        out["Bollinger band"] = _grade(1 - b, "Stretched high" if b >= 1 else "Stretched low" if b <= 0 else "Inside range",
+                                       "Top of range", "Bottom of range")
     if pd.notna(row["stochrsi"]):
         v = row["stochrsi"]
-        out["Stochastic RSI"] = _zones(v, "Oversold" if v < 0.2 else "Overbought" if v > 0.8 else "Balanced", "Oversold (20)", "Overbought (80)")
+        out["Stochastic RSI"] = _grade(1 - v, "Oversold" if v < 0.2 else "Overbought" if v > 0.8 else "Balanced", "Overbought (80)", "Oversold (20)")
     if pd.notna(row["mfi"]):
         v = row["mfi"] / 100
-        out["Money flow (MFI)"] = _zones(v, "Oversold" if v < 0.2 else "Overbought" if v > 0.8 else "Balanced", "Oversold (20)", "Overbought (80)")
+        out["Money flow (MFI)"] = _grade(1 - v, "Oversold" if v < 0.2 else "Overbought" if v > 0.8 else "Balanced", "Overbought (80)", "Oversold (20)")
     if pd.notna(row["clv"]):
         v = (row["clv"] + 1) / 2
-        out["Where it closed"] = _zones(v, "Near the low" if v < 0.2 else "Near the high" if v > 0.8 else "Mid-range", "Day's low", "Day's high")
+        out["Where it closed"] = _grade(1 - v, "Near the low" if v < 0.2 else "Near the high" if v > 0.8 else "Mid-range", "Day's high", "Day's low")
     if pd.notna(row["ret1"]):
         r1 = row["ret1"]
-        out["Yesterday's move"] = _zones(0.5 + r1 / 0.06, "Big fall" if r1 < -0.015 else "Big rise" if r1 > 0.015 else "Small move",
-                                         "Big fall", "Big rise", 0.25, 0.75)
+        out["Yesterday's move"] = _grade(0.5 - r1 / 0.06, "Big fall" if r1 < -0.015 else "Big rise" if r1 > 0.015 else "Small move", "Big rise", "Big fall")
     if pd.notna(row["rsi"]):
         r = row["rsi"]
-        out["RSI (speed)"] = _zones(r / 100, "Oversold" if r <= 30 else "Overbought" if r >= 70 else "Balanced", "Oversold (30)", "Overbought (70)", 0.3, 0.7)
+        out["RSI (speed)"] = _grade(1 - r / 100, "Oversold" if r <= 30 else "Overbought" if r >= 70 else "Balanced", "Overbought (70)", "Oversold (30)")
     if pd.notna(row["macd_hist"]):
         gap = row["macd_hist"] / c * 100
         word = "Rising" if gap > 0 else "Falling"
@@ -162,10 +163,12 @@ def key_signal_gauges(row):
     if pd.notna(row["cloud_top"]):
         w = 1 if c > row["cloud_top"] else -1 if c < row["cloud_bot"] else 0
         out["Ichimoku cloud"] = _grade(0.5 + w * 0.35, "Above the cloud" if w > 0 else "Below the cloud" if w < 0 else "Inside the cloud", "Below", "Above")
-    if pd.notna(row["vol_ratio"]):
-        vr = row["vol_ratio"]
-        out["Volume"] = {"pos": _clip((np.log2(max(vr, 1e-6)) + 1) / 2), "label": "Busy" if vr >= ind.VOLUME_STRONG else "Thin" if vr <= ind.VOLUME_WEAK else "Normal",
-                         "kind": "neutral", "ends": ("Thin (0.5x)", "Busy (2x)")}
+    if pd.notna(row["vol_ratio"]) and pd.notna(row["mom5"]):
+        vr, m = row["vol_ratio"], row["mom5"]
+        push = float(np.sign(m)) * float(np.log2(max(vr, 1e-6))) if abs(m) > 0.01 else 0.0     # busy trading behind a rise or a fall
+        busy = vr >= ind.VOLUME_STRONG and abs(m) > 0.01
+        out["Volume"] = _grade(0.5 + max(-1.0, min(1.0, push)) / 2, ("Busy buying" if m > 0 else "Busy selling") if busy else "Normal",
+                               "Busy selling", "Busy buying")
     if pd.notna(row["daily_vol"]):
         vol = row["daily_vol"] * np.sqrt(252) * 100
         out["Volatility"] = _grade(1 - _clip((vol - 10) / 40), "Calm" if vol < 20 else "Moderate" if vol < 35 else "High", "Very bumpy", "Calm")

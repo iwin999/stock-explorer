@@ -150,8 +150,8 @@ def test_the_second_sites_gauges_use_the_real_sites_key_signal_scales_and_the_re
     styled = dc.evaluate(p["basis"], p, scales=True)
     assert {v["gauge"]["kind"] for v in plain["votes"]} == {"neutral"}                     # the real site's Daily check: unchanged
     kinds = {v["name"]: v["gauge"]["kind"] for v in styled["votes"]}
-    assert kinds["Trend"] == "grade" and kinds["RSI (speed)"] == "zones" and kinds["MACD (momentum)"] == "grade" and kinds["Volume"] == "neutral"
+    assert set(kinds.values()) == {"grade"}                              # every gauge is the same red-to-green bar as the Trend one
     assert "Volatility" in kinds and len(styled["votes"]) == len(plain["votes"]) + 1
     assert (plain["prediction"], plain["score"]) == (styled["prediction"], styled["score"])    # the call itself does not change
     rsi = [v for v in styled["votes"] if v["name"] == "RSI (speed)"][0]["gauge"]
-    assert "#9fd0b8" in rsi["bar"] and rsi["ends"] == ("Oversold (30)", "Overbought (70)")
+    assert rsi["ends"] == ("Overbought (70)", "Oversold (30)")             # reversal indicators are turned round: red end = stretched high
