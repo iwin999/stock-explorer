@@ -332,5 +332,8 @@ A bar reading **You are looking at: Tata Consultancy Services, TCS** now stays p
 ## New in Step 45 (Dashboard view on the simple site)
 The **simple site** (not the full site) has a **Dashboard view** switch that puts everything on one wide screen, laid out from the hand-drawn sketch: a top bar with **MCGS Stock Explorer** and the **Portfolio value**; on the left the bought and sold list with quantity and profit or loss, the allocation ring, and the **refresh interval** setting; in the middle the stock search, the chart with its analysis tools, **Buy / Sell / Exit all** and the **prediction comparison for today**; on the right every indicator with a gauge and a hover description. It opens in Dark mode. The second site now opens straight into this Dashboard, in Dark mode, for laptops and the exhibition display; the phone layout is on hold behind the "Dashboard view" switch. The full site is unchanged. Code: `core/terminal_ui.py` (with `core/company_search.py` and `core/price_panel.py`).
 
+## New in Step 46 (one-row search on the second site)
+On the second site the search is one row: a single **SEARCH STOCK** box. The "Cannot find a company? Search Yahoo Finance live" drawer and the explanatory lines are gone; close matches for a typed name appear as one row of buttons. The real site's search is unchanged.
+
 ## Status
 All 8 features are built.

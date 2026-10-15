@@ -199,7 +199,7 @@ def run():
         st.fragment(run_every=every)(_ring)()
 
     with mid:
-        symbol = company_search.choose()
+        symbol = company_search.choose(compact=True)
         name = _name(symbol)
         hist, source, last_date = _history(symbol)
         offline = source == "offline"

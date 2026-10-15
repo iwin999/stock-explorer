@@ -160,3 +160,15 @@ def test_the_full_site_has_no_dashboard_switch():
     with a, b:
         full.run()
         assert not full.exception and not [t for t in full.toggle if t.key == "terminal_view"]
+
+
+def test_the_dashboard_search_is_one_compact_row_without_the_live_search_drawer():
+    store, app = _app("Compact", phone=False)
+    a, b = _patches(store)
+    with a, b:
+        app.run()
+        assert not app.exception
+        box = app.selectbox(key="company")
+        assert box.placeholder == "SEARCH STOCK" and box.label == "Search stock"
+        assert not [e for e in app.expander if "Yahoo Finance live" in e.label]
+        assert not [t for t in app.text_input if t.key == "live_query"]
