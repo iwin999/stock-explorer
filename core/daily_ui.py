@@ -12,13 +12,13 @@ from core.market_hours import is_market_open, now_ist
 from core.ui import plain_english
 
 
-def evaluate_now(symbol, hist, offline=False):
+def evaluate_now(symbol, hist, offline=False, scales=False):
     """(result, plan) for a company using the latest price; result is None when the history is too short."""
     now = now_ist().replace(tzinfo=None)
     open_now = is_market_open() and not offline
     quote = None if offline else live_quote(symbol)
     info = dc.plan(hist, now, live_price=quote["price"] if quote else None, market_open=open_now)
-    return dc.evaluate(info["basis"], info), info
+    return dc.evaluate(info["basis"], info, scales), info
 
 
 def render(symbol, name, hist, offline=False):

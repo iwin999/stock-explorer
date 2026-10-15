@@ -341,5 +341,8 @@ The top bar is now one rounded panel: school logo and title, a divider, the port
 ## New in Step 48 (calmer, aligned top bar on the second site)
 The top bar is a white card with a hairline border: crest and title, a thin divider, the portfolio value, then the Dark mode and Dashboard view switches and the About icon, all centred on exactly the same line (checked by measuring). The colours follow the site's own navy instead of a bright blue: the chosen period is navy with white text, the others are plain outlined buttons, and switches and labels are quiet grey. In Dark mode the same bar uses charcoal and a muted steel blue.
 
+## New in Step 49 (the second site's indicator panel uses the real site's scales)
+The indicators in the right-hand panel of the second site are now drawn like the real site's Key signals: Trend, MACD, Trend strength, Supertrend and Ichimoku on the red-to-green grade bar with the verdict word under it; RSI, Bollinger band, Stochastic RSI, Money flow, Where it closed and Yesterday's move on the RSI-style bar (green zone at the low end, grey in the middle, red at the high end); Volume on the blue bar. A Volatility reading was added. The call itself is unchanged, and the real site's Daily check tab keeps its own look.
+
 ## Status
 All 8 features are built.

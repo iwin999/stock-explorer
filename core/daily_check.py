@@ -94,7 +94,85 @@ def _entry(name, voting, vote, reading, why, gauge):
     return {"name": name, "voting": voting, "vote": vote, "reading": reading, "why": why, "gauge": gauge}
 
 
-def votes(row):
+def _with_real_gauges(entries, real):
+    """Swap each indicator's gauge for the real site's Key-signals style one, and add the Volatility reading."""
+    for e in entries:
+        if e["name"] in real:
+            e["gauge"] = real[e["name"]]
+    if "Volatility" in real:
+        entries.append(_entry("Volatility", False, 0, f"{real['Volatility']['label']}", "How much the price swings in a year", real["Volatility"]))
+    return entries
+
+
+
+def _zones_bar(low, high):
+    """The bar used under the real site's RSI: green zone at the low end, grey in the middle, red at the high end."""
+    lo, hi = int(low * 100), int(high * 100)
+    return (f"linear-gradient(90deg, #9fd0b8 0%, #9fd0b8 {lo}%, #e3e8ee {lo}%, #e3e8ee {hi}%, #e9a59d {hi}%, #e9a59d 100%)")
+
+
+def _zones(pos, label, left, right, low=0.2, high=0.8):
+    return {"pos": _clip(pos), "label": label, "kind": "zones", "ends": (left, right), "bar": _zones_bar(low, high)}
+
+
+def _grade(pos, label, left, right):
+    return {"pos": _clip(pos), "label": label, "kind": "grade", "ends": (left, right)}
+
+
+def key_signal_gauges(row):
+    """Gauges drawn exactly like the real site's Key signals (red to green grades, RSI-style zone bars, a blue volume bar),
+    by indicator name. Used by the second site's indicator panel."""
+    out = {}
+    c = row["close"]
+    ma = row["sma200"] if pd.notna(row["sma200"]) else row["sma50"]
+    if pd.notna(ma):
+        gap = c / ma - 1
+        up = c > row["sma50"] > row["sma200"] if pd.notna(row["sma200"]) else c > row["sma50"]
+        down = c < row["sma50"] < row["sma200"] if pd.notna(row["sma200"]) else c < row["sma50"]
+        out["Trend"] = _grade(0.5 + gap / 0.5, "Uptrend" if up else "Downtrend" if down else "Sideways", "Downtrend", "Uptrend")
+    if pd.notna(row["bb_up"]) and row["bb_up"] > row["bb_lo"]:
+        b = (c - row["bb_lo"]) / (row["bb_up"] - row["bb_lo"])
+        out["Bollinger band"] = _zones(b, "Stretched high" if b >= 1 else "Stretched low" if b <= 0 else "Inside range",
+                                       "Bottom of range", "Top of range")
+    if pd.notna(row["stochrsi"]):
+        v = row["stochrsi"]
+        out["Stochastic RSI"] = _zones(v, "Oversold" if v < 0.2 else "Overbought" if v > 0.8 else "Balanced", "Oversold (20)", "Overbought (80)")
+    if pd.notna(row["mfi"]):
+        v = row["mfi"] / 100
+        out["Money flow (MFI)"] = _zones(v, "Oversold" if v < 0.2 else "Overbought" if v > 0.8 else "Balanced", "Oversold (20)", "Overbought (80)")
+    if pd.notna(row["clv"]):
+        v = (row["clv"] + 1) / 2
+        out["Where it closed"] = _zones(v, "Near the low" if v < 0.2 else "Near the high" if v > 0.8 else "Mid-range", "Day's low", "Day's high")
+    if pd.notna(row["ret1"]):
+        r1 = row["ret1"]
+        out["Yesterday's move"] = _zones(0.5 + r1 / 0.06, "Big fall" if r1 < -0.015 else "Big rise" if r1 > 0.015 else "Small move",
+                                         "Big fall", "Big rise", 0.25, 0.75)
+    if pd.notna(row["rsi"]):
+        r = row["rsi"]
+        out["RSI (speed)"] = _zones(r / 100, "Oversold" if r <= 30 else "Overbought" if r >= 70 else "Balanced", "Oversold (30)", "Overbought (70)", 0.3, 0.7)
+    if pd.notna(row["macd_hist"]):
+        gap = row["macd_hist"] / c * 100
+        word = "Rising" if gap > 0 else "Falling"
+        pos = 0.5 + gap / 2.0
+        out["MACD (momentum)"] = _grade(pos, f"Slightly {word.lower()}" if abs(_clip(pos) - 0.5) < 0.1 else word, "Falling", "Rising")
+    if pd.notna(row["adx"]) and (row["pdi"] + row["mdi"]):
+        lean = row["pdi"] / (row["pdi"] + row["mdi"])
+        out["Trend strength (ADX)"] = _grade(lean, "Buyers lead" if lean > 0.5 else "Sellers lead", "Sellers", "Buyers")
+    out["Supertrend"] = _grade(0.85 if row["supertrend"] > 0 else 0.15, "Uptrend" if row["supertrend"] > 0 else "Downtrend", "Downtrend", "Uptrend")
+    if pd.notna(row["cloud_top"]):
+        w = 1 if c > row["cloud_top"] else -1 if c < row["cloud_bot"] else 0
+        out["Ichimoku cloud"] = _grade(0.5 + w * 0.35, "Above the cloud" if w > 0 else "Below the cloud" if w < 0 else "Inside the cloud", "Below", "Above")
+    if pd.notna(row["vol_ratio"]):
+        vr = row["vol_ratio"]
+        out["Volume"] = {"pos": _clip((np.log2(max(vr, 1e-6)) + 1) / 2), "label": "Busy" if vr >= ind.VOLUME_STRONG else "Thin" if vr <= ind.VOLUME_WEAK else "Normal",
+                         "kind": "neutral", "ends": ("Thin (0.5x)", "Busy (2x)")}
+    if pd.notna(row["daily_vol"]):
+        vol = row["daily_vol"] * np.sqrt(252) * 100
+        out["Volatility"] = _grade(1 - _clip((vol - 10) / 40), "Calm" if vol < 20 else "Moderate" if vol < 35 else "High", "Very bumpy", "Calm")
+    return out
+
+
+def votes(row, scales=False):
     """A list of dicts, one per indicator, from one day's row. Keys: name, voting (does it count towards the call?), vote
     (+1 Up, -1 Down, 0 Neutral), reading (a few words), why (a short reason) and gauge (a 0 to 1 position for the picture).
 
@@ -102,6 +180,7 @@ def votes(row):
     the others are shown for context only (tested, and did not help next-day accuracy). An indicator with no data is left out."""
     out = []
     c = row["close"]
+    real = key_signal_gauges(row) if scales else {}
     # ---- the six that vote ----
     s50, s200 = row["sma50"], row["sma200"]
     if pd.notna(s50):
@@ -168,7 +247,7 @@ def votes(row):
         vote = 1 if vr >= ind.VOLUME_STRONG and m > 0.01 else -1 if vr >= ind.VOLUME_STRONG and m < -0.01 else 0
         out.append(_entry("Volume", False, vote, f"{vr:.1f}x usual", "Busy trading makes a move more believable",
                           _gauge(0.5 + (vr - 1) / 2, "Busy" if vr >= 1.15 else "Thin" if vr <= 0.85 else "Normal", "Thin", "Busy")))
-    return out
+    return _with_real_gauges(out, real) if scales else out
 
 
 def call_from(vote_list):
@@ -216,7 +295,7 @@ def plan(hist, now, live_price=None, market_open=False):
             "note": "The market is closed today, so this checks the last trading day.", "complete": hist}
 
 
-def evaluate(basis, plan_info):
+def evaluate(basis, plan_info, scales=False):
     """The whole check for one company. Returns None if there is not enough history.
 
     Keys: prediction, score, n, votes, prev_close, basis_date, range (low, high), actual, change, actual_direction,
@@ -227,7 +306,7 @@ def evaluate(basis, plan_info):
         return None
     frame = indicator_frame(basis)
     row = frame.iloc[-1]
-    vote_list = votes(row)
+    vote_list = votes(row, scales)
     prediction, score, n = call_from(vote_list)
     prev_close = float(row["close"])
     vol = float(row["daily_vol"]) if pd.notna(row["daily_vol"]) else 0.015

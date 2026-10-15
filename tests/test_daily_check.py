@@ -141,3 +141,17 @@ def test_the_pictures_build_without_errors():
     rec = dc.track_record(p["complete"])
     assert vis.strip(rec["rows"]).count("dc-sq") == rec["n"] and "This rule" in vis.bars(55, 50)
     assert "The call" in vis.versus("Up", "Down", False)
+
+
+def test_the_second_sites_gauges_use_the_real_sites_key_signal_scales_and_the_real_site_keeps_its_own():
+    h = _hist()
+    p = dc.plan(h, datetime(2026, 10, 14, 13, 0), live_price=float(h["Close"].iloc[-1]), market_open=True)
+    plain = dc.evaluate(p["basis"], p)
+    styled = dc.evaluate(p["basis"], p, scales=True)
+    assert {v["gauge"]["kind"] for v in plain["votes"]} == {"neutral"}                     # the real site's Daily check: unchanged
+    kinds = {v["name"]: v["gauge"]["kind"] for v in styled["votes"]}
+    assert kinds["Trend"] == "grade" and kinds["RSI (speed)"] == "zones" and kinds["MACD (momentum)"] == "grade" and kinds["Volume"] == "neutral"
+    assert "Volatility" in kinds and len(styled["votes"]) == len(plain["votes"]) + 1
+    assert (plain["prediction"], plain["score"]) == (styled["prediction"], styled["score"])    # the call itself does not change
+    rsi = [v for v in styled["votes"] if v["name"] == "RSI (speed)"][0]["gauge"]
+    assert "#9fd0b8" in rsi["bar"] and rsi["ends"] == ("Oversold (30)", "Overbought (70)")

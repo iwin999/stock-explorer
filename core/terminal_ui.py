@@ -29,7 +29,7 @@ CSS = """<style>
 .tm-row .s { opacity:.65; font-size:.8rem; } .tm-h { font-weight:800; font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin:.5rem 0 .2rem 0; }
 .dc-card.tm { padding:.5rem .7rem .05rem .7rem; margin-bottom:.45rem; cursor:help; }
 .dc-card.tm .dc-name { font-size:.92rem; } .dc-card.tm .scale { margin:.1rem 0 .3rem 0; }
-.dc-card.tm .scale-verdict { display:none; }
+.dc-card.tm .scale-verdict { font-size:.85rem; margin-top:0; }
 .up { color:#26a69a; font-weight:700; } .down { color:#ef5350; font-weight:700; } .flat { color:#868993; font-weight:700; }
 </style>"""
 
@@ -176,7 +176,7 @@ def _prediction(symbol, name, hist, offline):
 
 @guard()
 def _indicators(symbol, hist, offline):
-    result, _ = daily_ui.evaluate_now(symbol, hist, offline)
+    result, _ = daily_ui.evaluate_now(symbol, hist, offline, scales=True)          # gauges drawn like the real site's Key signals
     if result is None:
         st.caption("Not enough history for the indicators.")
         return
