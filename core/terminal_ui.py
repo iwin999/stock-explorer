@@ -25,6 +25,8 @@ PANEL_HEIGHT = 755
 
 CSS = """<style>
 .stApp [data-testid="stMainBlockContainer"], .stApp .block-container { padding-top: 3.2rem !important; max-width: 100% !important; }
+.stApp [data-testid="stLayoutWrapper"]:has(> .st-key-tm_ind), .stApp [data-testid="stLayoutWrapper"]:has(> .st-key-tm_lists) { flex:1 1 0 !important; height:auto !important; min-height:150px; }
+.st-key-tm_ind, .st-key-tm_lists { height:100% !important; }
 .tm-row { display:flex; justify-content:space-between; gap:.5rem; padding:.35rem 0; border-bottom:1px solid rgba(128,128,128,.25); font-size:.92rem; }
 .tm-row .s { opacity:.65; font-size:.8rem; } .tm-h { font-weight:800; font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin:.5rem 0 .2rem 0; }
 .dc-card.tm { padding:.5rem .7rem .05rem .7rem; margin-bottom:.45rem; cursor:help; }
@@ -43,7 +45,7 @@ def _theme_css(dark):
 :root {{ --tm-panel:{panel}; --tm-line:{line}; --tm-muted:{muted}; --tm-ink:{ink}; }}
 .st-key-tm_top, .st-key-tm_trade {{ background:{panel}; border:1px solid {line}; border-radius:12px; padding:.6rem 1.2rem !important;
   box-shadow:0 1px 3px rgba(16,24,40,.07); margin-bottom:.8rem; }}
-.st-key-tm_trade {{ border:1px solid {line}; border-radius:12px; padding:.55rem 1.2rem !important; box-shadow:0 1px 3px rgba(16,24,40,.07); }}
+.st-key-tm_trade {{ border:1px solid {line}; border-radius:12px; padding:.55rem 1.2rem !important; box-shadow:0 1px 3px rgba(16,24,40,.07); margin-bottom:0 !important; }}
 .st-key-tm_top [data-testid="stHorizontalBlock"], .st-key-tm_trade [data-testid="stHorizontalBlock"] {{ align-items:center !important; gap:1rem; flex-wrap:nowrap; }}
 .st-key-tm_top [data-testid="stColumn"], .st-key-tm_trade [data-testid="stColumn"] {{ min-width:0 !important; }}
 .st-key-tm_top [data-testid="stVerticalBlock"], .st-key-tm_trade [data-testid="stVerticalBlock"] {{ gap:0 !important; }}
@@ -213,7 +215,7 @@ def run():
     left, mid, right = st.columns([1.2, 3.3, 1.45], gap="small")
 
     with left:
-        lists_box = st.container(height=290, border=True)
+        lists_box = st.container(height=290, border=True, key="tm_lists")
         ring_box = st.container(height=270, border=True)
         refresh_box = st.container(border=True)
     with refresh_box:
@@ -252,9 +254,13 @@ def run():
             if b3.button("Exit all", key="term_exit_btn", width="stretch", disabled=not (pf.holdings or pf.derivatives),
                          help="Sell everything you hold in one go. Your starting capital is not reset."):
                 tu._exit_dialog()
-        st.fragment(run_every=every)(_prediction)(symbol, name, hist, offline)
 
     with right:
-        box = st.container(height=PANEL_HEIGHT, border=True)
+        box = st.container(height=PANEL_HEIGHT, border=True, key="tm_ind")
         with box:
             st.fragment(run_every=every)(_indicators)(symbol, hist, offline)
+
+    # the prediction bar sits on the next row, in the same place under the middle column
+    _, pred_col, _ = st.columns([1.2, 3.3, 1.45], gap="small")
+    with pred_col:
+        st.fragment(run_every=every)(_prediction)(symbol, name, hist, offline)

@@ -350,5 +350,8 @@ The Buy / Sell / Exit all buttons now sit in a bar styled like the top bar: a wh
 ## New in Step 52 (taller chart on the second site)
 The chart on the second site is taller (520 px instead of 420), so the Buttons for paper trading bar sits lower, where the prediction bar used to start, and the prediction bar follows it on the next scroll, unchanged. The right-hand indicator panel was made taller so its bottom lines up with the paper-trading bar.
 
+## New in Step 53 (the three columns end on one line)
+On the second site the left column, the paper-trading bar and the indicator panel now end on exactly the same line (measured at two window widths). The holdings list and the indicator panel stretch to the bottom of the row instead of having fixed heights, and the prediction bar sits on its own row underneath, in the same place as before.
+
 ## Status
 All 8 features are built.
