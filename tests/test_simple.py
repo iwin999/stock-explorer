@@ -129,10 +129,8 @@ def test_a_bar_names_the_company_being_looked_at_on_both_sites():
         assert any("companybar-name" in m.value and "You are looking at" in m.value for m in full.markdown)
 
 
-def test_the_terminal_view_lays_everything_out_on_one_screen():
-    store, _ = _app("Termy")
-    app = AppTest.from_file(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "app.py"), default_timeout=240)
-    app.query_params["user"] = "Termy"
+def test_the_dashboard_view_lays_everything_out_on_one_screen():
+    store, app = _app("Termy")
     a, b = _patches(store)
     with a, b:
         app.run()
@@ -147,4 +145,15 @@ def test_the_terminal_view_lays_everything_out_on_one_screen():
         app.selectbox(key="term_refresh").set_value("Off").run()
         assert not app.exception
         app.toggle(key="terminal_view").set_value(False).run()          # and back to the tabs
-        assert not app.exception and len(app.tabs) >= 9
+        assert not app.exception and [x for x in app.radio if x.key == "spage"]            # back in the phone layout
+
+
+def test_the_full_site_has_no_dashboard_switch():
+    """The Dashboard view belongs to the simple site only; the full site must not change."""
+    full = AppTest.from_file(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "app.py"), default_timeout=240)
+    store, _ = _app("FullOnly")
+    full.query_params["user"] = "FullOnly"
+    a, b = _patches(store)
+    with a, b:
+        full.run()
+        assert not full.exception and not [t for t in full.toggle if t.key == "terminal_view"]

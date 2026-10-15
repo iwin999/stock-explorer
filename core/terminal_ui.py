@@ -1,4 +1,4 @@
-"""The Terminal view: the whole job on one screen, laid out like a trading terminal.
+"""The Dashboard (terminal) view of the SIMPLE site: the whole job on one screen, laid out like a trading terminal.
 
     top bar:  MCGS Stock Explorer                                    Portfolio value
     left   :  bought and sold list, allocation ring, refresh setting
@@ -178,7 +178,7 @@ def run():
     with c_value:
         st.fragment(run_every=every)(_portfolio_value)()
     c_dark.toggle("Dark mode", key="dark_site", on_change=about._dark_changed)
-    c_term.toggle("Terminal view", key="terminal_view", on_change=switched)
+    c_term.toggle("Dashboard view", key="terminal_view", on_change=switched)
     with c_info:
         about.icon()
 

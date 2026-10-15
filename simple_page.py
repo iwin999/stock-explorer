@@ -7,7 +7,7 @@ import streamlit as st
 from core import instruments as ins
 from core import daily_check as dc
 from core import daily_ui
-from core import about, assistant_ui, companies, tour, universe
+from core import about, assistant_ui, companies, terminal_ui, tour, universe
 from core import simple_words as words
 from core.charts import allocation_donut, show as show_chart, simple_line_chart
 from core.formatting import format_inr
@@ -21,40 +21,46 @@ from core import trading_ui as tu
 PAGES = ["Home", "Company", "Portfolio", "Learn"]
 POPULAR = ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS", "INFY.NS", "ITC.NS", "SBIN.NS"]
 
-st.set_page_config(page_title="Stock Explorer (simple)", layout="centered")
+dashboard = bool(st.session_state.get("terminal_view"))          # the wide, one-screen Dashboard view
+st.set_page_config(page_title="Stock Explorer (simple)", layout="wide" if dashboard else "centered")
 st.markdown(STYLE_CSS, unsafe_allow_html=True)
 if st.session_state.get("dark_site"):
     st.markdown(DARK_CSS, unsafe_allow_html=True)
-st.markdown("""<style>
-.stApp [data-testid="stMainBlockContainer"], .stApp .block-container { max-width: 560px; padding: 2.4rem 1rem 9rem 1rem !important; }
-.stApp, .stApp p, .stApp label { font-size: 1.08rem; }
-.stApp button { min-height: 3rem; font-size: 1.05rem !important; border-radius: 12px; }
-.big-number { font-size: 2.3rem; font-weight: 700; line-height: 1.1; }
-.up { color: #1f9d73; font-weight: 600; } .down { color: #d6453d; font-weight: 600; } .flat { color: #6b7785; font-weight: 600; }
-.card { border: 1px solid #d8dde6; border-radius: 14px; padding: 0.9rem 1rem; margin: 0.4rem 0 0.8rem 0; }
-.st-key-bottomnav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 998; padding: 0.4rem 0.6rem 0.7rem 0.6rem;
-  background: #ffffff; border-top: 1px solid #d8dde6; }
-.st-key-bottomnav [role="radiogroup"] { display: flex; width: 100%; max-width: 560px; margin: 0 auto; gap: 0.3rem; }
-.st-key-bottomnav [role="radiogroup"] label { flex: 1 1 0; justify-content: center; border-radius: 12px; padding: 0.55rem 0.2rem;
-  border: 1px solid #d8dde6; margin: 0; }
-.st-key-bottomnav [role="radiogroup"] label > div { margin: 0; padding: 0; justify-content: center; width: 100%; }
-.st-key-bottomnav [role="radiogroup"] label > div > div:first-child { display: none !important; }
-.st-key-bottomnav [role="radiogroup"] { flex-wrap: nowrap !important; }
-.st-key-bottomnav [role="radiogroup"] label[data-selected="true"] { background: #2962ff; border-color: #2962ff; }
-.st-key-bottomnav [role="radiogroup"] label[data-selected="true"] p { color: #ffffff !important; }
-.st-key-bottomnav [role="radiogroup"] p { font-weight: 600; text-align: center; font-size: 1rem !important; margin: 0; }
-.st-key-simplehead [data-testid="stHorizontalBlock"] { flex-wrap: nowrap !important; align-items: center; }
-.st-key-simplehead [data-testid="stColumn"] { min-width: 0 !important; }
-.st-key-bottomnav [data-testid="stWidgetLabel"] { display: none; }
-</style>""", unsafe_allow_html=True)
-if st.session_state.get("dark_site"):
-    st.markdown("<style>.card { border-color: #2a2e39; } .st-key-bottomnav { background: #131722; border-top-color: #2a2e39; }"
-                " .st-key-bottomnav [role='radiogroup'] label { border-color: #2a2e39; }</style>", unsafe_allow_html=True)
+if not dashboard:
+    st.markdown("""<style>
+    .stApp [data-testid="stMainBlockContainer"], .stApp .block-container { max-width: 560px; padding: 2.4rem 1rem 9rem 1rem !important; }
+    .stApp, .stApp p, .stApp label { font-size: 1.08rem; }
+    .stApp button { min-height: 3rem; font-size: 1.05rem !important; border-radius: 12px; }
+    .big-number { font-size: 2.3rem; font-weight: 700; line-height: 1.1; }
+    .up { color: #1f9d73; font-weight: 600; } .down { color: #d6453d; font-weight: 600; } .flat { color: #6b7785; font-weight: 600; }
+    .card { border: 1px solid #d8dde6; border-radius: 14px; padding: 0.9rem 1rem; margin: 0.4rem 0 0.8rem 0; }
+    .st-key-bottomnav { position: fixed; bottom: 0; left: 0; right: 0; z-index: 998; padding: 0.4rem 0.6rem 0.7rem 0.6rem;
+      background: #ffffff; border-top: 1px solid #d8dde6; }
+    .st-key-bottomnav [role="radiogroup"] { display: flex; width: 100%; max-width: 560px; margin: 0 auto; gap: 0.3rem; }
+    .st-key-bottomnav [role="radiogroup"] label { flex: 1 1 0; justify-content: center; border-radius: 12px; padding: 0.55rem 0.2rem;
+      border: 1px solid #d8dde6; margin: 0; }
+    .st-key-bottomnav [role="radiogroup"] label > div { margin: 0; padding: 0; justify-content: center; width: 100%; }
+    .st-key-bottomnav [role="radiogroup"] label > div > div:first-child { display: none !important; }
+    .st-key-bottomnav [role="radiogroup"] { flex-wrap: nowrap !important; }
+    .st-key-bottomnav [role="radiogroup"] label[data-selected="true"] { background: #2962ff; border-color: #2962ff; }
+    .st-key-bottomnav [role="radiogroup"] label[data-selected="true"] p { color: #ffffff !important; }
+    .st-key-bottomnav [role="radiogroup"] p { font-weight: 600; text-align: center; font-size: 1rem !important; margin: 0; }
+    .st-key-simplehead [data-testid="stHorizontalBlock"] { flex-wrap: nowrap !important; align-items: center; }
+    .st-key-simplehead [data-testid="stColumn"] { min-width: 0 !important; }
+    .st-key-bottomnav [data-testid="stWidgetLabel"] { display: none; }
+    </style>""", unsafe_allow_html=True)
+    if st.session_state.get("dark_site"):
+        st.markdown("<style>.card { border-color: #2a2e39; } .st-key-bottomnav { background: #131722; border-top-color: #2a2e39; }"
+                    " .st-key-bottomnav [role='radiogroup'] label { border-color: #2a2e39; }</style>", unsafe_allow_html=True)
 
 if not tu.has_account():
     tu.capital_gate()
     st.stop()
 pf = tu._get_portfolio()
+if dashboard:                       # everything on one screen: holdings, chart, indicators (see core/terminal_ui.py)
+    terminal_ui.run()
+    show_disclaimer()
+    st.stop()
 
 
 # ---------------- small helpers ----------------
@@ -121,8 +127,10 @@ def span(text, kind):
 with st.container(key="simplehead"):
     st.markdown(f'<div class="brand">{about._crest_html()}<h1 style="font-size:1.9rem !important">Stock Explorer</h1></div>',
                 unsafe_allow_html=True)
-    left, right = st.columns([4, 1])
+    left, middle, right = st.columns([3, 3, 1])
     left.toggle("Dark mode", key="dark_site", on_change=about._dark_changed)
+    middle.toggle("Dashboard view", key="terminal_view", on_change=terminal_ui.switched,
+                  help="Everything on one wide screen, for a laptop or a big display: your holdings, the chart and the indicators side by side.")
     with right:
         about.icon()
 tu.housekeeping()

@@ -10,8 +10,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from core import about, assistant_ui, carpet_ui, company_search, daily_ui, terminal_ui, universe, market_strip, backtest as bt, fusion_ui, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
-from core import price_panel
+from core import about, assistant_ui, carpet_ui, daily_ui, universe, market_strip, backtest as bt, fusion_ui, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
 from core.charts import (show as show_chart, add_fibonacci, backtest_chart, fan_chart, outlook_gauge, outcome_histogram, price_chart,
                          zoom_to_window)
 from core.formatting import format_inr
@@ -29,13 +28,6 @@ setup_page("Stock Explorer")
 # ---------- step 1: ask how much virtual money to practise with ----------
 if not trading_ui.has_account():
     trading_ui.capital_gate()
-    st.stop()
-
-
-# ---------- the Terminal view: everything on one screen (switch it on below the market strip) ----------
-if st.session_state.get("terminal_view"):
-    terminal_ui.run()
-    show_disclaimer()
     st.stop()
 
 
@@ -58,20 +50,72 @@ def load_benchmark(index_symbol):
     return get_history_with_source(index_symbol, "7y")
 
 
+@st.cache_data(ttl=600, show_spinner=False)
+def run_search(query):
+    return companies.search(query)
+
 
 # ---------- header ----------
 about.title_row("Stock Explorer")
 st.caption("Price history, key signals and a range of possible outcomes for Indian companies listed on the NSE and the BSE.")
 market_strip.render(lambda: trading_ui.snapshot_now(trading_ui._get_portfolio()), portfolio_ui.my_rank)
 trading_ui.user_bar()
-st.toggle("Terminal view", key="terminal_view", on_change=terminal_ui.switched,
-          help="Everything on one screen like a trading terminal: your holdings on the left, the chart in the middle, the indicators on the right.")
 trading_ui.housekeeping()      # settle expired futures/options, close busted futures
 trading_ui.show_flash()        # result of the last click, wherever it came from
 trading_ui.show_events()       # e.g. 'your future expired and was settled'
 
 # ---------- company search: one box, suggestions as you type ----------
-symbol = company_search.choose()
+def _use_found_company(symbol):
+    """Button callback: make a company found by the live Yahoo search the chosen one."""
+    st.session_state.setdefault("extra_companies", [])
+    if symbol not in st.session_state["extra_companies"]:
+        st.session_state["extra_companies"].append(symbol)
+    st.session_state["company"] = symbol
+
+
+def _pick_company(symbol):
+    """Button callback: choose one of the suggested companies."""
+    st.session_state["company"] = symbol
+
+
+company_options = list(st.session_state.get("extra_companies", [])) + universe.OPTIONS
+typed_or_picked = st.selectbox("Search any NSE or BSE company (start typing a name)", company_options,
+                               format_func=companies.label, key="company", accept_new_options=True, index=None,
+                               placeholder="Type a company name, for example Tata, Suzlon or HDFC",
+                               help=f"{len(universe.OPTIONS):,} companies listed on the NSE and the BSE. Type part of a name, "
+                                    "for example 'tata', 'suzlon' or 'bank'. A small spelling slip is fine: type the name, "
+                                    "press Enter, and the closest matches are listed best first.")
+symbol = typed_or_picked
+if typed_or_picked is None:                                # nothing typed yet: start with a well-known company
+    symbol = company_options[0]
+    st.caption(f"Showing {companies.label(symbol)} to start with. Click the box to browse the list, or type a name to find another company.")
+elif typed_or_picked not in company_options:               # something was typed and entered: find the closest companies
+    suggestions = universe.rank(typed_or_picked, 8)
+    if suggestions:
+        symbol = suggestions[0]
+        old = universe.renamed(typed_or_picked)
+        if old:
+            st.info(f"“{typed_or_picked}” is an old name. The company is now listed as "
+                    f"**{companies.NAME_BY_SYMBOL.get(suggestions[0], suggestions[0])}**.")
+        st.caption(f"Closest matches for “{typed_or_picked}”, best first. Showing the first one; tap another to switch.")
+        for i in range(0, len(suggestions), 2):
+            cols = st.columns(2)
+            for col, sug in zip(cols, suggestions[i:i + 2]):
+                col.button(("1. " if sug == suggestions[0] else "") + companies.label(sug), key=f"sug_{sug}", width="stretch",
+                           type="primary" if sug == suggestions[0] else "secondary", on_click=_pick_company, args=(sug,))
+    else:
+        symbol = company_options[0]
+        st.warning(f"No company looks like “{typed_or_picked}”. Try another spelling, or search Yahoo Finance below.")
+with st.expander("Cannot find a company? Search Yahoo Finance live"):
+    live_query = st.text_input("Company name", key="live_query", placeholder="e.g. a company that listed very recently")
+    if live_query.strip():
+        found, _src = run_search(live_query.strip())
+        if not found:
+            st.warning(f"Nothing found for “{live_query}”. Try another spelling.")
+        for r in found[:8]:
+            c1, c2 = st.columns([5, 1])
+            c1.write(companies.label(r["symbol"]) if r["symbol"] in companies.NAME_BY_SYMBOL else f"{r['name']} ({r['symbol']})")
+            c2.button("Use", key=f"use_{r['symbol']}", on_click=_use_found_company, args=(r["symbol"],))
 
 # ---------- load data ----------
 name = load_name(symbol)
@@ -118,7 +162,7 @@ bench_symbol, bench_name = companies.benchmark_for(symbol)
 _bench, _, _ = load_benchmark(bench_symbol)
 bench_close = _bench["Close"] if _bench is not None else None
 
-PERIODS = price_panel.PERIODS
+PERIODS = {"6 months": 126, "1 year": 252, "2 years": 504, "5 years": 1260}
 STRATEGY_KEYS = list(STRATEGIES)
 
 tab_overview, tab_daily, tab_carpet, tab_outcomes, tab_strategy, tab_fusion, tab_trade, tab_portfolio, tab_bot = st.tabs(
@@ -130,7 +174,29 @@ tab_overview, tab_daily, tab_carpet, tab_outcomes, tab_strategy, tab_fusion, tab
 # =====================================================================
 with tab_overview:
     st.markdown("**In short:** the chart shows what the price did. The cards below say whether it is speeding up or slowing down, how bumpy it is, and whether the risk was worth the reward.")
-    price_panel.render(hist, symbol, name)
+    st.header("Price history")
+    p1, p2, p4, p3 = st.columns([5, 3, 2, 1])
+    period = p1.radio("Period", list(PERIODS), index=1, horizontal=True)
+    show_fib = p2.checkbox("Show Fibonacci levels", key="show_fib",
+                           help="Draws the Fibonacci retracement lines (23.6%, 38.2%, 50%, 61.8%, 78.6%) and the extension lines (127.2%, 161.8%) from the highest and lowest price in the period you are viewing.")
+    dark_chart = p4.toggle("Dark chart", key="dark_chart",
+                           help="Turns just this price chart into a dark trading screen, whatever the rest of the site looks like.")
+    with p3:
+        help_bubble("fibonacci")
+
+    fig = price_chart(hist, symbol, name)
+    fib = ind.fibonacci_levels(hist, PERIODS[period]) if show_fib else None
+    if show_fib:
+        add_fibonacci(fig, fib)
+    extra = [price for _, price in fib["extensions"]] if fib else ()      # keep the extension lines inside the chart
+    fig = zoom_to_window(fig, hist, PERIODS[period], include=extra)
+    show_chart(fig, dark=dark_chart)
+    if show_fib:
+        st.info(ind.describe_fibonacci(fib) + " They depend on the period chosen and are a visual guide, not a prediction.")
+    st.caption("Each bar is one trading day. The amber and navy lines are the average price over the last 50 and "
+               "200 days; they smooth out day-to-day noise. The grey band is the price's usual range, and it "
+               "widens when the price is moving more. The bars underneath are volume, the number of shares traded each day "
+               "(green on days the price rose, red when it fell); the grey line is the usual level. Tall bars mean a busy day.")
 
     # ---------- key signals ----------
     st.header("Key signals")
