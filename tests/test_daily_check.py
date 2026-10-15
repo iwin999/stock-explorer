@@ -100,6 +100,9 @@ def _open(path, name):
     acc.save_account(store, pf)
     app = AppTest.from_file(path, default_timeout=240)
     app.query_params["user"] = name
+    if path == SIMPLE:                         # the second site opens in the Dashboard; this test looks at its phone layout
+        app.session_state["dash_init"] = True
+        app.session_state["terminal_view"] = False
     return store, app
 
 

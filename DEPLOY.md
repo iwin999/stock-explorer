@@ -87,11 +87,11 @@ Please keep it to a first name: the site is public.
 ## The simple site (second link, for phones and the QR code)
 The repository holds two sites that share the same code, accounts and leaderboard:
 - **Full site:** main file `app.py` (everything, including the CMT Level III tools).
-- **Simple site:** main file `simple.py` (phone layout, plain words, guided tour for first-time visitors).
+- **Second site (exhibition display):** main file `simple.py`. It opens straight into the wide one-screen Dashboard in Dark mode (holdings on the left, chart in the middle, indicators on the right). The phone layout and guided tour are still in the code behind the "Dashboard view" switch but are on hold.
 
-To publish the simple site: on share.streamlit.io choose **Create app**, pick this same repository and branch, set **Main file
+To publish the second site: on share.streamlit.io choose **Create app**, pick this same repository and branch, set **Main file
 path** to `simple.py`, choose a short address (for example `mayo-stock-simple`), and under Advanced settings paste the same
-Secrets as the full site (so both use the same Supabase database). Point the QR code at the simple site.
+Secrets as the full site (so both use the same Supabase database). 
 
 ## What is different online
 | Topic | Behaviour |

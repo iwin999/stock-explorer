@@ -14,13 +14,16 @@ APP = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
 PRICES = {"RELIANCE.NS": 1000.0, "TCS.NS": 3000.0}
 
 
-def _app(name, tour_seen=True):
+def _app(name, tour_seen=True, phone=True):
     store = acc.FileStore(tempfile.mkdtemp())
     pf = acc.create_account(store, name, 100000)
     pf.tour_seen = tour_seen
     acc.save_account(store, pf)
     app = AppTest.from_file(APP, default_timeout=240)
     app.query_params["user"] = name
+    if phone:                                  # the second site opens in the Dashboard; these tests look at the phone layout
+        app.session_state["dash_init"] = True
+        app.session_state["terminal_view"] = False
     return store, app
 
 
@@ -129,12 +132,12 @@ def test_a_bar_names_the_company_being_looked_at_on_both_sites():
         assert any("companybar-name" in m.value and "You are looking at" in m.value for m in full.markdown)
 
 
-def test_the_dashboard_view_lays_everything_out_on_one_screen():
-    store, app = _app("Termy")
+def test_the_second_site_opens_straight_into_the_dashboard():
+    store, app = _app("Termy", phone=False)
     a, b = _patches(store)
     with a, b:
         app.run()
-        app.toggle(key="terminal_view").set_value(True).run()
+        assert app.toggle(key="terminal_view").value is True                 # no click needed
         assert not app.exception and not _errors(app)
         text = " ".join(m.value for m in app.markdown)
         assert "MCGS Stock Explorer" in text and "Portfolio value" in text
