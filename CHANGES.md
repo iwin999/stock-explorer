@@ -338,5 +338,8 @@ On the second site the search is one row: a single **SEARCH STOCK** box. The "Ca
 ## New in Step 47 (tidier top bar and chart controls on the second site)
 The top bar is now one rounded panel: school logo and title, a divider, the portfolio value with its percentage, then the Dark mode and Dashboard view switches and the About icon, all on one line. Above the chart the period is a row of pill buttons (6 months, 1 year, 2 years, 5 years; the chosen one in blue) with the Fibonacci and Dark chart switches beside it. The real site is unchanged.
 
+## New in Step 48 (calmer, aligned top bar on the second site)
+The top bar is a white card with a hairline border: crest and title, a thin divider, the portfolio value, then the Dark mode and Dashboard view switches and the About icon, all centred on exactly the same line (checked by measuring). The colours follow the site's own navy instead of a bright blue: the chosen period is navy with white text, the others are plain outlined buttons, and switches and labels are quiet grey. In Dark mode the same bar uses charcoal and a muted steel blue.
+
 ## Status
 All 8 features are built.

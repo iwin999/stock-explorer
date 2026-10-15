@@ -25,25 +25,49 @@ PANEL_HEIGHT = 700
 
 CSS = """<style>
 .stApp [data-testid="stMainBlockContainer"], .stApp .block-container { padding-top: 3.2rem !important; max-width: 100% !important; }
-.tm-brand { display:flex; align-items:center; gap:.7rem; } .tm-brand img { height:2.6rem; width:auto; }
-.tm-brand .t { font-size:1.55rem; font-weight:800; line-height:1.1; }
-.tm-value { text-align:left; padding-left:1.1rem; border-left:1px solid rgba(128,128,128,.35); } .tm-value .l { font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; opacity:.7; }
-.tm-value .v { font-size:1.7rem; font-weight:800; line-height:1.1; }
-.st-key-tm_top { background:rgba(128,128,128,.10); border:1px solid rgba(128,128,128,.28); border-radius:16px; padding:.55rem 1.1rem !important; margin-bottom:.7rem; }
-.st-key-tm_top label p, .st-key-tm_chartbar label p { white-space:nowrap; font-size:.95rem !important; font-weight:600; }
-.st-key-tm_top [data-testid="stHorizontalBlock"] { gap:.6rem; flex-wrap:nowrap; }
-.st-key-tm_top [data-testid="stColumn"], .st-key-tm_chartbar [data-testid="stColumn"] { min-width:0 !important; }
-.st-key-tm_chartbar { margin:.3rem 0 .2rem 0; } .st-key-tm_chartbar [data-testid="stHorizontalBlock"] { flex-wrap:nowrap; gap:.8rem; }
-.st-key-tm_chartbar [data-testid="stButtonGroup"] button { padding:.25rem .8rem; min-height:2.1rem; font-size:.92rem !important; }
-.st-key-tm_chartbar button[data-variant="segmented_control"] { background:transparent !important; color:inherit !important; border:1px solid rgba(128,128,128,.45) !important; }
-.st-key-tm_chartbar button[data-variant="segmented_control"][data-selected="true"] { background:#2962ff !important; color:#ffffff !important; border:1px solid #2962ff !important; }
-.st-key-tm_chartbar button[data-variant="segmented_control"] * { color:inherit !important; }
 .tm-row { display:flex; justify-content:space-between; gap:.5rem; padding:.35rem 0; border-bottom:1px solid rgba(128,128,128,.25); font-size:.92rem; }
 .tm-row .s { opacity:.65; font-size:.8rem; } .tm-h { font-weight:800; font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin:.5rem 0 .2rem 0; }
 .dc-card.tm { padding:.5rem .7rem .05rem .7rem; margin-bottom:.45rem; cursor:help; }
 .dc-card.tm .dc-name { font-size:.92rem; } .dc-card.tm .scale { margin:.1rem 0 .3rem 0; }
 .dc-card.tm .scale-verdict { display:none; }
 .up { color:#26a69a; font-weight:700; } .down { color:#ef5350; font-weight:700; } .flat { color:#868993; font-weight:700; }
+</style>"""
+
+
+def _theme_css(dark):
+    """The top bar and the chart controls, in the site's navy (steel blue in Dark mode). Everything is centred on one line."""
+    ink, muted = ("#e6e9ef", "#9aa3b2") if dark else ("#1d3557", "#6b7785")
+    panel, line = ("#1e222d", "#2a2e39") if dark else ("#ffffff", "#dfe3ea")
+    pick, hover = ("#3b5b8c", "rgba(255,255,255,.07)") if dark else ("#1d3557", "rgba(29,53,87,.07)")
+    return f"""<style>
+.st-key-tm_top {{ background:{panel}; border:1px solid {line}; border-radius:12px; padding:.6rem 1.2rem !important;
+  box-shadow:0 1px 3px rgba(16,24,40,.07); margin-bottom:.8rem; }}
+.st-key-tm_top [data-testid="stHorizontalBlock"] {{ align-items:center !important; gap:1rem; flex-wrap:nowrap; }}
+.st-key-tm_top [data-testid="stColumn"] {{ min-width:0 !important; }}
+.st-key-tm_top [data-testid="stVerticalBlock"] {{ gap:0 !important; }}
+.st-key-tm_top [data-testid="stElementContainer"] {{ margin:0 !important; padding:0 !important; }}
+.st-key-tm_top [data-testid="stMarkdownContainer"] {{ margin:0 !important; }}
+.st-key-tm_top [data-testid="stColumn"] {{ margin:0 !important; }}
+.st-key-tm_top [data-testid="stToggle"] label {{ gap:.5rem; }}
+.st-key-tm_top label p, .st-key-tm_chartbar label p {{ white-space:nowrap; font-size:.9rem !important; font-weight:500; color:{muted} !important; margin:0; }}
+.st-key-tm_top .st-key-about_btn button {{ min-height:2.1rem !important; height:2.1rem !important; width:2.1rem !important; padding:0 !important;
+  font-size:1rem !important; border-width:1.5px !important; border-radius:50% !important; }}
+.tm-brand {{ display:flex; align-items:center; gap:.75rem; }} .tm-brand img {{ height:2.4rem; width:auto; display:block; }}
+.tm-brand .t {{ font-size:1.35rem; font-weight:700; line-height:1.1; color:{ink}; letter-spacing:.01em; }}
+.tm-value {{ border-left:1px solid {line}; padding-left:1.2rem; line-height:1.15; }}
+.tm-value .l {{ font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:{muted}; }}
+.tm-value .v {{ font-size:1.45rem; font-weight:700; color:{ink}; }}
+.tm-value .v span {{ font-size:.9rem; font-weight:600; margin-left:.35rem; }}
+.st-key-tm_chartbar {{ margin:.2rem 0 .3rem 0; }}
+.st-key-tm_chartbar [data-testid="stHorizontalBlock"] {{ align-items:center !important; flex-wrap:nowrap; gap:1.1rem; }}
+.st-key-tm_chartbar [data-testid="stColumn"] {{ min-width:0 !important; }}
+.st-key-tm_chartbar [data-testid="stElementContainer"] {{ margin:0 !important; }}
+.st-key-tm_chartbar button[data-variant="segmented_control"] {{ background:transparent !important; border:1px solid {line} !important;
+  padding:.2rem .85rem; min-height:2rem; font-size:.88rem !important; font-weight:500; }}
+.st-key-tm_chartbar button[data-variant="segmented_control"] * {{ color:{muted} !important; }}
+.st-key-tm_chartbar button[data-variant="segmented_control"]:hover {{ background:{hover} !important; }}
+.st-key-tm_chartbar button[data-variant="segmented_control"][data-selected="true"] {{ background:{pick} !important; border-color:{pick} !important; }}
+.st-key-tm_chartbar button[data-variant="segmented_control"][data-selected="true"] * {{ color:#ffffff !important; }}
 </style>"""
 
 
@@ -77,7 +101,7 @@ def _portfolio_value():
     kind = "up" if gain >= 0 else "down"
     pct = gain / pf.deposited * 100 if pf.deposited else 0.0
     st.markdown(f'<div class="tm-value"><div class="l">Portfolio value</div><div class="v">{format_inr(snap["total"], 0)} '
-                f'<span class="{kind}" style="font-size:1rem">{pct:+.2f}%</span></div></div>', unsafe_allow_html=True)
+                f'<span class="{kind}">{pct:+.2f}%</span></div></div>', unsafe_allow_html=True)
 
 
 @guard()
@@ -174,7 +198,7 @@ def run():
     tu.housekeeping()
     tu.show_flash()
     tu.show_events()
-    st.html(vis.CSS + CSS)
+    st.html(vis.CSS + CSS + _theme_css(bool(st.session_state.get("dark_site"))))
     st.session_state.setdefault("term_refresh", "15 seconds")
     every = _every()
 
