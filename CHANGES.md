@@ -353,5 +353,8 @@ The chart on the second site is taller (520 px instead of 420), so the Buttons f
 ## New in Step 53 (the three columns end on one line)
 On the second site the left column, the paper-trading bar and the indicator panel now end on exactly the same line (measured at two window widths). The holdings list and the indicator panel stretch to the bottom of the row instead of having fixed heights, and the prediction bar sits on its own row underneath, in the same place as before.
 
+## New in Step 54 (full-width prediction bar)
+The prediction comparison bar on the second site now has a row of its own, as wide as the whole page (the same left and right edges as the top bar), with a little more room and larger text. Its contents are unchanged.
+
 ## Status
 All 8 features are built.

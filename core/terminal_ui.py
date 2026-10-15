@@ -260,7 +260,5 @@ def run():
         with box:
             st.fragment(run_every=every)(_indicators)(symbol, hist, offline)
 
-    # the prediction bar sits on the next row, in the same place under the middle column
-    _, pred_col, _ = st.columns([1.2, 3.3, 1.45], gap="small")
-    with pred_col:
-        st.fragment(run_every=every)(_prediction)(symbol, name, hist, offline)
+    # the prediction bar has its own row, as wide as the whole page (left edge of the left column to right edge of the right panel)
+    st.fragment(run_every=every)(_prediction)(symbol, name, hist, offline)
