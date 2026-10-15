@@ -21,7 +21,7 @@ from core.market_data import get_company_name, get_history_with_source
 from core.market_hours import is_market_open, now_ist, status_message
 
 REFRESH = {"Off": None, "15 seconds": 15, "30 seconds": 30, "1 minute": 60}     # live prices are shared for 15 seconds at a time
-PANEL_HEIGHT = 700
+PANEL_HEIGHT = 755
 
 CSS = """<style>
 .stApp [data-testid="stMainBlockContainer"], .stApp .block-container { padding-top: 3.2rem !important; max-width: 100% !important; }
@@ -235,7 +235,7 @@ def run():
             st.error("Price data for this company could not be loaded right now. Please choose another company.")
             return
         st.fragment(run_every=every)(_headline)(symbol, name, hist, offline)
-        price_panel.render(hist, symbol, name, header=False, height=420, explain=False, compact=True)
+        price_panel.render(hist, symbol, name, header=False, height=520, explain=False, compact=True)
 
         price = float(live_quote(symbol)["price"]) if (not offline and live_quote(symbol)) else float(hist["Close"].iloc[-1])
         with st.container(key="tm_trade"):

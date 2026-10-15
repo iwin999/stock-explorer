@@ -347,5 +347,8 @@ The indicators in the right-hand panel of the second site are now drawn like the
 ## New in Step 51 (paper-trading bar and prediction bar on the second site)
 The Buy / Sell / Exit all buttons now sit in a bar styled like the top bar: a white card with a hairline border, a small label on the left ("Buttons for paper trading", with how many shares of the chosen company you own) and the three buttons on one line. The prediction comparison is one matching bar: THE CALL (with one dot per vote), WHAT HAPPENED (with the move and price), RESULT (right or wrong, inside or outside the range) and the EXPECTED RANGE with yesterday's close and today's price, with a status line at the top right (live, final or waiting for the market to open).
 
+## New in Step 52 (taller chart on the second site)
+The chart on the second site is taller (520 px instead of 420), so the Buttons for paper trading bar sits lower, where the prediction bar used to start, and the prediction bar follows it on the next scroll, unchanged. The right-hand indicator panel was made taller so its bottom lines up with the paper-trading bar.
+
 ## Status
 All 8 features are built.
