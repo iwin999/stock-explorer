@@ -356,5 +356,8 @@ On the second site the left column, the paper-trading bar and the indicator pane
 ## New in Step 54 (full-width prediction bar)
 The prediction comparison bar on the second site now has a row of its own, as wide as the whole page (the same left and right edges as the top bar), with a little more room and larger text. Its contents are unchanged.
 
+## New in Step 55 (prediction card fills the whole box)
+On the second site the prediction bar is now one card filling the whole area at the bottom of the page, edge to edge with the page, and the disclaimer sits inside it (under a thin divider) instead of floating below. The disclaimer wording is unchanged.
+
 ## Status
 All 8 features are built.

@@ -43,6 +43,7 @@ CSS = """<style>
 .pb-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:.35rem; }
 .pb-title { font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--tm-muted,#6b7785); }
 .pb-status { font-size:.78rem; color:var(--tm-muted,#6b7785); }
+.pb-foot { margin-top:.9rem; padding-top:.8rem; border-top:1px solid var(--tm-line,#dfe3ea); font-size:.8rem; line-height:1.5; color:var(--tm-muted,#6b7785); }
 .pb-row { display:grid; grid-template-columns:1fr 1fr .9fr 2.4fr; align-items:center; }
 .pb-cell { padding:0 1.6rem; border-left:1px solid var(--tm-line,#dfe3ea); line-height:1.2; min-width:0; }
 .pb-cell:first-child { padding-left:0; border-left:0; }
@@ -160,7 +161,7 @@ def terminal_card(entry):
             f'{scale_html(entry["gauge"])}</div>')
 
 
-def prediction_bar(result, status_text=""):
+def prediction_bar(result, status_text="", footer=""):
     """The prediction comparison as one tidy bar: THE CALL | WHAT HAPPENED | RESULT | EXPECTED RANGE, all on one line."""
     p = result["prediction"]
     voters = [v for v in result["votes"] if v["voting"]]
@@ -189,4 +190,5 @@ def prediction_bar(result, status_text=""):
         rng = (f'<div class="pb-cell"><div class="pb-l">Expected range</div>'
                f'{range_bar(low, high, result["prev_close"], result["actual"], "Now" if result["status"] == "live" else "Close")}</div>')
     head = f'<div class="pb-head"><span class="pb-title">Prediction comparison for today</span><span class="pb-status">{e(status_text)}</span></div>'
-    return f'<div class="pb">{head}<div class="pb-row">{call}{what}{outcome}{rng}</div></div>'
+    foot = f'<div class="pb-foot">{footer}</div>' if footer else ""
+    return f'<div class="pb">{head}<div class="pb-row">{call}{what}{outcome}{rng}</div>{foot}</div>'

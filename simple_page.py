@@ -64,8 +64,7 @@ if not tu.has_account():
     st.stop()
 pf = tu._get_portfolio()
 if dashboard:                       # everything on one screen: holdings, chart, indicators (see core/terminal_ui.py)
-    terminal_ui.run()
-    show_disclaimer()
+    terminal_ui.run()                # (it draws the disclaimer itself, inside the prediction bar)
     st.stop()
 
 

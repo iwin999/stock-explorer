@@ -19,6 +19,7 @@ from core.formatting import format_inr
 from core.live import live_quote
 from core.market_data import get_company_name, get_history_with_source
 from core.market_hours import is_market_open, now_ist, status_message
+from core.ui import DISCLAIMER, show_disclaimer
 
 REFRESH = {"Off": None, "15 seconds": 15, "30 seconds": 30, "1 minute": 60}     # live prices are shared for 15 seconds at a time
 PANEL_HEIGHT = 755
@@ -166,9 +167,10 @@ def _prediction(symbol, name, hist, offline):
     result, info = daily_ui.evaluate_now(symbol, hist, offline)
     if result is None:
         st.caption("Not enough history for this company to make a call.")
+        show_disclaimer()
         return
     status = {"live": "Live: market open, updating", "final": "Final for the day", "pending": "Waiting for the market to open"}[result["status"]]
-    st.markdown(vis.prediction_bar(result, status), unsafe_allow_html=True)
+    st.markdown(vis.prediction_bar(result, status, f"<b>Disclaimer.</b> {DISCLAIMER}"), unsafe_allow_html=True)       # the disclaimer sits inside the bar
     if info["note"]:
         st.caption(info["note"])
 
@@ -235,6 +237,7 @@ def run():
         offline = source == "offline"
         if hist is None or len(hist) < 30:
             st.error("Price data for this company could not be loaded right now. Please choose another company.")
+            show_disclaimer()
             return
         st.fragment(run_every=every)(_headline)(symbol, name, hist, offline)
         price_panel.render(hist, symbol, name, header=False, height=520, explain=False, compact=True)
