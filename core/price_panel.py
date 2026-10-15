@@ -33,6 +33,8 @@ def render(hist, symbol, name, header=True, height=None, explain=True, compact=F
     fig = price_chart(hist, symbol, name)
     if height:
         fig.update_layout(height=height)
+    if compact:                                                        # the dashboard has little height: no legend, a slim title and margins
+        fig.update_layout(showlegend=False, title=dict(font=dict(size=15)), margin=dict(l=10, r=10, t=36, b=10))
     fib = ind.fibonacci_levels(hist, PERIODS[period]) if show_fib else None
     if show_fib:
         add_fibonacci(fig, fib)

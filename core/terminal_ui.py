@@ -21,10 +21,19 @@ from core.market_data import get_company_name, get_history_with_source
 from core.market_hours import is_market_open, now_ist, status_message
 
 REFRESH = {"Off": None, "15 seconds": 15, "30 seconds": 30, "1 minute": 60}     # live prices are shared for 15 seconds at a time
-PANEL_HEIGHT = 700
+PANEL_HEIGHT = 590
 
 CSS = """<style>
-.stApp [data-testid="stMainBlockContainer"], .stApp .block-container { padding-top: 3.2rem !important; max-width: 100% !important; }
+.stApp [data-testid="stMainBlockContainer"], .stApp .block-container { padding: 3.3rem 1.5rem 0.4rem 1.5rem !important; max-width: 100% !important; }
+.stApp [data-testid="stMainBlockContainer"] [data-testid="stVerticalBlock"] { gap: .5rem; }
+.stApp .disclaimer { font-size:.7rem; line-height:1.3; margin-top:.3rem; padding-top:.4rem; }
+.st-key-tm_pred .dc-hero { padding:.5rem .8rem; gap:.7rem; margin:0; border-radius:12px; } .st-key-tm_pred .dc-badge { width:2.8rem; height:2.8rem; font-size:1.2rem; }
+.st-key-tm_pred .dc-call { font-size:1.05rem; } .st-key-tm_pred .dc-sub { font-size:.8rem; margin:0; } .st-key-tm_pred .dc-dot { width:.8rem; height:.8rem; }
+.st-key-tm_pred .dc-dots { margin-top:.25rem; }
+.st-key-tm_pred .dc-versus { margin:0 0 .2rem 0; } .st-key-tm_pred .dc-tile { padding:.3rem .2rem; border-radius:10px; }
+.st-key-tm_pred .dc-tile .v { font-size:1.05rem; } .st-key-tm_pred .dc-result { width:2.3rem; height:2.3rem; font-size:1.2rem; }
+.st-key-tm_pred .dc-range { margin:1.1rem .3rem 1.5rem .3rem; }
+.tm-h { margin:.1rem 0 .1rem 0 !important; }
 .tm-row { display:flex; justify-content:space-between; gap:.5rem; padding:.35rem 0; border-bottom:1px solid rgba(128,128,128,.25); font-size:.92rem; }
 .tm-row .s { opacity:.65; font-size:.8rem; } .tm-h { font-weight:800; font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin:.5rem 0 .2rem 0; }
 .dc-card.tm { padding:.5rem .7rem .05rem .7rem; margin-bottom:.45rem; cursor:help; }
@@ -134,7 +143,7 @@ def _ring():
     snap = tu.snapshot_now(pf)
     st.markdown('<div class="tm-h">Where your money is</div>', unsafe_allow_html=True)
     donut = allocation_donut(snap["by_class"])
-    donut.update_layout(height=230, margin=dict(l=0, r=0, t=0, b=0), legend=dict(orientation="h", y=-0.05, font=dict(size=11)))
+    donut.update_layout(height=165, margin=dict(l=0, r=0, t=0, b=0), legend=dict(orientation="h", y=-0.05, font=dict(size=11)))
     show_chart(donut, key="term_ring")
 
 
@@ -155,23 +164,24 @@ def _headline(symbol, name, hist, offline):
 
 @guard()
 def _prediction(symbol, name, hist, offline):
-    st.markdown('<div class="tm-h">Prediction comparison for today</div>', unsafe_allow_html=True)
-    result, info = daily_ui.evaluate_now(symbol, hist, offline)
-    if result is None:
-        st.caption("Not enough history for this company to make a call.")
-        return
-    voters = [v for v in result["votes"] if v["voting"]]
-    word = "today" if result["target"] == now_ist().date() else result["target"].strftime("on %d %b")
-    left, right = st.columns([1.3, 1.7])
-    left.markdown(vis.hero(result["prediction"], result["score"], voters, word), unsafe_allow_html=True)
-    if result["actual"] is None:
-        right.info("Today's price is not available yet to compare.")
-    else:
-        right.markdown(vis.versus(result["prediction"], result["actual_direction"], result["matched"]), unsafe_allow_html=True)
-        right.markdown(vis.range_bar(result["range"][0], result["range"][1], result["prev_close"], result["actual"],
-                                     "Now" if result["status"] == "live" else "Close"), unsafe_allow_html=True)
-    if info["note"]:
-        st.caption(info["note"])
+    with st.container(key="tm_pred"):
+        st.markdown('<div class="tm-h">Prediction comparison for today</div>', unsafe_allow_html=True)
+        result, info = daily_ui.evaluate_now(symbol, hist, offline)
+        if result is None:
+            st.caption("Not enough history for this company to make a call.")
+            return
+        voters = [v for v in result["votes"] if v["voting"]]
+        word = "today" if result["target"] == now_ist().date() else result["target"].strftime("on %d %b")
+        left, right = st.columns([1.25, 1.75], vertical_alignment="center")
+        left.markdown(vis.hero(result["prediction"], result["score"], voters, word), unsafe_allow_html=True)
+        if result["actual"] is None:
+            right.info("Today's price is not available yet to compare.")
+        else:
+            right.markdown(vis.versus(result["prediction"], result["actual_direction"], result["matched"]), unsafe_allow_html=True)
+            right.markdown(vis.range_bar(result["range"][0], result["range"][1], result["prev_close"], result["actual"],
+                                         "Now" if result["status"] == "live" else "Close"), unsafe_allow_html=True)
+        if info["note"]:
+            st.caption(info["note"])
 
 
 @guard()
@@ -181,8 +191,11 @@ def _indicators(symbol, hist, offline):
         st.caption("Not enough history for the indicators.")
         return
     st.markdown(f'<div class="tm-h">Indicators for {companies.code_of(symbol)} (hover for a description)</div>', unsafe_allow_html=True)
-    ordered = [v for v in result["votes"] if v["voting"]] + [v for v in result["votes"] if not v["voting"]]
-    st.markdown("".join(vis.terminal_card(v) for v in ordered), unsafe_allow_html=True)
+    voters = [v for v in result["votes"] if v["voting"]]
+    context = [v for v in result["votes"] if not v["voting"]]
+    st.markdown("".join(vis.terminal_card(v) for v in voters), unsafe_allow_html=True)
+    with st.expander(f"{len(context)} more indicators (shown for context, they do not vote)"):
+        st.markdown("".join(vis.terminal_card(v) for v in context), unsafe_allow_html=True)
 
 
 @st.dialog("Paper trade")
@@ -216,8 +229,8 @@ def run():
     left, mid, right = st.columns([1.2, 3.3, 1.45], gap="small")
 
     with left:
-        lists_box = st.container(height=290, border=True)
-        ring_box = st.container(height=270, border=True)
+        lists_box = st.container(height=205, border=True)
+        ring_box = st.container(height=195, border=True)
         refresh_box = st.container(border=True)
     with refresh_box:
         st.selectbox("Refreshing at intervals configured", list(REFRESH), key="term_refresh",
@@ -238,10 +251,9 @@ def run():
             st.error("Price data for this company could not be loaded right now. Please choose another company.")
             return
         st.fragment(run_every=every)(_headline)(symbol, name, hist, offline)
-        price_panel.render(hist, symbol, name, header=False, height=420, explain=False, compact=True)
+        price_panel.render(hist, symbol, name, header=False, height=268, explain=False, compact=True)
 
         price = float(live_quote(symbol)["price"]) if (not offline and live_quote(symbol)) else float(hist["Close"].iloc[-1])
-        st.markdown('<div class="tm-h">Buttons for paper trading</div>', unsafe_allow_html=True)
         b1, b2, b3, _ = st.columns([1, 1, 1, 2.2])
         if b1.button("Buy", type="primary", key="term_buy_btn", width="stretch"):
             _order_dialog("Buy", symbol, name, price, offline)

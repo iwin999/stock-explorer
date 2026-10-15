@@ -344,5 +344,8 @@ The top bar is a white card with a hairline border: crest and title, a thin divi
 ## New in Step 49 (the second site's indicator panel uses the real site's scales)
 The indicators in the right-hand panel of the second site are now drawn like the real site's Key signals: every indicator uses the same red-to-green bar as Trend, with the verdict word under it (red on the left leans down, green on the right leans up). Indicators that tend to reverse from an extreme (Bollinger band, Stochastic RSI, Money flow, Where it closed, Yesterday's move, RSI) have the bar turned round, so the stretched-high end is red and the stretched-low end green. Volume leans by whether busy trading is behind a rise or a fall. A Volatility reading was added. The call itself is unchanged, and the real site's Daily check tab keeps its own look.
 
+## New in Step 50 (the second site fits one screen)
+The dashboard now fits a normal laptop screen (checked at 1440 x 780: the page overflows by about 20 pixels, just the end of the disclaimer line, where it used to run several screens). The panels were made shorter, the chart uses the space better (no legend, slimmer title), the "Buttons for paper trading" caption went, the prediction comparison is a compact single row, the gaps between blocks are tighter, and the right panel shows the six voting indicators with the other seven folded into one "more indicators" drawer.
+
 ## Status
 All 8 features are built.
