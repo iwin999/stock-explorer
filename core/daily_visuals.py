@@ -64,7 +64,7 @@ CSS = """<style>
 .sc { border:1px solid var(--tm-line,#dfe3ea); border-left-width:4px; border-radius:10px; padding:.65rem .85rem .6rem .85rem; min-width:0; cursor:help; }
 .sc-top { display:flex; justify-content:space-between; align-items:baseline; gap:.5rem; } .sc-n { font-weight:700; font-size:.95rem; line-height:1.2; }
 .sc-v { font-size:.78rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; white-space:nowrap; }
-.sc-src { font-size:.68rem; letter-spacing:.07em; text-transform:uppercase; color:var(--tm-muted,#6b7785); margin:.15rem 0 .4rem 0; }
+.sc-r { margin-top:.5rem; }
 .sc-r { font-size:.92rem; font-weight:600; line-height:1.3; min-height:2.4em; }
 .sc-t { font-size:.74rem; color:var(--tm-muted,#6b7785); margin-top:.45rem; }
 .pb-note { margin-top:.9rem; font-size:.84rem; line-height:1.5; color:var(--tm-muted,#6b7785); }
@@ -223,7 +223,7 @@ def strategy_tiles(entries, stats=None):
             tested = f'<div class="sc-t">Back-test: {d1:.0f}% next day &middot; {d20:.0f}% in 20 days</div>'
             tip += f" Back-tested on past data: right {d1:.0f}% of the time for the next day and {d20:.0f}% over the next 20 days."
         tiles.append(f'<div class="sc" style="border-left-color:{colour};--sc-glow:{_tint(colour, .10)}" title="{e(tip)}"><div class="sc-top"><span class="sc-n">{e(en["name"])}</span>'
-                     f'<span class="sc-v" style="color:{colour}">{word}</span></div><div class="sc-src">{e(en.get("source", ""))}</div>'
+                     f'<span class="sc-v" style="color:{colour}">{word}</span></div>'
                      f'<div class="sc-r">{e(en["reading"])}</div>{tested}</div>')
     return '<div class="sc-head">The five strategies behind the call (hover a tile to read why)</div><div class="sc-row">' + "".join(tiles) + "</div>"
 

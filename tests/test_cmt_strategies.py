@@ -61,7 +61,7 @@ def test_evaluate_gives_the_shape_the_prediction_bar_draws():
     result = cmt.evaluate(plan["basis"], bench, plan)
     assert [v["name"] for v in result["votes"]] == cmt.NAMES and result["n"] == 5 and result["matched"] in (True, False)
     html = vis.prediction_bar(result, "Live", "footer", vis.strategy_tiles(result["votes"], cmt.load_stats()), "note")
-    assert html.count('class="sc"') == 5 and "CMT Level III, Chapter 8" in html and "footer" in html
+    assert html.count('class="sc"') == 5 and "sc-src" not in html and "footer" in html
     assert cmt.evaluate(plan["basis"].iloc[:100], bench, plan) is None                 # too little history
     assert cmt.track_record(plan["complete"], bench)["n"] == 60
 
