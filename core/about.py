@@ -125,6 +125,56 @@ CMT, CFTe. Explanations here are written in our own words.
 Supabase or any broker.*"""
 
 
+# ---- the same dialog for the second (dashboard) site: only what that site actually has ----
+WHAT_IT_IS_SIMPLE = """\
+**Stock Explorer** is an educational dashboard that makes Indian (NSE and BSE) stocks easier to understand. Search a company, read its \
+price chart in daily, weekly or monthly candles, see a **prediction for today** made by five strategies from the CMT curriculum and a \
+small machine-learning model, check the main indicators, and practise buying and selling shares with **virtual money**. Nothing here is \
+real money, and nothing here is investment advice."""
+
+HOW_TO_USE_SIMPLE = """\
+1. **Start:** choose a name and an amount of virtual money. Your portfolio is saved under your name, so you can come back later \
+(choose *Returning user*).
+2. **Search stock:** type a company name (a small spelling slip is fine) and press Enter.
+3. **Chart:** show 1, 2 or 4 charts, each in daily, weekly or monthly candles, with optional Fibonacci levels.
+4. **Buy, Sell, Exit all:** practise trading with virtual money from the bar under the chart.
+5. **Today's prediction:** the call (Up, Down or Sideways), the machine-learning estimate, what actually happened so far today, and the \
+expected range. Under it are the five strategies behind the call: Fusion stage, Dow Theory, relative strength, Wyckoff effort vs \
+result and Fibonacci confluence.
+6. **Left side:** what you hold, what you sold, where your money is, and how often the page refreshes.
+7. **Right side:** six indicators: RSI, MACD, ADX, Z-score, Supertrend and Bollinger band.
+
+Hover over the small **?** chips at the bottom of the prediction card for a short explanation of each piece of analysis."""
+
+LIMITATIONS_SIMPLE = """\
+- **Not advice, and close to a coin toss for one day.** The prediction is a learning tool. In our tests the five CMT strategies and the \
+machine-learning estimate were each right about 50% to 51% of the time on the next day, which is what chance gives. These methods are \
+built for weeks and months.
+- **Prices can be late.** Prices come from Yahoo Finance and can be a few minutes behind. Outside market hours (Monday to Friday, \
+9:15 AM to 3:30 PM Indian time, and on holidays) the last close is shown. The holiday list is not built in.
+- **Shares only.** Practice trading here covers shares, with simple virtual-money rules.
+- **Names have no passwords.** Anyone can open any portfolio by its name, so please use a first name or nickname.
+- **Free hosting.** The site may be slow, or take a moment to wake up."""
+
+SOURCES_SIMPLE = """\
+**Data**
+- Prices of shares and the Nifty 50 and Sensex indices: [Yahoo Finance](https://finance.yahoo.com), read with the open-source `yfinance` \
+library. This is unofficial and may be delayed or occasionally wrong.
+- Portfolios are stored in a [Supabase](https://supabase.com) database.
+
+**Ideas and methods**
+- The five strategies: Fusion stage (the Winner's Circle trend test, **CMT Level III curriculum, Chapter 8**, in our own words), Dow Theory, \
+relative strength, Wyckoff effort vs result and Fibonacci retracements.
+- Indicators: RSI and ADX (J. Welles Wilder), MACD (Gerald Appel), Bollinger Bands (John Bollinger), Supertrend and the Z-score.
+- The machine-learning estimate is a logistic regression trained on saved NSE price history.
+
+**Software**
+- Python, Streamlit, pandas, NumPy, Plotly, Requests and yfinance, all open source. Hosted on Streamlit Community Cloud.
+
+*This is an independent student project. It is not affiliated with, or endorsed by, the NSE, the BSE, Yahoo, the CMT Association, \
+Supabase or any broker.*"""
+
+
 def _secret(name, default):
     try:
         return str(st.secrets["about"][name]).strip() or default
@@ -184,16 +234,22 @@ def _creator_section():
     st.markdown(creator_story())
 
 
+def _site():
+    """'simple' on the second (dashboard) site, 'full' on the real site."""
+    return st.session_state.get("site", "full")
+
+
 @st.dialog("About Stock Explorer", width="large")
 def _dialog():
+    simple = _site() == "simple"
     st.markdown("### What this project is")
-    st.markdown(WHAT_IT_IS)
+    st.markdown(WHAT_IT_IS_SIMPLE if simple else WHAT_IT_IS)
     st.markdown("### How to use it")
-    st.markdown(HOW_TO_USE)
+    st.markdown(HOW_TO_USE_SIMPLE if simple else HOW_TO_USE)
     st.markdown("### Limitations")
-    st.markdown(LIMITATIONS)
+    st.markdown(LIMITATIONS_SIMPLE if simple else LIMITATIONS)
     st.markdown("### Sources and credits")
-    st.markdown(SOURCES)
+    st.markdown(SOURCES_SIMPLE if simple else SOURCES)
     st.markdown("### Meet the creator")
     _creator_section()
     st.markdown("### Gratitude")

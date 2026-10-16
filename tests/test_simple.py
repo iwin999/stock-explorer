@@ -200,3 +200,14 @@ def test_weekly_and_monthly_candles_are_built_from_the_daily_ones():
     assert mc.resample(h, "Daily") is h and len(mc.resample(h, "Monthly")) <= 15
     fig = mc.figure(h, "TEST", "Weekly", 52, show_fib=True)
     assert any("week" in (t.name or "") for t in fig.data)
+
+
+def test_the_about_dialog_on_the_second_site_shows_the_second_sites_text():
+    store, app = _app("Abouter", phone=False)
+    a, b = _patches(store)
+    with a, b:
+        app.run()
+        app.button(key="about_btn").click().run()
+        assert not app.exception
+        text = " ".join(m.value for m in app.markdown)
+        assert "Search stock" in text and "Possible outcomes" not in text and "Black-Scholes" not in text

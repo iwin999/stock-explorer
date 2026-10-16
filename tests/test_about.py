@@ -99,3 +99,13 @@ def test_exit_all_button_is_first_greyed_out_when_empty_and_enabled_when_somethi
             assert not app.exception and _error_cards(app) == [], _error_cards(app)
             for key in ("exit_open_trade", "exit_open_portfolio"):               # one in each of the two tabs
                 assert app.button(key=key).disabled is (not enabled), (name, key)
+
+
+def test_the_second_site_about_leaves_out_what_only_the_real_site_has():
+    simple = about.WHAT_IT_IS_SIMPLE + about.HOW_TO_USE_SIMPLE + about.LIMITATIONS_SIMPLE + about.SOURCES_SIMPLE
+    for only_on_the_real_site in ("Possible outcomes", "Strategy tests", "Ask the bot", "leaderboard", "Black-Scholes", "futures and options",
+                                  "Monte Carlo", "Sharpe", "Know how"):
+        assert only_on_the_real_site.lower() not in simple.lower(), only_on_the_real_site
+    for on_the_second_site in ("Search stock", "Buy, Sell, Exit all", "five strategies", "machine-learning", "Z-score"):
+        assert on_the_second_site in simple
+    assert "Possible outcomes" in about.HOW_TO_USE                       # the real site's About is unchanged
