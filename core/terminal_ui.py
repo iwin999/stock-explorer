@@ -9,6 +9,7 @@ import streamlit as st
 
 from core import about, company_search, companies
 from core import cmt_strategies as cmt
+from core import instruments as ins
 from core import daily_check as dc
 from core import daily_ui
 from core import daily_visuals as vis
@@ -215,9 +216,20 @@ def _indicators(symbol, hist, offline):
 
 @st.dialog("Paper trade", width="large")
 def _order_dialog(mode, symbol, name, price, offline):
+    """The order pop-up: stocks first, then ETFs and bonds, futures and options (the same tickets as the real site's Paper trading tab)."""
     pf = tu._get_portfolio()
-    st.markdown(f"**{mode} {name}**")
-    tu._cash_ticket(pf, symbol, name, price, offline, f"term_{mode.lower()}", mode)
+    stocks_tab, funds_tab, fut_tab, opt_tab = st.tabs(["Stocks", "ETFs and bonds", "Futures", "Options"])
+    with stocks_tab:
+        st.markdown(f"**{mode} {name}**")
+        tu._cash_ticket(pf, symbol, name, price, offline, f"term_{mode.lower()}", mode)
+    with funds_tab:
+        funds = [x for x in ins.CASH_INSTRUMENTS if ins.asset_class(x) != ins.STOCKS]
+        st.caption("Funds that hold many companies or bonds in one. Prices are live exchange prices.")
+        tu._trade_picker(pf, "etf", funds, funds[0], offline, "fund")
+    with fut_tab:
+        tu._futures_ticket(pf, offline)
+    with opt_tab:
+        tu._options_ticket(pf, offline)
 
 
 # ---------------- the page ----------------
@@ -278,8 +290,8 @@ def run():
                              unsafe_allow_html=True)
             if b1.button("Buy", type="primary", key="term_buy_btn", width="stretch"):
                 _order_dialog("Buy", symbol, name, price, offline)
-            if b2.button("Sell", key="term_sell_btn", width="stretch", disabled=symbol not in pf.holdings,
-                         help="Sell some or all of this company. Greyed out when you do not own it."):
+            if b2.button("Sell", key="term_sell_btn", width="stretch", disabled=not (pf.holdings or pf.derivatives),
+                         help="Sell what you hold: shares here, or switch to the ETFs, Futures or Options tab. Greyed out until you hold something."):
                 _order_dialog("Sell", symbol, name, price, offline)
             if b3.button("Exit all", key="term_exit_btn", width="stretch", disabled=not (pf.holdings or pf.derivatives),
                          help="Sell everything you hold in one go. Your starting capital is not reset."):

@@ -379,5 +379,8 @@ The prediction card now looks like a trading console while still following the s
 ## New in Step 61 (a plainer prediction panel)
 The prediction panel was rebuilt to be easy to read instead of busy. It opens with **one plain sentence** (for example "3 of the 5 strategies point down, so the call is down. So far today the price is down 0.49%, so the call is right."). Under it are three simple cards: **Our call**, the **Machine-learning second opinion** (a probability bar with its tested accuracy) and **What happened**; then the **expected range** with the price on it; then a **table of the five strategies** with each one's vote, what it sees, and how often it was right in back-tests. Normal sans-serif type and the site's own colours, with green and red used only for up and down. The monospaced "console" styling, LEDs, dial and numbered boxes are gone. The About dialog on the second site now lists only what that site has.
 
+## New in Step 62 (ETFs, bonds, futures and options in the order pop-up)
+The Buy / Sell pop-up on the second site now has four tabs: **Stocks** (as before), **ETFs and bonds**, **Futures** and **Options**, using the same tickets as the real site's Paper trading tab (calculated prices, simplified lots and margins, and only buying options). The Sell button is enabled whenever you hold anything.
+
 ## Status
 All 8 features are built.
