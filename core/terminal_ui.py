@@ -30,7 +30,7 @@ PANEL_INDICATORS = ["RSI (speed)", "MACD (momentum)", "Trend strength (ADX)", "Z
 
 CSS = """<style>
 .stApp [data-testid="stMainBlockContainer"], .stApp .block-container { padding-top: 3.2rem !important; max-width: 100% !important; }
-.stApp [data-testid="stLayoutWrapper"]:has(> .st-key-tm_ind), .stApp [data-testid="stLayoutWrapper"]:has(> .st-key-tm_lists) { flex:1 1 0 !important; height:auto !important; min-height:150px; }
+.stApp [data-testid="stLayoutWrapper"]:has(> .st-key-tm_ind), .stApp [data-testid="stLayoutWrapper"]:has(> .st-key-tm_lists) { flex:1 1 0 !important; height:auto !important; min-height:100px; }
 .st-key-tm_ind, .st-key-tm_lists { height:100% !important; }
 [data-testid="stDialog"] [data-testid="stMetric"] { background:rgba(128,128,128,.06); border:1px solid rgba(128,128,128,.28); border-radius:10px; padding:.7rem .95rem; }
 [data-testid="stDialog"] [data-testid="stMetricLabel"], [data-testid="stDialog"] [data-testid="stMetricLabel"] * { font-size:.85rem !important; font-weight:500; letter-spacing:.01em; opacity:.75; }
@@ -164,17 +164,17 @@ def _leaderboard():
     if not rows:
         st.caption("No portfolios yet.")
         return
-    shown = rows[:5]
+    shown = rows[:4]
     mine = next((r for r in rows if r["Name"] == me), None)
     if mine and mine not in shown:
-        shown = shown[:4] + [mine]
+        shown = shown[:3] + [mine]
     for r in shown:
         kind = "up" if r["Return"] >= 0 else "down"
         you = r["Name"] == me
         st.markdown(f'<div class="tm-row"><div>{"<b>" if you else ""}#{r["Rank"]} {r["Name"]}{" (you)" if you else ""}{"</b>" if you else ""}</div>'
                     f'<div class="{kind}">{r["Return"]:+.2f}%</div></div>', unsafe_allow_html=True)
     if mine:
-        st.caption(f"You are ranked {mine['Rank']} of {len(rows)}, by return since you started.")
+        st.caption(f"You are #{mine['Rank']} of {len(rows)} by return.")
 
 
 @guard()
@@ -183,7 +183,7 @@ def _ring():
     snap = tu.snapshot_now(pf)
     st.markdown('<div class="tm-h">Where your money is</div>', unsafe_allow_html=True)
     donut = allocation_donut(snap["by_class"])
-    donut.update_layout(height=190, margin=dict(l=0, r=0, t=0, b=0), legend=dict(orientation="h", y=-0.05, font=dict(size=11)))
+    donut.update_layout(height=125, margin=dict(l=0, r=0, t=0, b=0), legend=dict(orientation="h", y=-0.05, font=dict(size=11)))
     show_chart(donut, key="term_ring")
 
 
@@ -235,6 +235,19 @@ def _prediction(symbol, name, hist, offline):
         st.caption("Not enough history for the CMT strategies on this company, so the six-indicator vote is used instead.")
     if info["note"]:
         st.caption(info["note"])
+
+
+@guard()
+def _barometer(symbol, hist, offline):
+    """How the five strategies read together for this company, as a simple dial."""
+    result, _ = _cmt_result(symbol, hist, offline)
+    if result is None:
+        st.caption("Not enough history for the strategies.")
+        return
+    voters = [v for v in result["votes"] if v["voting"]]
+    ups = sum(1 for v in voters if v["vote"] > 0)
+    downs = sum(1 for v in voters if v["vote"] < 0)
+    st.markdown(vis.barometer(result["score"], result["n"], ups, downs, len(voters) - ups - downs), unsafe_allow_html=True)
 
 
 @guard()
@@ -320,12 +333,7 @@ def run():
         lists_box = st.container(height=290, border=True, key="tm_lists")
         ring_box = st.container(border=True)
         board_box = st.container(border=True)
-        refresh_box = st.container(border=True)
-    with refresh_box:
-        st.selectbox("Refreshing at intervals configured", list(REFRESH), key="term_refresh",
-                     help="How often prices and your portfolio update by themselves. Prices from Yahoo are shared for 15 seconds, so "
-                          "going faster would not show anything new. Updates only happen while the market is open.")
-        st.caption(f"{status_message()}." + (" Updating automatically." if every else " Not updating by itself."))
+        baro_box = st.container(border=True)
     with lists_box:
         st.fragment(run_every=every)(_lists)()
     with board_box:
@@ -360,6 +368,10 @@ def run():
             if b3.button("Exit all", key="term_exit_btn", width="stretch", disabled=not (pf.holdings or pf.derivatives),
                          help="Sell everything you hold in one go. Your starting capital is not reset."):
                 tu._exit_dialog()
+
+    with baro_box:
+        st.markdown('<div class="tm-h">Combined strategy reading</div>', unsafe_allow_html=True)
+        _barometer(symbol, hist, offline)
 
     with right:
         box = st.container(height=PANEL_HEIGHT, border=True, key="tm_ind")

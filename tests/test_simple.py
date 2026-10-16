@@ -144,9 +144,9 @@ def test_the_second_site_opens_straight_into_the_dashboard():
         assert app.toggle(key="dark_site").value is False and app.toggle(key="dark_chart").value is False   # opens in the normal light look
         assert [x for x in app.button if x.key == "term_buy_btn"] and [x for x in app.button if x.key == "term_exit_btn"]
         assert [x for x in app.button if x.key == "term_exit_btn"][0].disabled is True            # nothing held yet
-        assert app.selectbox(key="term_refresh").value == "15 seconds"
-        app.selectbox(key="term_refresh").set_value("Off").run()
-        assert not app.exception
+        text2 = " ".join(m.value for m in app.markdown)
+        assert "Combined strategy reading" in text2 and "bm-word" in text2           # the barometer replaced the refresh box
+        assert not [x for x in app.selectbox if x.key == "term_refresh"]
         app.toggle(key="terminal_view").set_value(False).run()          # and back to the tabs
         assert not app.exception and [x for x in app.radio if x.key == "spage"]            # back in the phone layout
 

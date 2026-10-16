@@ -89,6 +89,9 @@ CSS = """<style>
 .fg-name { font-weight:700; font-size:1rem; } .fg-tag { margin-left:.5rem; font-size:.72rem; font-weight:700; color:#2962ff; text-transform:uppercase; letter-spacing:.05em; }
 .fg-rule { color:var(--tm-muted,#6b7785); margin:.15rem 0 .3rem 0; } .fg-verdict { margin-top:.4rem; font-size:.88rem; line-height:1.45; }
 @media (max-width:1100px){ .fg-cards { grid-template-columns:1fr; } }
+.bm { text-align:center; } .bm .up { color:var(--pp-up,#158a7e); } .bm .down { color:var(--pp-down,#d6453d); } .bm .flat { color:var(--pp-flat,#6b7785); } .bm svg { width:100%; max-width:10rem; height:auto; display:block; margin:.2rem auto 0 auto; }
+.bm-word { font-size:1.45rem; font-weight:700; line-height:1.15; margin-top:.1rem; } .bm-sub { font-size:.92rem; color:var(--tm-muted,#6b7785); margin-top:.25rem; line-height:1.4; }
+.bm-ends { display:flex; justify-content:space-between; font-size:.78rem; color:var(--tm-muted,#6b7785); margin:-.1rem .35rem 0 .35rem; }
 @media (max-width:640px){ .dc-hero{gap:.7rem;padding:.8rem} .dc-badge{width:3.6rem;height:3.6rem;font-size:1.6rem} .dc-call{font-size:1.5rem} .dc-bars .lab{width:6rem} }
 </style>"""
 
@@ -478,3 +481,35 @@ def strategies_panel(result, stats=None, learn="", footer="", fusion=None):
     foot = f'<div class="pp-foot">{footer}</div>' if footer else ""
     return (f'<div class="pp"><div class="pp-sec" style="margin-top:0">The five strategies behind the reading'
             f'<small>click Full view to see what a strategy is doing</small></div>{head}{"".join(rows)}{learn}{foot}</div>')
+
+
+def barometer(score, n, ups, downs, neutral):
+    """A half-circle barometer for the combined reading of the strategies: five bands from 'Down' (red) through 'Neutral' (grey) to
+    'Up' (green), with a needle at the net vote (-n to +n)."""
+    import math
+    cx, cy, r = 60, 58, 46
+    pos = (score + n) / (2 * n) if n else 0.5
+    bands = ["#ef5350", "#f4958f", "#c4c9d2", "#85cfc6", "#26a69a"]
+    def arc(p0, p1):
+        a0, a1 = math.pi * (1 - p0), math.pi * (1 - p1)
+        x0, y0, x1, y1 = cx + r * math.cos(a0), cy - r * math.sin(a0), cx + r * math.cos(a1), cy - r * math.sin(a1)
+        return f"M {x0:.2f} {y0:.2f} A {r} {r} 0 0 1 {x1:.2f} {y1:.2f}"
+    segs = "".join(f'<path d="{arc(i / 5 + 0.006, (i + 1) / 5 - 0.006)}" stroke="{c}" stroke-width="11" fill="none"/>' for i, c in enumerate(bands))
+    ang = math.pi * (1 - min(max(pos, 0.0), 1.0))
+    nx, ny = cx + (r - 9) * math.cos(ang), cy - (r - 9) * math.sin(ang)
+    needle = (f'<line x1="{cx}" y1="{cy}" x2="{nx:.2f}" y2="{ny:.2f}" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>'
+              f'<circle cx="{cx}" cy="{cy}" r="5" fill="currentColor"/>')
+    if score >= 3:
+        word, cls = "Strongly up", "up"
+    elif score >= 1:
+        word, cls = "Leans up", "up"
+    elif score <= -3:
+        word, cls = "Strongly down", "down"
+    elif score <= -1:
+        word, cls = "Leans down", "down"
+    else:
+        word, cls = "Balanced", "flat"
+    return (f'<div class="bm"><svg viewBox="0 0 120 66" role="img" aria-label="Combined strategy reading: {word}">{segs}{needle}</svg>'
+            f'<div class="bm-ends"><span>Down</span><span>Neutral</span><span>Up</span></div>'
+            f'<div class="bm-word"><span class="{cls}">{word}</span></div>'
+            f'<div class="bm-sub">{downs} of {n} strategies read down, {ups} up, {neutral} neutral</div></div>')

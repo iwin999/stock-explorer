@@ -100,3 +100,10 @@ def test_the_fusion_full_view_has_a_scrollable_guide_with_english_group_names():
     assert "Clear uptrend" in html and "200-day" in html and "price-to-book" in html and "Chapter 8" in html
     assert html.count("this company</span>") == 1 and "Strong contender" in html.split("fg-card up here")[1][:200]
     assert "company results are not available" in vis.strategy_view("Fusion stage", result["view"], None)
+
+
+def test_the_barometer_reads_from_strongly_down_to_strongly_up():
+    for score, word in ((-5, "Strongly down"), (-2, "Leans down"), (0, "Balanced"), (1, "Leans up"), (4, "Strongly up")):
+        html = vis.barometer(score, 5, 2, 2, 1)
+        assert word in html and "<svg" in html and "of 5 strategies read down" in html
+    assert vis.barometer(-5, 5, 0, 5, 0) != vis.barometer(5, 5, 5, 0, 0)               # the needle moves

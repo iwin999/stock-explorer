@@ -402,5 +402,8 @@ The strategies table has a new **Full view** column. Clicking a row opens, in pl
 ## New in Step 68 (the Fusion stage Full view: a scrollable guide to the four groups)
 In the Fusion stage's Full view the tick-and-cross lines are replaced by a **scrollable box** that sets out everything that decides which Winner's Circle group a company is in (CMT Level III, Chapter 8): the trend and momentum gate (clear uptrend, positive six-month return, ahead of the market), the quality-of-fundamentals and valuation tests (0 to 100 scores, 50 or more passes), and the four groups with **English names instead of numbers**: **Winner's Circle** (group 1), **Strong contender** (2), **Momentum only** (3) and **Watchlist** (4), each with its requirements and what the framework says to do. The box starts with where this company stands today and highlights its group.
 
+## New in Step 69 (a barometer instead of the refresh box)
+On the second site the "Refreshing at intervals" box in the left column is replaced by a **Combined strategy reading** barometer: a half-circle dial in five bands from red (Down) through grey (Neutral) to green (Up), a needle at the net vote of the five CMT strategies, the reading in words (Strongly down, Leans down, Balanced, Leans up, Strongly up) and "3 of 5 strategies read down, 1 up, 1 neutral". The page now simply refreshes every 15 seconds while the market is open. The leaderboard and the allocation ring were made a little more compact so the three columns still end on one line.
+
 ## Status
 All 8 features are built.
