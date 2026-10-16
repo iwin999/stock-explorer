@@ -39,36 +39,6 @@ CSS = """<style>
 .dc-bars .lab { width:8.5rem; font-size:.92rem; } .dc-bars .bar { flex:1; height:1.1rem; border-radius:99px; background:rgba(128,128,128,.25); position:relative; overflow:hidden; }
 .dc-bars .fill { height:100%; border-radius:99px; } .dc-bars .num { width:3.2rem; font-weight:700; text-align:right; }
 .dc-bars .half { position:absolute; left:50%; top:0; bottom:0; width:2px; background:rgba(0,0,0,.45); }
-.pb { background:var(--tm-panel,#fff); border:1px solid var(--tm-line,#dfe3ea); border-radius:14px; padding:1.1rem 1.6rem 1rem 1.6rem; box-shadow:0 1px 3px rgba(16,24,40,.07); }
-.pb-head { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; margin-bottom:.9rem; }
-.pb-title { font-size:1.15rem; font-weight:700; color:var(--tm-ink,#1d3557); line-height:1.2; }
-.pb-sub { font-size:.85rem; color:var(--tm-muted,#6b7785); margin-top:.15rem; }
-.pb-pill { display:inline-flex; align-items:center; gap:.45rem; font-size:.8rem; font-weight:600; padding:.25rem .8rem; border-radius:99px; border:1px solid var(--tm-line,#dfe3ea); color:var(--tm-muted,#6b7785); white-space:nowrap; }
-.pb-pill i { width:.5rem; height:.5rem; border-radius:50%; background:#868993; display:inline-block; } .pb-pill.live { color:#1f8f84; border-color:rgba(38,166,154,.35); background:rgba(38,166,154,.08); }
-.pb-pill.live i { background:#26a69a; box-shadow:0 0 0 0 rgba(38,166,154,.6); animation:pbpulse 1.8s infinite; }
-@keyframes pbpulse { 70% { box-shadow:0 0 0 .45rem rgba(38,166,154,0); } 100% { box-shadow:0 0 0 0 rgba(38,166,154,0); } }
-.pb-main { display:grid; grid-template-columns:1fr 1fr 1.7fr; gap:.9rem; }
-.pb-box { border:1px solid var(--tm-line,#dfe3ea); border-radius:12px; padding:.85rem 1.1rem; min-width:0; background:rgba(128,128,128,.035); }
-.pb-l { font-size:.7rem; letter-spacing:.09em; text-transform:uppercase; color:var(--tm-muted,#6b7785); font-weight:600; margin-bottom:.45rem; }
-.pb-big { display:flex; align-items:center; gap:.8rem; }
-.pb-badge { width:3.1rem; height:3.1rem; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.35rem; flex:0 0 auto; }
-.pb-word { font-size:1.9rem; font-weight:800; line-height:1; letter-spacing:.01em; }
-.pb-line { font-size:.88rem; color:var(--tm-muted,#6b7785); margin-top:.35rem; }
-.pb-meter { display:flex; gap:.25rem; margin-top:.7rem; } .pb-meter span { flex:1; height:.4rem; border-radius:99px; }
-.pb-meterl { font-size:.78rem; color:var(--tm-muted,#6b7785); margin-top:.35rem; }
-.pb-verdict { display:inline-flex; align-items:center; gap:.4rem; font-weight:700; font-size:.92rem; padding:.28rem .8rem; border-radius:99px; margin-top:.55rem; }
-.pb-rng { display:flex; justify-content:space-between; font-size:.9rem; font-weight:600; margin-bottom:.1rem; } .pb-rng span:last-child { text-align:right; }
-.pb-box .dc-range { margin:1.1rem .2rem 1.5rem .2rem; height:2rem; }
-.sc-head { font-size:.7rem; letter-spacing:.09em; text-transform:uppercase; color:var(--tm-muted,#6b7785); font-weight:600; margin:1.1rem 0 .5rem 0; }
-.sc-row { display:grid; grid-template-columns:repeat(5,1fr); gap:.75rem; }
-.sc { border:1px solid var(--tm-line,#dfe3ea); border-left-width:4px; border-radius:10px; padding:.65rem .85rem .6rem .85rem; min-width:0; cursor:help; }
-.sc-top { display:flex; justify-content:space-between; align-items:baseline; gap:.5rem; } .sc-n { font-weight:700; font-size:.95rem; line-height:1.2; }
-.sc-v { font-size:.78rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; white-space:nowrap; }
-.sc-r { margin-top:.5rem; }
-.sc-r { font-size:.92rem; font-weight:600; line-height:1.3; min-height:2.4em; }
-.sc-t { font-size:.74rem; color:var(--tm-muted,#6b7785); margin-top:.45rem; }
-.pb-note { margin-top:.9rem; font-size:.84rem; line-height:1.5; color:var(--tm-muted,#6b7785); }
-.pb-foot { margin-top:.8rem; padding-top:.7rem; border-top:1px solid var(--tm-line,#dfe3ea); font-size:.76rem; line-height:1.5; color:var(--tm-muted,#6b7785); }
 .lh-row { display:flex; flex-wrap:wrap; gap:.45rem .5rem; }
 .lh { position:relative; display:inline-flex; align-items:center; gap:.35rem; border:1px solid var(--tm-line,#dfe3ea); border-radius:99px; padding:.2rem .65rem; font-size:.82rem; cursor:help; color:var(--tm-ink,#1d3557); }
 .lh b { display:inline-flex; width:1.05rem; height:1.05rem; border-radius:50%; background:rgba(128,128,128,.22); align-items:center; justify-content:center; font-size:.7rem; }
@@ -76,23 +46,27 @@ CSS = """<style>
 .lh .tip b { display:inline; width:auto; height:auto; background:none; font-size:.85rem; color:#fff; }
 .lh:hover .tip { visibility:visible; opacity:1; }
 .lh:nth-child(n+8) .tip { left:auto; right:0; }
-.pb-main.four { grid-template-columns:1fr 1fr 1fr 1.7fr; }
-@media (max-width:1100px){ .sc-row { grid-template-columns:repeat(2,1fr); } .pb-main { grid-template-columns:1fr; } }
-.pb { position:relative; overflow:hidden; }
-.pb::before { content:""; position:absolute; left:0; right:0; top:0; height:3px; background:linear-gradient(90deg,#26a69a,#2962ff 55%,#ef5350); }
-.pb-head { padding-bottom:.8rem; border-bottom:1px dashed var(--tm-line,#dfe3ea); background-image:radial-gradient(rgba(128,128,128,.16) 1px, transparent 1px); background-size:14px 14px; margin:-.3rem -1.6rem .9rem -1.6rem; padding:.7rem 1.6rem .8rem 1.6rem; }
-.pb-right { display:flex; align-items:center; gap:1rem; }
-.mono, .pb-word, .pb-line, .pb-meterl, .pb-rng, .sc-v, .sc-t, .pb-verdict, .pb-sub, .pb-pill, .pb-l { font-family:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace; }
-.pb-l { letter-spacing:.14em; font-size:.66rem; } .pb-l b { color:#2962ff; margin-right:.4rem; font-weight:700; }
-.pb-box { background:linear-gradient(180deg,rgba(128,128,128,.06),rgba(128,128,128,.02)); }
-.led-row { display:flex; gap:.5rem; margin-top:.75rem; } .led { width:.8rem; height:.8rem; border-radius:50%; display:inline-block; }
-.pb-gauge { display:block; width:100%; max-width:11rem; margin:.1rem 0 -.2rem 0; }
-.pb-gauge-n { font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:1.55rem; font-weight:800; line-height:1; text-align:center; }
-.pb-ml { text-align:center; }
-.pb-ml .pb-l { text-align:left; } .pb-ml .pb-word { font-size:.95rem !important; font-weight:700; margin-top:.25rem; } .pb-ml .pb-meterl { text-align:center; }
-.sc { background:linear-gradient(90deg,var(--sc-glow,transparent),transparent 40%); }
-.sc-v { font-size:.74rem; } .sc-t { letter-spacing:.01em; }
-.spark { display:block; }
+.pp { background:var(--tm-panel,#fff); border:1px solid var(--tm-line,#dfe3ea); border-radius:14px; padding:1.4rem 1.8rem 1.2rem 1.8rem; box-shadow:0 1px 3px rgba(16,24,40,.07); }
+.pp .up { color:var(--pp-up,#158a7e); } .pp .down { color:var(--pp-down,#d6453d); } .pp .flat { color:var(--pp-flat,#6b7785); }
+.pp-head { display:flex; justify-content:space-between; align-items:baseline; gap:1rem; }
+.pp-title { font-size:1.35rem; font-weight:700; } .pp-sub { font-size:.92rem; color:var(--tm-muted,#6b7785); margin-top:.2rem; }
+.pp-live { display:flex; align-items:center; gap:.45rem; font-size:.92rem; color:var(--tm-muted,#6b7785); white-space:nowrap; }
+.pp-live i { width:.6rem; height:.6rem; border-radius:50%; background:#9aa3b2; display:inline-block; } .pp-live.on i { background:#26a69a; }
+.pp-say { font-size:1.2rem; line-height:1.55; margin:1.1rem 0 1.2rem 0; padding:.95rem 1.2rem; border-left:5px solid #9aa3b2; background:rgba(128,128,128,.07); border-radius:0 10px 10px 0; }
+.pp-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; }
+.pp-stat { border:1px solid var(--tm-line,#dfe3ea); border-radius:12px; padding:1rem 1.2rem; min-width:0; }
+.pp-k { font-size:.9rem; color:var(--tm-muted,#6b7785); margin-bottom:.35rem; }
+.pp-v { font-size:1.9rem; font-weight:700; line-height:1.1; } .pp-d { font-size:.98rem; color:var(--tm-muted,#6b7785); margin-top:.35rem; line-height:1.4; }
+.pp-pbar { position:relative; height:.55rem; border-radius:99px; background:rgba(128,128,128,.22); margin:.75rem 0 .1rem 0; }
+.pp-pbar i { position:absolute; left:0; top:0; bottom:0; border-radius:99px; background:#2962ff; opacity:.8; } .pp-pbar u { position:absolute; left:50%; top:-.25rem; bottom:-.25rem; width:2px; background:var(--tm-ink,#1d3557); opacity:.6; }
+.pp-rangebox { border:1px solid var(--tm-line,#dfe3ea); border-radius:12px; padding:1rem 1.2rem .3rem 1.2rem; margin-top:1rem; }
+.pp-rangebox .dc-range { margin:1.3rem .4rem 1.6rem .4rem; }
+.pp-sec { font-size:1.05rem; font-weight:700; margin:1.5rem 0 .6rem 0; } .pp-sec small { font-weight:400; color:var(--tm-muted,#6b7785); font-size:.9rem; margin-left:.4rem; }
+.pp-table { width:100%; border-collapse:collapse; } .pp-table th { text-align:left; font-size:.85rem; font-weight:600; color:var(--tm-muted,#6b7785); padding:.4rem .7rem; border-bottom:1px solid var(--tm-line,#dfe3ea); }
+.pp-table td { padding:.75rem .7rem; border-bottom:1px solid var(--tm-line,#dfe3ea); font-size:1rem; vertical-align:middle; } .pp-table tr:last-child td { border-bottom:0; }
+.pp-sname { font-weight:700; } .pp-vote { font-weight:700; white-space:nowrap; } .pp-test { color:var(--tm-muted,#6b7785); font-size:.92rem; }
+.pp-foot { margin-top:1rem; padding-top:.8rem; border-top:1px solid var(--tm-line,#dfe3ea); font-size:.8rem; line-height:1.5; color:var(--tm-muted,#6b7785); }
+@media (max-width:1100px){ .pp-stats { grid-template-columns:1fr; } .pp-table th:last-child, .pp-table td:last-child { display:none; } }
 @media (max-width:640px){ .dc-hero{gap:.7rem;padding:.8rem} .dc-badge{width:3.6rem;height:3.6rem;font-size:1.6rem} .dc-call{font-size:1.5rem} .dc-bars .lab{width:6rem} }
 </style>"""
 
@@ -201,123 +175,6 @@ def terminal_card(entry):
             f'{scale_html(entry["gauge"])}</div>')
 
 
-def _tint(colour, alpha=0.12):
-    r, g, b = int(colour[1:3], 16), int(colour[3:5], 16), int(colour[5:7], 16)
-    return f"rgba({r},{g},{b},{alpha})"
-
-
-def strategy_tiles(entries, stats=None):
-    """One tile per CMT strategy: a coloured edge and vote word, its name and source, what it sees, and how it fared in testing.
-    Hover a tile for the longer explanation."""
-    tiles = []
-    for en in entries:
-        avail = en.get("available", True)
-        name = VOTE_NAME[en["vote"]]
-        colour = COLOUR[name] if avail else FLAT_C
-        word = "n/a" if not avail else (f"{GLYPH[name]} " + ("Neutral" if name == "Sideways" else name))
-        tested, tip = "", en["why"]
-        rec = (stats or {}).get("strategies", {}).get(en["name"])
-        if rec:
-            d1 = rec["next day"]["last 30% of dates"]["accuracy"] * 100
-            d20 = rec["next 20 days"]["last 30% of dates"]["accuracy"] * 100
-            tested = f'<div class="sc-t">Back-test: {d1:.0f}% next day &middot; {d20:.0f}% in 20 days</div>'
-            tip += f" Back-tested on past data: right {d1:.0f}% of the time for the next day and {d20:.0f}% over the next 20 days."
-        tiles.append(f'<div class="sc" style="border-left-color:{colour};--sc-glow:{_tint(colour, .10)}" title="{e(tip)}"><div class="sc-top"><span class="sc-n">{e(en["name"])}</span>'
-                     f'<span class="sc-v" style="color:{colour}">{word}</span></div>'
-                     f'<div class="sc-r">{e(en["reading"])}</div>{tested}</div>')
-    return '<div class="sc-head">The five strategies behind the call (hover a tile to read why)</div><div class="sc-row">' + "".join(tiles) + "</div>"
-
-
-def _arc(cx, cy, r, p0, p1):
-    """An SVG arc along the top half of a circle from fraction p0 to p1 of the way round (0 = far left, 1 = far right)."""
-    import math
-    a0, a1 = math.pi * (1 - p0), math.pi * (1 - p1)
-    x0, y0, x1, y1 = cx + r * math.cos(a0), cy - r * math.sin(a0), cx + r * math.cos(a1), cy - r * math.sin(a1)
-    return f"M {x0:.2f} {y0:.2f} A {r} {r} 0 0 1 {x1:.2f} {y1:.2f}"
-
-
-def gauge_svg(p_up, colour):
-    """A semicircle dial: red below 46%, grey between 46% and 54%, green above 54%, with a needle at the model's chance of 'up'."""
-    import math
-    cx, cy, r = 50, 50, 38
-    ang = math.pi * (1 - min(max(p_up, 0.0), 1.0))
-    nx, ny = cx + (r - 6) * math.cos(ang), cy - (r - 6) * math.sin(ang)
-    seg = lambda p0, p1, c: f'<path d="{_arc(cx, cy, r, p0, p1)}" stroke="{c}" stroke-width="7" fill="none"/>'
-    return (f'<svg class="pb-gauge" viewBox="0 0 100 58" aria-hidden="true">{seg(0.0, 0.46, DOWN_C)}{seg(0.46, 0.54, "#868993")}{seg(0.54, 1.0, UP_C)}'
-            f'<line x1="{cx}" y1="{cy}" x2="{nx:.2f}" y2="{ny:.2f}" stroke="{colour}" stroke-width="2.2" stroke-linecap="round"/>'
-            f'<circle cx="{cx}" cy="{cy}" r="3.4" fill="{colour}"/></svg>')
-
-
-def spark_svg(values, colour, width=150, height=34):
-    """A tiny price line for the header, with a dot on the last price."""
-    vals = [float(v) for v in values]
-    if len(vals) < 3:
-        return ""
-    lo, hi = min(vals), max(vals)
-    span = (hi - lo) or 1.0
-    pts = [(i / (len(vals) - 1) * (width - 6) + 3, height - 4 - (v - lo) / span * (height - 8)) for i, v in enumerate(vals)]
-    path = " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
-    return (f'<svg class="spark" width="{width}" height="{height}" viewBox="0 0 {width} {height}" aria-hidden="true">'
-            f'<polyline points="{path}" fill="none" stroke="{colour}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" opacity=".9"/>'
-            f'<circle cx="{pts[-1][0]:.1f}" cy="{pts[-1][1]:.1f}" r="3" fill="{colour}"/></svg>')
-
-
-def prediction_bar(result, status_text="", footer="", strategies="", note="", ml=None, learn="", spark=None):
-    """The prediction panel, in a tech-console style: a header with a tiny price line and a live pill, four numbered boxes (the call
-    with one LED per strategy, the ML dial, what happened, the expected range), the strategy tiles, the hint chips and the footer."""
-    p = result["prediction"]
-    voters = [v for v in result["votes"] if v["voting"]]
-    ups = sum(1 for v in voters if v["vote"] > 0)
-    downs = sum(1 for v in voters if v["vote"] < 0)
-    neutral = len(voters) - ups - downs
-    colour = COLOUR[p]
-    leds = "".join(f'<i class="led" title="{e(v["name"])}: {VOTE_NAME[v["vote"]]}" style="background:{COLOUR[VOTE_NAME[v["vote"]]]};'
-                   f'box-shadow:0 0 7px {COLOUR[VOTE_NAME[v["vote"]]]}"></i>' for v in voters)
-    call = (f'<div class="pb-box"><div class="pb-l"><b>01</b>THE CALL</div><div class="pb-big"><div class="pb-badge" style="background:{_tint(colour, .16)};color:{colour}">{GLYPH[p]}</div>'
-            f'<div><div class="pb-word" style="color:{colour}">{p.upper()}</div></div></div><div class="led-row">{leds}</div>'
-            f'<div class="pb-meterl">{ups} up &middot; {downs} down &middot; {neutral} neutral</div></div>')
-    ml_html = ""
-    if ml:
-        lean = ml["lean"]
-        mcol = COLOUR.get(lean, FLAT_C)
-        word = {"Up": "LEANS UP", "Down": "LEANS DOWN", "None": "NO CLEAR VIEW"}[lean]
-        held = ml["tested"].get("last 30% of dates (held back)", {})
-        conf = held.get("confident_accuracy")
-        drivers = ", ".join(f"{n} ({'up' if v > 0 else 'down'})" for n, v in ml["top"])
-        tested = (f'held-back test: {held["accuracy"] * 100:.0f}% overall, {conf * 100:.0f}% when confident' if conf else "")
-        ml_html = (f'<div class="pb-box pb-ml" title="Biggest influences today: {e(drivers)}.">'
-                   f'<div class="pb-l"><b>02</b>ML ESTIMATE</div>{gauge_svg(ml["p_up"], mcol)}'
-                   f'<div class="pb-gauge-n" style="color:{mcol}">{ml["p_up"] * 100:.1f}%</div>'
-                   f'<div class="pb-word" style="color:{mcol}">{word}</div><div class="pb-meterl">chance of closing higher<br>{e(tested)}</div></div>')
-    n_what, n_rng = ("03", "04") if ml else ("02", "03")
-    low, high = result["range"]
-    if result["actual"] is None:
-        what = (f'<div class="pb-box"><div class="pb-l"><b>{n_what}</b>OUTCOME</div><div class="pb-big"><div class="pb-badge" style="background:rgba(128,128,128,.12);color:#868993">&hellip;</div>'
-                '<div><div class="pb-word" style="color:#868993">NOT YET</div></div></div><div class="pb-line">waiting for today\'s price</div></div>')
-        rng = (f'<div class="pb-box"><div class="pb-l"><b>{n_rng}</b>EXPECTED RANGE</div><div class="pb-rng"><span>Rs {low:,.0f}</span><span>Rs {high:,.0f}</span></div>'
-               f'{range_bar(low, high, result["prev_close"], None, ends=False)}</div>')
-    else:
-        a = result["actual_direction"]
-        ac = COLOUR[a]
-        ok = result["matched"]
-        vc = UP_C if ok else DOWN_C
-        what = (f'<div class="pb-box"><div class="pb-l"><b>{n_what}</b>OUTCOME</div><div class="pb-big"><div class="pb-badge" style="background:{_tint(ac, .16)};color:{ac}">{GLYPH[a]}</div>'
-                f'<div><div class="pb-word" style="color:{ac}">{a.upper()}</div></div></div>'
-                f'<div class="pb-line">{result["change"] * 100:+.2f}% &middot; Rs {result["actual"]:,.2f}</div>'
-                f'<span class="pb-verdict" style="background:{_tint(vc, .14)};color:{vc}">{"&#10003; CALL RIGHT" if ok else "&#10007; CALL WRONG"}</span></div>')
-        inside = "inside" if result["in_range"] else "outside"
-        rng = (f'<div class="pb-box"><div class="pb-l"><b>{n_rng}</b>EXPECTED RANGE &middot; {inside}</div><div class="pb-rng"><span>Rs {low:,.0f}</span><span>Rs {high:,.0f}</span></div>'
-               f'{range_bar(low, high, result["prev_close"], result["actual"], "Now" if result["status"] == "live" else "Close", ends=False)}</div>')
-    live = "live" in status_text.lower()
-    pill = f'<span class="pb-pill{" live" if live else ""}"><i></i>{e(status_text.upper())}</span>' if status_text else ""
-    sk = spark_svg(spark, colour) if spark is not None and len(spark) else ""
-    head = (f'<div class="pb-head"><div><div class="pb-title">Today\'s prediction</div><div class="pb-sub">data to {result["basis_date"]:%a %d %b} &middot; close Rs {result["prev_close"]:,.2f}</div></div>'
-            f'<div class="pb-right">{sk}{pill}</div></div>')
-    note_html = f'<div class="pb-note">{note}</div>' if note else ""
-    foot = f'<div class="pb-foot">{footer}</div>' if footer else ""
-    return f'<div class="pb">{head}<div class="pb-main{" four" if ml_html else ""}">{call}{ml_html}{what}{rng}</div>{strategies}{learn}{note_html}{foot}</div>'
-
-
 # Basic explanations for the "Learn the analysis" strip (hover a ? to read one)
 HINTS = {
     "Fusion stage": "From CMT Level III, Chapter 8. It asks whether the price is in a clear uptrend (above a rising 200-day average, 50-day above 200-day) and also beating the market over six months. A stock that passes is in the 'Winner's Circle' trend test and tends to keep trending.",
@@ -337,3 +194,90 @@ def learn_strip():
     """A row of small ? chips; hovering one shows a short plain-words explanation of that piece of analysis."""
     chips = "".join(f'<span class="lh">{e(n)} <b>?</b><span class="tip"><b>{e(n)}</b><br>{e(t)}</span></span>' for n, t in HINTS.items())
     return f'<div class="sc-head">Learn the analysis (hover a ? for a quick explanation)</div><div class="lh-row">{chips}</div>'
+
+
+def _say(result):
+    """One plain sentence: how many strategies lean which way, and how the day is going against that call."""
+    p = result["prediction"]
+    voters = [v for v in result["votes"] if v["voting"]]
+    ups = sum(1 for v in voters if v["vote"] > 0)
+    downs = sum(1 for v in voters if v["vote"] < 0)
+    if p == "Sideways":
+        first = f"The strategies are split ({ups} up, {downs} down), so the call is <b>sideways</b>."
+    else:
+        n = ups if p == "Up" else downs
+        first = f"{n} of the {len(voters)} strategies point <b>{p.lower()}</b>, so the call is <b>{p.lower()}</b>."
+    if result["actual"] is None:
+        return first + " The market has not opened yet, so there is nothing to compare."
+    a = result["actual_direction"]
+    move = {"Up": "up", "Down": "down", "Sideways": "flat"}[a]
+    verb = "So far today the price is" if result["status"] == "live" else "Today the price was"
+    amount = f" {abs(result['change']) * 100:.2f}%" if a != "Sideways" else f" ({result['change'] * 100:+.2f}%)"
+    verdict = "right" if result["matched"] else "wrong"
+    return f"{first} {verb} <b>{move}</b>{amount}, so the call is <b>{verdict}</b>{' so far' if result['status'] == 'live' else ''}."
+
+
+def prediction_panel(result, status_text="", footer="", stats=None, ml=None, learn=""):
+    """Today's prediction in plain terms: a sentence that says what is going on, three simple cards (the call, the machine-learning
+    second opinion, what happened), the expected range, and a table of the five strategies with each one's vote and back-test."""
+    p = result["prediction"]
+    cls = {"Up": "up", "Down": "down", "Sideways": "flat"}
+    voters = [v for v in result["votes"] if v["voting"]]
+    ups = sum(1 for v in voters if v["vote"] > 0)
+    downs = sum(1 for v in voters if v["vote"] < 0)
+    neutral = len(voters) - ups - downs
+    edge = {"Up": "#26a69a", "Down": "#ef5350", "Sideways": "#9aa3b2"}[p]
+    live = "live" in status_text.lower()
+    head = (f'<div class="pp-head"><div><div class="pp-title">Today\'s prediction</div>'
+            f'<div class="pp-sub">Using prices up to {result["basis_date"]:%A %d %b} (close Rs {result["prev_close"]:,.2f})</div></div>'
+            f'<div class="pp-live{" on" if live else ""}"><i></i>{e(status_text)}</div></div>')
+    say = f'<div class="pp-say" style="border-left-color:{edge}">{_say(result)}</div>'
+
+    call = (f'<div class="pp-stat"><div class="pp-k">Our call</div><div class="pp-v {cls[p]}">{GLYPH[p]} {p}</div>'
+            f'<div class="pp-d">{downs} down &middot; {ups} up &middot; {neutral} neutral<br>Two or more net votes decide.</div></div>')
+    if ml:
+        lean = ml["lean"]
+        word = {"Up": "Leans up", "Down": "Leans down", "None": "No clear view"}[lean]
+        mcls = {"Up": "up", "Down": "down", "None": "flat"}[lean]
+        held = ml["tested"].get("last 30% of dates (held back)", {})
+        conf = held.get("confident_accuracy")
+        tested = f"Tested on unseen dates: right {held['accuracy'] * 100:.0f}% overall, {conf * 100:.0f}% when confident." if conf else ""
+        drivers = ", ".join(f"{n} ({'up' if v > 0 else 'down'})" for n, v in ml["top"])
+        mlc = (f'<div class="pp-stat" title="Biggest influences today: {e(drivers)}"><div class="pp-k">Machine-learning second opinion</div>'
+               f'<div class="pp-v {mcls}">{word}</div><div class="pp-pbar"><i style="width:{ml["p_up"] * 100:.0f}%"></i><u></u></div>'
+               f'<div class="pp-d">{ml["p_up"] * 100:.0f}% chance the price closes higher.<br>{e(tested)}</div></div>')
+    else:
+        mlc = ""
+    if result["actual"] is None:
+        out = ('<div class="pp-stat"><div class="pp-k">What happened</div><div class="pp-v flat">Not yet</div>'
+               '<div class="pp-d">Waiting for today\'s price.</div></div>')
+    else:
+        a = result["actual_direction"]
+        out = (f'<div class="pp-stat"><div class="pp-k">What happened {"so far" if result["status"] == "live" else "today"}</div>'
+               f'<div class="pp-v {cls[a]}">{GLYPH[a]} {a}</div>'
+               f'<div class="pp-d">{result["change"] * 100:+.2f}% &middot; Rs {result["actual"]:,.2f}<br>'
+               f'The call was <b class="{"up" if result["matched"] else "down"}">{"right" if result["matched"] else "wrong"}</b>.</div></div>')
+    low, high = result["range"]
+    inside = ""
+    if result["actual"] is not None:
+        inside = f' &middot; the price is <b>{"inside" if result["in_range"] else "outside"}</b> it'
+    rng = (f'<div class="pp-rangebox"><div class="pp-k">Expected range today: Rs {low:,.0f} to Rs {high:,.0f}{inside} '
+           f'<span style="opacity:.7">(yesterday\'s close plus or minus a typical day\'s swing)</span></div>'
+           f'{range_bar(low, high, result["prev_close"], result["actual"], "Now" if result["status"] == "live" else "Close")}</div>')
+    rows = []
+    for en in result["votes"]:
+        avail = en.get("available", True)
+        name = VOTE_NAME[en["vote"]]
+        word = "n/a" if not avail else f"{GLYPH[name]} " + ("Neutral" if name == "Sideways" else name)
+        rec = (stats or {}).get("strategies", {}).get(en["name"])
+        tested = ""
+        if rec:
+            tested = (f'{rec["next day"]["last 30% of dates"]["accuracy"] * 100:.0f}% next day &middot; '
+                      f'{rec["next 20 days"]["last 30% of dates"]["accuracy"] * 100:.0f}% over 20 days')
+        rows.append(f'<tr title="{e(en["why"])}"><td class="pp-sname">{e(en["name"])}</td>'
+                    f'<td class="pp-vote {cls[name] if avail else "flat"}">{word}</td><td>{e(en["reading"])}</td><td class="pp-test">{tested}</td></tr>')
+    table = ('<div class="pp-sec">The five strategies behind the call<small>hover a row to read why</small></div>'
+             '<table class="pp-table"><tr><th>Strategy</th><th>Vote</th><th>What it sees</th><th>Back-test: how often it was right</th></tr>'
+             + "".join(rows) + "</table>") if rows else ""
+    foot = f'<div class="pp-foot">{footer}</div>' if footer else ""
+    return f'<div class="pp">{head}{say}<div class="pp-stats">{call}{mlc}{out}</div>{rng}{table}{learn}{foot}</div>'

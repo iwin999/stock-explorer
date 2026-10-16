@@ -60,8 +60,8 @@ def test_evaluate_gives_the_shape_the_prediction_bar_draws():
     plan = dc.plan(hist, datetime(2026, 10, 14, 13, 0), live_price=float(hist["Close"].iloc[-1]) * 1.02, market_open=True)
     result = cmt.evaluate(plan["basis"], bench, plan)
     assert [v["name"] for v in result["votes"]] == cmt.NAMES and result["n"] == 5 and result["matched"] in (True, False)
-    html = vis.prediction_bar(result, "Live", "footer", vis.strategy_tiles(result["votes"], cmt.load_stats()), "note")
-    assert html.count('class="sc"') == 5 and "sc-src" not in html and "footer" in html
+    html = vis.prediction_panel(result, "Live", "footer", cmt.load_stats())
+    assert html.count('class="pp-sname"') == 5 and "footer" in html and "Back-test" in html
     assert cmt.evaluate(plan["basis"].iloc[:100], bench, plan) is None                 # too little history
     assert cmt.track_record(plan["complete"], bench)["n"] == 60
 

@@ -376,5 +376,8 @@ Three things on the second site. (1) An **ML estimate** sits beside the CMT call
 ## New in Step 60 (a more tech-style prediction card)
 The prediction card now looks like a trading console while still following the site's theme (light or dark): a thin teal-to-blue-to-red line across the top, a dotted-grid header with a tiny price line of the last 40 days and a LIVE pill, monospaced numbers and labels, and four numbered boxes: **01 THE CALL** (with one glowing LED per strategy vote), **02 ML ESTIMATE** (a semicircle dial, red below 46%, grey between, green above 54%, with a needle at the model's chance of closing higher), **03 OUTCOME** (CALL RIGHT or CALL WRONG) and **04 EXPECTED RANGE**. The strategy tiles have a soft glow from their colour edge. The "Now" and "Yesterday" price labels on the range bar are kept apart.
 
+## New in Step 61 (a plainer prediction panel)
+The prediction panel was rebuilt to be easy to read instead of busy. It opens with **one plain sentence** (for example "3 of the 5 strategies point down, so the call is down. So far today the price is down 0.49%, so the call is right."). Under it are three simple cards: **Our call**, the **Machine-learning second opinion** (a probability bar with its tested accuracy) and **What happened**; then the **expected range** with the price on it; then a **table of the five strategies** with each one's vote, what it sees, and how often it was right in back-tests. Normal sans-serif type and the site's own colours, with green and red used only for up and down. The monospaced "console" styling, LEDs, dial and numbered boxes are gone. The About dialog on the second site now lists only what that site has.
+
 ## Status
 All 8 features are built.

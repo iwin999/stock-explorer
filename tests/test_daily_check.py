@@ -157,13 +157,13 @@ def test_the_second_sites_gauges_use_the_real_sites_key_signal_scales_and_the_re
     assert rsi["ends"] == ("Overbought (70)", "Oversold (30)")             # reversal indicators are turned round: red end = stretched high
 
 
-def test_the_prediction_bar_reads_left_to_right_and_handles_a_day_with_no_price_yet():
+def test_the_prediction_panel_says_what_is_going_on_and_handles_a_day_with_no_price_yet():
     from core import daily_visuals as vis
     h = _hist()
     live = dc.plan(h, datetime(2026, 10, 14, 13, 0), live_price=float(h["Close"].iloc[-1]) * 1.02, market_open=True)
-    html = vis.prediction_bar(dc.evaluate(live["basis"], live), "Live: market open")
-    for part in ("THE CALL", "OUTCOME", "EXPECTED RANGE", "Today's prediction", "LIVE: MARKET OPEN", "CALL "):
+    html = vis.prediction_panel(dc.evaluate(live["basis"], live), "Live: market open")
+    for part in ("Our call", "What happened", "Expected range today", "Today's prediction", "Live: market open", "the call is <b>"):
         assert part in html
     pending = dc.plan(h, datetime(2026, 10, 14, 8, 30), live_price=None, market_open=False)
-    waiting = vis.prediction_bar(dc.evaluate(pending["basis"], pending), "Waiting for the market to open")
-    assert "NOT YET" in waiting and "CALL RIGHT" not in waiting and "CALL WRONG" not in waiting
+    waiting = vis.prediction_panel(dc.evaluate(pending["basis"], pending), "Waiting for the market to open")
+    assert "Not yet" in waiting and "nothing to compare" in waiting and "is <b>right</b>" not in waiting and "is <b>wrong</b>" not in waiting

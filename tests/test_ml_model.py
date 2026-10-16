@@ -61,6 +61,6 @@ def test_the_prediction_bar_shows_the_ml_box_next_to_the_call():
     plan = dc.plan(hist, datetime(2026, 10, 14, 13, 0), live_price=float(hist["Close"].iloc[-1]), market_open=True)
     result = dc.evaluate(plan["basis"], plan)
     est = ml.estimate(hist, bench)
-    html = vis.prediction_bar(result, "Live", "", "", "", ml=est, learn=vis.learn_strip())
-    assert "ML ESTIMATE" in html and "pb-main four" in html and "chance of closing higher" in html and "pb-gauge" in html
-    assert "pb-main four" not in vis.prediction_bar(result, "Live")
+    html = vis.prediction_panel(result, "Live", "", None, est, vis.learn_strip())
+    assert "Machine-learning second opinion" in html and "chance the price closes higher" in html and "pp-pbar" in html
+    assert "Machine-learning second opinion" not in vis.prediction_panel(result, "Live")

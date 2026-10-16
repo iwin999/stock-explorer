@@ -46,7 +46,7 @@ def _theme_css(dark):
     panel, line = ("#1e222d", "#2a2e39") if dark else ("#ffffff", "#dfe3ea")
     pick, hover = ("#3b5b8c", "rgba(255,255,255,.07)") if dark else ("#1d3557", "rgba(29,53,87,.07)")
     return f"""<style>
-:root {{ --tm-panel:{panel}; --tm-line:{line}; --tm-muted:{muted}; --tm-ink:{ink}; }}
+:root {{ --tm-panel:{panel}; --tm-line:{line}; --tm-muted:{muted}; --tm-ink:{ink}; --pp-up:{"#26a69a" if dark else "#158a7e"}; --pp-down:{"#ef5350" if dark else "#d6453d"}; --pp-flat:{muted}; }}
 .st-key-tm_top, .st-key-tm_trade {{ background:{panel}; border:1px solid {line}; border-radius:12px; padding:.6rem 1.2rem !important;
   box-shadow:0 1px 3px rgba(16,24,40,.07); margin-bottom:.8rem; }}
 .st-key-tm_trade {{ border:1px solid {line}; border-radius:12px; padding:.55rem 1.2rem !important; box-shadow:0 1px 3px rgba(16,24,40,.07); margin-bottom:0 !important; }}
@@ -192,16 +192,11 @@ def _prediction(symbol, name, hist, offline):
         show_disclaimer()
         return
     status = {"live": "Live: market open, updating", "final": "Final for the day", "pending": "Waiting for the market to open"}[result["status"]]
-    stats = cmt.load_stats()
-    tiles, note, ml = "", "", None
-    if by_cmt:
-        tiles = vis.strategy_tiles(result["votes"], stats)
-        ml = ml_model.estimate(info["basis"], _bench_close(symbol))
-        note = ""                                  # the tiles carry their own back-test lines, so no paragraph is needed
-    else:
-        note = "Not enough history for the CMT strategies on this company, so the six-indicator vote is used instead."
-    st.markdown(vis.prediction_bar(result, status, f"<b>Disclaimer.</b> {DISCLAIMER}", tiles, note, ml=ml, learn=vis.learn_strip(), spark=info["basis"]["Close"].tail(40).tolist()),
-                unsafe_allow_html=True)
+    stats = cmt.load_stats() if by_cmt else None
+    ml = ml_model.estimate(info["basis"], _bench_close(symbol)) if by_cmt else None
+    st.markdown(vis.prediction_panel(result, status, f"<b>Disclaimer.</b> {DISCLAIMER}", stats, ml, vis.learn_strip()), unsafe_allow_html=True)
+    if not by_cmt:
+        st.caption("Not enough history for the CMT strategies on this company, so the six-indicator vote is used instead.")
     if info["note"]:
         st.caption(info["note"])
 
