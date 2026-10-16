@@ -51,6 +51,18 @@ def _dow(high, low):
     return pd.Series(vote, index=high.index)
 
 
+def swing_points(high, low):
+    """The confirmed swing highs and lows as [(position, value)], the same points the Dow Theory vote uses."""
+    h, l = high.values, low.values
+    sh, sl = [], []
+    for i in range(PIVOT, len(h) - PIVOT):
+        if h[i] == h[i - PIVOT:i + PIVOT + 1].max():
+            sh.append((i, float(h[i])))
+        if l[i] == l[i - PIVOT:i + PIVOT + 1].min():
+            sl.append((i, float(l[i])))
+    return sh, sl
+
+
 # ---------------- 5. Fibonacci confluence ----------------
 def _fib(high, low, close, window=FIB_WINDOW):
     """+1 when a rising swing has pulled back to a 38.2%, 50% or 61.8% level (support), -1 when a falling swing has bounced
@@ -201,7 +213,7 @@ def evaluate(basis_hist, bench_close, plan_info):
     prediction, score, n = call_from_row(row)
     prev_close = float(row["close"])
     vol = float(row["daily_vol"]) if pd.notna(row["daily_vol"]) else 0.015
-    out = {"prediction": prediction, "score": score, "n": n, "votes": entries(row), "prev_close": prev_close,
+    out = {"prediction": prediction, "score": score, "n": n, "votes": entries(row), "prev_close": prev_close, "view": view_data(basis_hist, bench_close),
            "basis_date": basis_hist.index[-1].date(), "range": (prev_close * (1 - vol), prev_close * (1 + vol)), "daily_vol": vol,
            "status": plan_info["status"], "target": plan_info["target"], "note": plan_info["note"], "actual": plan_info["actual"],
            "change": None, "actual_direction": None, "matched": None, "in_range": None}
@@ -247,3 +259,48 @@ def load_stats():
             return json.load(f)
     except (OSError, ValueError):
         return {}
+
+
+# ---------------- the numbers behind each strategy, for the "Full view" on the screen ----------------
+def view_data(hist, bench_close, days=130):
+    """Everything needed to DRAW what each strategy is doing on the last `days` days (positions are relative to that window)."""
+    close = hist["Close"].astype(float)
+    high = hist["High"].astype(float) if "High" in hist else close
+    low = hist["Low"].astype(float) if "Low" in hist else close
+    n = min(days, len(close))
+    cut = len(close) - n
+    tail = lambda ser: [None if pd.isna(v) else float(v) for v in ser.iloc[cut:]]
+    out = {"n": n, "dates": [d.date() for d in close.index[cut:]], "close": tail(close), "high": tail(high), "low": tail(low)}
+    s50, s200 = close.rolling(50).mean(), close.rolling(200).mean()
+    out["sma50"], out["sma200"] = tail(s50), tail(s200)
+    ret6 = float(close.iloc[-1] / close.iloc[-127] - 1) if len(close) > 127 else None
+    b = bench_close.reindex(close.index).ffill()
+    bench6 = float(b.iloc[-1] / b.iloc[-127] - 1) if len(b) > 127 and pd.notna(b.iloc[-127]) else None
+    out["fusion"] = {"above200": bool(close.iloc[-1] > s200.iloc[-1]) if pd.notna(s200.iloc[-1]) else None,
+                     "s50_over_s200": bool(s50.iloc[-1] > s200.iloc[-1]) if pd.notna(s200.iloc[-1]) else None,
+                     "rising200": bool(s200.iloc[-1] > s200.iloc[-21]) if len(s200) > 21 and pd.notna(s200.iloc[-21]) else None,
+                     "ret6": ret6, "bench6": bench6}
+    sh, sl = swing_points(high, low)
+    out["dow_high"] = [(i - cut, v) for i, v in sh if i >= cut]
+    out["dow_low"] = [(i - cut, v) for i, v in sl if i >= cut]
+    out["dow_last"] = {"highs": [v for _, v in sh[-2:]], "lows": [v for _, v in sl[-2:]]}
+    rs = close / b
+    base = rs.iloc[cut] if pd.notna(rs.iloc[cut]) and rs.iloc[cut] else None
+    if base:
+        out["rs"] = tail(rs / base * 100)
+        out["rs_ma50"] = tail(rs.rolling(50).mean() / base * 100)
+        out["rs_chg63"] = float(rs.iloc[-1] / rs.iloc[-64] - 1) if len(rs) > 64 else None
+    vol = ind.clean_volume(hist)
+    if vol is not None:
+        out["volume"] = tail(vol)
+        out["vol_ma20"] = tail(vol.shift(1).rolling(20).mean())
+        atr = pd.concat([high - low, (high - close.shift()).abs(), (low - close.shift()).abs()], axis=1).max(axis=1).ewm(alpha=1 / 14, adjust=False).mean()
+        out["wy"] = {"effort": float(vol.iloc[-1] / vol.shift(1).rolling(20).mean().iloc[-1]),
+                     "result": float(abs(close.diff().iloc[-1]) / atr.iloc[-1]), "move": float(close.pct_change().iloc[-1])}
+    hi, lo = float(high.iloc[-FIB_WINDOW:].max()), float(low.iloc[-FIB_WINDOW:].min())
+    rising = bool(high.iloc[-FIB_WINDOW:].values.argmax() > low.iloc[-FIB_WINDOW:].values.argmin())
+    swing = (hi - lo) or 1.0
+    out["fib"] = {"hi": hi, "lo": lo, "rising": rising, "swing": swing,
+                  "levels": [(lv, (hi - lv * swing) if rising else (lo + lv * swing)) for lv in FIB_LEVELS],
+                  "depth": float((hi - close.iloc[-1]) / swing) if rising else float((close.iloc[-1] - lo) / swing)}
+    return out

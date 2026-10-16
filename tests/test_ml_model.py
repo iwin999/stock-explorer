@@ -61,6 +61,6 @@ def test_the_prediction_bar_shows_the_ml_box_next_to_the_call():
     plan = dc.plan(hist, datetime(2026, 10, 14, 13, 0), live_price=float(hist["Close"].iloc[-1]), market_open=True)
     result = dc.evaluate(plan["basis"], plan)
     est = ml.estimate(hist, bench)
-    html = vis.prediction_panel(result, "Live", "", None, est, vis.learn_strip())
+    html = vis.prediction_panel(result, "Live", est)
     assert "ML model reading" in html and "modelled chance of a higher close" in html and "pp-pbar" in html
     assert "ML model reading" not in vis.prediction_panel(result, "Live")

@@ -222,20 +222,30 @@ def _cmt_result(symbol, hist, offline):
 def _prediction(symbol, name, hist, offline):
     result, info = _cmt_result(symbol, hist, offline)
     by_cmt = result is not None
-    if result is None:                                   # a young listing: fall back to the indicator vote so the bar still works
+    if result is None:                                   # a young listing: fall back to the indicator vote so the card still works
         result, info = daily_ui.evaluate_now(symbol, hist, offline)
     if result is None:
-        st.caption("Not enough history for this company to make a call.")
+        st.caption("Not enough history for this company to make a reading.")
         show_disclaimer()
         return
     status = {"live": "Live: market open, updating", "final": "Final for the day", "pending": "Waiting for the market to open"}[result["status"]]
-    stats = cmt.load_stats() if by_cmt else None
     ml = ml_model.estimate(info["basis"], _bench_close(symbol)) if by_cmt else None
-    st.markdown(vis.prediction_panel(result, status, f"<b>Disclaimer.</b> {DISCLAIMER}", stats, ml, vis.learn_strip()), unsafe_allow_html=True)
+    st.markdown(vis.prediction_panel(result, status, ml), unsafe_allow_html=True)
     if not by_cmt:
         st.caption("Not enough history for the CMT strategies on this company, so the six-indicator vote is used instead.")
     if info["note"]:
         st.caption(info["note"])
+
+
+@guard()
+def _strategies(symbol, hist, offline):
+    """The strategies card. The strategies only use yesterday's data and earlier, so this card does not change during the day and is
+    not refreshed on a timer (so a Full view you have opened stays open)."""
+    result, _ = _cmt_result(symbol, hist, offline)
+    if result is None:
+        show_disclaimer()
+        return
+    st.markdown(vis.strategies_panel(result, cmt.load_stats(), vis.learn_strip(), f"<b>Disclaimer.</b> {DISCLAIMER}"), unsafe_allow_html=True)
 
 
 @guard()
@@ -353,3 +363,4 @@ def run():
 
     # the prediction bar has its own row, as wide as the whole page (left edge of the left column to right edge of the right panel)
     st.fragment(run_every=every)(_prediction)(symbol, name, hist, offline)
+    _strategies(symbol, hist, offline)

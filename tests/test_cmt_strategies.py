@@ -60,8 +60,8 @@ def test_evaluate_gives_the_shape_the_prediction_bar_draws():
     plan = dc.plan(hist, datetime(2026, 10, 14, 13, 0), live_price=float(hist["Close"].iloc[-1]) * 1.02, market_open=True)
     result = cmt.evaluate(plan["basis"], bench, plan)
     assert [v["name"] for v in result["votes"]] == cmt.NAMES and result["n"] == 5 and result["matched"] in (True, False)
-    html = vis.prediction_panel(result, "Live", "footer", cmt.load_stats())
-    assert html.count('class="pp-sname"') == 5 and "footer" in html and "Back-test" in html
+    html = vis.strategies_panel(result, cmt.load_stats(), "", "footer")
+    assert html.count('class="pp-sname"') == 5 and "footer" in html and "Back-test" in html and html.count('class="ss-det"') == 5 and "Full view" in html
     assert cmt.evaluate(plan["basis"].iloc[:100], bench, plan) is None                 # too little history
     assert cmt.track_record(plan["complete"], bench)["n"] == 60
 
@@ -71,3 +71,17 @@ def test_the_tested_numbers_are_saved_and_honest():
     assert set(stats["strategies"]) == set(cmt.NAMES) and stats["companies"] > 100
     for rec in stats["strategies"].values():
         assert 0.4 < rec["next day"]["last 30% of dates"]["accuracy"] < 0.6          # nothing here claims a magic edge
+
+
+def test_every_strategy_has_a_full_view_with_a_chart_and_plain_lines():
+    hist, bench = _prices(drift=0.002)
+    plan = dc.plan(hist, datetime(2026, 10, 14, 13, 0), live_price=float(hist["Close"].iloc[-1]), market_open=True)
+    result = cmt.evaluate(plan["basis"], bench, plan)
+    html = vis.strategies_panel(result, cmt.load_stats())
+    assert html.count('<details class="ss-det"') == 5 and html.count("<svg") == 5 and html.count('class="ss-open"') == 5
+    for name in cmt.NAMES:
+        view = vis.strategy_view(name, result["view"])
+        assert "<svg" in view and "<li>" in view, name
+    no_volume = hist.drop(columns=["Volume"])
+    plan2 = dc.plan(no_volume, datetime(2026, 10, 14, 13, 0), live_price=float(hist["Close"].iloc[-1]), market_open=True)
+    assert "no usable trading volume" in vis.strategy_view("Wyckoff effort vs result", cmt.evaluate(plan2["basis"], bench, plan2)["view"])

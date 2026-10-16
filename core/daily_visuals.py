@@ -67,6 +67,16 @@ CSS = """<style>
 .pp-sname { font-weight:700; } .pp-vote { font-weight:700; white-space:nowrap; } .pp-test { color:var(--tm-muted,#6b7785); font-size:.92rem; }
 .pp-foot { margin-top:1rem; padding-top:.8rem; border-top:1px solid var(--tm-line,#dfe3ea); font-size:.8rem; line-height:1.5; color:var(--tm-muted,#6b7785); }
 @media (max-width:1100px){ .pp-stats { grid-template-columns:1fr; } .pp-table th:last-child, .pp-table td:last-child { display:none; } }
+.ss-grid { display:grid; grid-template-columns:1.5fr .8fr 1.7fr 1.9fr .8fr; gap:.8rem; align-items:center; padding:.75rem .7rem; }
+.ss-head { font-size:.85rem; font-weight:600; color:var(--tm-muted,#6b7785); border-bottom:1px solid var(--tm-line,#dfe3ea); padding-top:.4rem; padding-bottom:.4rem; }
+.ss-det { border-bottom:1px solid var(--tm-line,#dfe3ea); } .ss-det:last-of-type { border-bottom:0; }
+.ss-det > summary { list-style:none; cursor:pointer; font-size:1rem; } .ss-det > summary::-webkit-details-marker { display:none; }
+.ss-det > summary:hover { background:rgba(128,128,128,.06); }
+.ss-open { font-weight:700; color:#2962ff; white-space:nowrap; } .ss-open::after { content:" \\25BE"; } .ss-det[open] .ss-open::after { content:" \\25B4"; }
+.ss-view { padding:.4rem .7rem 1.2rem .7rem; } .ss-view svg { width:100%; height:auto; display:block; color:var(--tm-ink,#1d3557); }
+.ss-view ul { margin:.6rem 0 0 1.1rem; padding:0; font-size:.98rem; line-height:1.6; } .ss-view li b { font-weight:700; }
+.ss-key { display:flex; flex-wrap:wrap; gap:.4rem 1.2rem; font-size:.85rem; color:var(--tm-muted,#6b7785); margin:.4rem 0 0 0; } .ss-key i { display:inline-block; width:1.1rem; height:.28rem; border-radius:3px; margin-right:.35rem; vertical-align:middle; }
+@media (max-width:1100px){ .ss-grid { grid-template-columns:1.4fr .8fr .8fr; } .ss-grid > :nth-child(3), .ss-grid > :nth-child(4) { display:none; } }
 @media (max-width:640px){ .dc-hero{gap:.7rem;padding:.8rem} .dc-badge{width:3.6rem;height:3.6rem;font-size:1.6rem} .dc-call{font-size:1.5rem} .dc-bars .lab{width:6rem} }
 </style>"""
 
@@ -217,9 +227,9 @@ def _say(result):
     return f"{first} {verb} <b>{move}</b>{amount}, which <b>{verdict}</b> that reading{' so far' if result['status'] == 'live' else ''}."
 
 
-def prediction_panel(result, status_text="", footer="", stats=None, ml=None, learn=""):
-    """Today's prediction in plain terms: a sentence that says what is going on, three simple cards (the call, the machine-learning
-    second opinion, what happened), the expected range, and a table of the five strategies with each one's vote and back-test."""
+def prediction_panel(result, status_text="", ml=None):
+    """The live card: a plain sentence about what is going on, three simple cards (the model reading, the ML model reading, what
+    happened) and the typical range. (The strategies table is a separate card: see strategies_panel.)"""
     p = result["prediction"]
     cls = {"Up": "up", "Down": "down", "Sideways": "flat"}
     voters = [v for v in result["votes"] if v["voting"]]
@@ -232,7 +242,6 @@ def prediction_panel(result, status_text="", footer="", stats=None, ml=None, lea
             f'<div class="pp-sub">Using prices up to {result["basis_date"]:%A %d %b} (close Rs {result["prev_close"]:,.2f}). Educational only: what the methods read, not a recommendation to buy or sell.</div></div>'
             f'<div class="pp-live{" on" if live else ""}"><i></i>{e(status_text)}</div></div>')
     say = f'<div class="pp-say" style="border-left-color:{edge}">{_say(result)}</div>'
-
     call = (f'<div class="pp-stat"><div class="pp-k">Model reading</div><div class="pp-v {cls[p]}">{GLYPH[p]} {p}</div>'
             f'<div class="pp-d">{downs} down &middot; {ups} up &middot; {neutral} neutral<br>Two or more net votes decide.</div></div>')
     if ml:
@@ -264,6 +273,133 @@ def prediction_panel(result, status_text="", footer="", stats=None, ml=None, lea
     rng = (f'<div class="pp-rangebox"><div class="pp-k">Typical range today: Rs {low:,.0f} to Rs {high:,.0f}{inside} '
            f'<span style="opacity:.7">(yesterday\'s close plus or minus a typical day\'s swing)</span></div>'
            f'{range_bar(low, high, result["prev_close"], result["actual"], "Now" if result["status"] == "live" else "Close")}</div>')
+    return f'<div class="pp">{head}{say}<div class="pp-stats">{call}{mlc}{out}</div>{rng}</div>'
+
+
+# ---------------- the strategies card, with a full view of each strategy ----------------
+def _chart(series, markers=(), hlines=(), dates=None, width=820, height=250, volume=None):
+    """A small SVG line chart. series: [(values, colour, width, dashed)]; markers: [(index, value, colour, shape)];
+    hlines: [(value, colour, label)]; volume: (bars, average) drawn in a strip underneath."""
+    left, right, top = 54, 14, 12
+    vol_h = 54 if volume else 0
+    bottom = 26 + vol_h
+    pw, ph = width - left - right, height - top - bottom
+    vals = [v for ser, *_ in series for v in ser if v is not None] + [v for _, v, *_ in markers] + [v for v, *_ in hlines]
+    lo, hi = min(vals), max(vals)
+    pad = (hi - lo) * 0.06 or 1.0
+    lo, hi = lo - pad, hi + pad
+    n = max(len(ser) for ser, *_ in series)
+    x = lambda i: left + i / max(n - 1, 1) * pw
+    y = lambda v: top + (1 - (v - lo) / (hi - lo)) * ph
+    out = [f'<svg viewBox="0 0 {width} {height}" role="img">']
+    for k in range(4):                                             # grid and price labels
+        v = lo + (hi - lo) * k / 3
+        out.append(f'<line x1="{left}" x2="{width - right}" y1="{y(v):.1f}" y2="{y(v):.1f}" stroke="currentColor" opacity=".12"/>'
+                   f'<text x="{left - 6}" y="{y(v) + 4:.1f}" text-anchor="end" font-size="11" fill="currentColor" opacity=".6">{v:,.0f}</text>')
+    for value, colour, label in hlines:
+        out.append(f'<line x1="{left}" x2="{width - right}" y1="{y(value):.1f}" y2="{y(value):.1f}" stroke="{colour}" stroke-width="1.4" stroke-dasharray="5 4"/>'
+                   f'<text x="{width - right - 4}" y="{y(value) - 4:.1f}" text-anchor="end" font-size="11" fill="{colour}" font-weight="700">{e(label)}</text>')
+    for ser, colour, w, dashed in series:
+        pts = " ".join(f"{x(i):.1f},{y(v):.1f}" for i, v in enumerate(ser) if v is not None)
+        if pts:
+            dash = ' stroke-dasharray="6 4"' if dashed else ""
+            out.append(f'<polyline points="{pts}" fill="none" stroke="{colour}" stroke-width="{w}" stroke-linejoin="round"{dash}/>')
+    for i, v, colour, shape in markers:
+        if shape == "up":
+            out.append(f'<path d="M {x(i):.1f} {y(v) - 8:.1f} l 6 11 h -12 z" fill="{colour}"/>')
+        elif shape == "down":
+            out.append(f'<path d="M {x(i):.1f} {y(v) + 8:.1f} l 6 -11 h -12 z" fill="{colour}"/>')
+        else:
+            out.append(f'<circle cx="{x(i):.1f}" cy="{y(v):.1f}" r="5" fill="{colour}" stroke="#fff" stroke-width="1.5"/>')
+    if volume:
+        bars, avg = volume
+        vtop, vh = height - bottom + 14, vol_h - 14
+        vmax = max(v for v in bars if v is not None) or 1
+        bw = max(pw / n - 1, 1)
+        for i, v in enumerate(bars):
+            if v:
+                out.append(f'<rect x="{x(i) - bw / 2:.1f}" y="{vtop + vh - v / vmax * vh:.1f}" width="{bw:.1f}" height="{v / vmax * vh:.1f}" fill="#868993" opacity=".55"/>')
+        pts = " ".join(f"{x(i):.1f},{vtop + vh - v / vmax * vh:.1f}" for i, v in enumerate(avg) if v is not None)
+        if pts:
+            out.append(f'<polyline points="{pts}" fill="none" stroke="#d98e04" stroke-width="1.6"/>')
+        out.append(f'<text x="{left - 6}" y="{vtop + 10:.1f}" text-anchor="end" font-size="11" fill="currentColor" opacity=".6">Volume</text>')
+    if dates:
+        for i in (0, len(dates) // 2, len(dates) - 1):
+            anchor = "start" if i == 0 else "end" if i == len(dates) - 1 else "middle"
+            out.append(f'<text x="{x(i):.1f}" y="{height - 6}" text-anchor="{anchor}" font-size="11" fill="currentColor" opacity=".6">{dates[i]:%d %b %Y}</text>')
+    out.append("</svg>")
+    return "".join(out)
+
+
+def _key(items):
+    return '<div class="ss-key">' + "".join(f'<span><i style="background:{c}"></i>{e(t)}</span>' for t, c in items) + "</div>"
+
+
+def _tick(ok):
+    return '<b class="up">&#10003;</b>' if ok else '<b class="down">&#10007;</b>'
+
+
+def strategy_view(name, v):
+    """The full view of one strategy: a chart of what it looks at, a key, and a few plain lines on what it is doing today."""
+    ink, amber, blue, teal, red = "#5b6573", "#d98e04", "#2962ff", UP_C, DOWN_C
+    d = v["dates"]
+    if name == "Fusion stage":
+        f = v["fusion"]
+        chart = _chart([(v["close"], ink, 2.2, False), (v["sma50"], amber, 1.8, False), (v["sma200"], blue, 1.8, False)], dates=d)
+        key = _key([("Price", ink), ("50-day average", amber), ("200-day average", blue)])
+        pts = [f"{_tick(f['above200'])} Price is {'above' if f['above200'] else 'below'} its 200-day average.",
+               f"{_tick(f['s50_over_s200'])} The 50-day average is {'above' if f['s50_over_s200'] else 'below'} the 200-day average.",
+               f"{_tick(f['rising200'])} The 200-day average is {'rising' if f['rising200'] else 'not rising'} (higher than 20 days ago)."]
+        if f["ret6"] is not None and f["bench6"] is not None:
+            pts.append(f"{_tick(f['ret6'] > 0 and f['ret6'] > f['bench6'])} Six-month return <b>{f['ret6'] * 100:+.1f}%</b> against the market's <b>{f['bench6'] * 100:+.1f}%</b>.")
+        pts.append("A stock passes the <b>Winner's Circle trend test</b> only when all four are true: a clear uptrend that is also beating the market.")
+    elif name == "Dow Theory":
+        hi, lo = v["dow_high"], v["dow_low"]
+        marks = [(i, val, red, "down") for i, val in hi] + [(i, val, teal, "up") for i, val in lo]
+        chart = _chart([(v["close"], ink, 2.0, False)], markers=marks, dates=d)
+        key = _key([("Price", ink), ("Swing high", red), ("Swing low", teal)])
+        last = v["dow_last"]
+        pts = []
+        if len(last["highs"]) == 2 and len(last["lows"]) == 2:
+            (h1, h2), (l1, l2) = last["highs"], last["lows"]
+            pts.append(f"{_tick(h2 > h1)} The last two swing highs: Rs {h1:,.0f} then Rs {h2:,.0f} ({'higher' if h2 > h1 else 'lower'}).")
+            pts.append(f"{_tick(l2 > l1)} The last two swing lows: Rs {l1:,.0f} then Rs {l2:,.0f} ({'higher' if l2 > l1 else 'lower'}).")
+        pts.append("Higher highs <b>and</b> higher lows confirm an uptrend; lower highs and lower lows confirm a downtrend; a mix means no confirmed trend.")
+    elif name == "Relative strength":
+        if "rs" not in v:
+            return "<p>The market index is not available for this company.</p>"
+        chart = _chart([(v["rs"], blue, 2.2, False), (v["rs_ma50"], amber, 1.8, False)], hlines=[(100, "#868993", "start = 100")], dates=d)
+        key = _key([("Stock divided by the index (start = 100)", blue), ("Its 50-day average", amber)])
+        chg = v.get("rs_chg63")
+        pts = [(f"Over the last 3 months the stock has moved <b>{chg * 100:+.1f}%</b> {'ahead of' if chg > 0 else 'behind'} the index." if chg is not None else ""),
+               "A rising line means the stock is <b>beating</b> the market; a falling line means it is <b>lagging</b>. The vote is Up when the line is above its 50-day average and has risen over three months."]
+        pts = [p for p in pts if p]
+    elif name == "Wyckoff effort vs result":
+        if "volume" not in v:
+            return "<p>This company has no usable trading volume, so the Wyckoff reading is not available.</p>"
+        chart = _chart([(v["close"], ink, 2.0, False)], dates=d, height=300, volume=(v["volume"], v["vol_ma20"]))
+        key = _key([("Price", ink), ("Daily volume", "#868993"), ("20-day average volume", amber)])
+        w = v["wy"]
+        pts = [f"<b>Effort:</b> yesterday's volume was <b>{w['effort']:.1f}x</b> the usual level.",
+               f"<b>Result:</b> the price moved <b>{w['move'] * 100:+.2f}%</b>, which is <b>{w['result']:.1f}x</b> a typical day's range.",
+               "Big effort with a big result follows the move. Big effort with little result is a stall: near the lows that suggests sellers are being absorbed, near the highs it suggests buyers are exhausted."]
+    else:                                                          # Fibonacci confluence
+        fb = v["fib"]
+        lines = [(fb["hi"], "#868993", f"swing high {fb['hi']:,.0f}"), (fb["lo"], "#868993", f"swing low {fb['lo']:,.0f}")] + \
+                [(price, c, f"{lv * 100:.1f}%") for (lv, price), c in zip(fb["levels"], (amber, "#6b7785", red))]
+        chart = _chart([(v["close"], ink, 2.2, False)], markers=[(len(v["close"]) - 1, v["close"][-1], blue, "dot")], hlines=lines, dates=d)
+        key = _key([("Price (blue dot = yesterday's close)", ink), ("Fibonacci levels", amber)])
+        pts = [f"The last six months went <b>{'up' if fb['rising'] else 'down'}</b>, from Rs {(fb['lo'] if fb['rising'] else fb['hi']):,.0f} to Rs {(fb['hi'] if fb['rising'] else fb['lo']):,.0f}.",
+               f"The price has {'pulled back' if fb['rising'] else 'bounced'} <b>{fb['depth'] * 100:.0f}%</b> of that move.",
+               "Prices often pause at 38.2%, 50% and 61.8%. A pullback to one of them in an uptrend is read as support (Up); a bounce to one in a downtrend is read as resistance (Down)."]
+    return chart + key + "<ul>" + "".join(f"<li>{p}</li>" for p in pts) + "</ul>"
+
+
+def strategies_panel(result, stats=None, learn="", footer=""):
+    """The second card: the five strategies as rows (strategy, vote, what it sees, back-test) with a Full view column. Clicking a row
+    opens that strategy's chart and plain-words explanation in place."""
+    cls = {"Up": "up", "Down": "down", "Sideways": "flat"}
+    view = result.get("view")
     rows = []
     for en in result["votes"]:
         avail = en.get("available", True)
@@ -274,10 +410,15 @@ def prediction_panel(result, status_text="", footer="", stats=None, ml=None, lea
         if rec:
             tested = (f'{rec["next day"]["last 30% of dates"]["accuracy"] * 100:.0f}% next day &middot; '
                       f'{rec["next 20 days"]["last 30% of dates"]["accuracy"] * 100:.0f}% over 20 days')
-        rows.append(f'<tr title="{e(en["why"])}"><td class="pp-sname">{e(en["name"])}</td>'
-                    f'<td class="pp-vote {cls[name] if avail else "flat"}">{word}</td><td>{e(en["reading"])}</td><td class="pp-test">{tested}</td></tr>')
-    table = ('<div class="pp-sec">The five strategies behind the reading<small>hover a row to read why</small></div>'
-             '<table class="pp-table"><tr><th>Strategy</th><th>Vote</th><th>What it sees</th><th>Back-test: how often it matched the next move</th></tr>'
-             + "".join(rows) + "</table>") if rows else ""
+        cells = (f'<span class="pp-sname">{e(en["name"])}</span><span class="pp-vote {cls[name] if avail else "flat"}">{word}</span>'
+                 f'<span>{e(en["reading"])}</span><span class="pp-test">{tested}</span>')
+        if view:
+            rows.append(f'<details class="ss-det" title="{e(en["why"])}"><summary class="ss-grid">{cells}<span class="ss-open">Full view</span></summary>'
+                        f'<div class="ss-view">{strategy_view(en["name"], view)}</div></details>')
+        else:
+            rows.append(f'<div class="ss-det"><div class="ss-grid">{cells}<span></span></div></div>')
+    head = ('<div class="ss-grid ss-head"><span>Strategy</span><span>Vote</span><span>What it sees</span>'
+            '<span>Back-test: how often it matched the next move</span><span>Full view</span></div>')
     foot = f'<div class="pp-foot">{footer}</div>' if footer else ""
-    return f'<div class="pp">{head}{say}<div class="pp-stats">{call}{mlc}{out}</div>{rng}{table}{learn}{foot}</div>'
+    return (f'<div class="pp"><div class="pp-sec" style="margin-top:0">The five strategies behind the reading'
+            f'<small>click Full view to see what a strategy is doing</small></div>{head}{"".join(rows)}{learn}{foot}</div>')
