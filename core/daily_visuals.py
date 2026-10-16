@@ -22,7 +22,7 @@ CSS = """<style>
 .dc-result { width:3.2rem; height:3.2rem; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.7rem; font-weight:800; }
 .dc-range { position:relative; height:2.6rem; margin:1.4rem .3rem 1.8rem .3rem; }
 .dc-track { position:absolute; top:1.05rem; left:0; right:0; height:.5rem; border-radius:99px; background:rgba(128,128,128,.28); }
-.dc-band { position:absolute; top:.85rem; height:.9rem; border-radius:99px; background:rgba(41,98,255,.55); }
+.dc-band { position:absolute; top:.85rem; height:.9rem; border-radius:99px; background:rgba(74,118,184,.55); }
 .dc-tick { position:absolute; top:.55rem; width:3px; height:1.5rem; background:#868993; }
 .dc-pin { position:absolute; top:.35rem; width:1.5rem; height:1.5rem; margin-left:-.75rem; border-radius:50%; border:3px solid #fff; box-shadow:0 0 0 2px #333; }
 .dc-lbl { position:absolute; top:-1.15rem; font-size:.78rem; transform:translateX(-50%); white-space:nowrap; opacity:.85; }
@@ -58,7 +58,7 @@ CSS = """<style>
 .pp-k { font-size:.9rem; color:var(--tm-muted,#6b7785); margin-bottom:.35rem; }
 .pp-v { font-size:1.9rem; font-weight:700; line-height:1.1; } .pp-d { font-size:.98rem; color:var(--tm-muted,#6b7785); margin-top:.35rem; line-height:1.4; }
 .pp-pbar { position:relative; height:.55rem; border-radius:99px; background:rgba(128,128,128,.22); margin:.75rem 0 .1rem 0; }
-.pp-pbar i { position:absolute; left:0; top:0; bottom:0; border-radius:99px; background:#2962ff; opacity:.8; } .pp-pbar u { position:absolute; left:50%; top:-.25rem; bottom:-.25rem; width:2px; background:var(--tm-ink,#1d3557); opacity:.6; }
+.pp-pbar i { position:absolute; left:0; top:0; bottom:0; border-radius:99px; background:var(--tm-fill,#2f5597); opacity:.8; } .pp-pbar u { position:absolute; left:50%; top:-.25rem; bottom:-.25rem; width:2px; background:var(--tm-ink,#1d3557); opacity:.6; }
 .pp-rangebox { border:1px solid var(--tm-line,#dfe3ea); border-radius:12px; padding:1rem 1.2rem .3rem 1.2rem; margin-top:1rem; }
 .pp-rangebox .dc-range { margin:1.3rem .4rem 1.6rem .4rem; }
 .pp-sec { font-size:1.05rem; font-weight:700; margin:1.5rem 0 .6rem 0; } .pp-sec small { font-weight:400; color:var(--tm-muted,#6b7785); font-size:.9rem; margin-left:.4rem; }
@@ -72,7 +72,7 @@ CSS = """<style>
 .ss-det { border-bottom:1px solid var(--tm-line,#dfe3ea); } .ss-det:last-of-type { border-bottom:0; }
 .ss-det > summary { list-style:none; cursor:pointer; font-size:1rem; } .ss-det > summary::-webkit-details-marker { display:none; }
 .ss-det > summary:hover { background:rgba(128,128,128,.06); }
-.ss-open { font-weight:700; color:#2962ff; white-space:nowrap; } .ss-open::after { content:" \\25BE"; } .ss-det[open] .ss-open::after { content:" \\25B4"; }
+.ss-open { font-weight:700; color:var(--tm-accent,#2f5597); white-space:nowrap; } .ss-open::after { content:" \\25BE"; } .ss-det[open] .ss-open::after { content:" \\25B4"; }
 .ss-view { padding:.4rem .7rem 1.2rem .7rem; } .ss-view svg { width:100%; height:auto; display:block; color:var(--tm-ink,#1d3557); }
 .ss-view ul { margin:.6rem 0 0 1.1rem; padding:0; font-size:.98rem; line-height:1.6; } .ss-view li b { font-weight:700; }
 .ss-key { display:flex; flex-wrap:wrap; gap:.4rem 1.2rem; font-size:.85rem; color:var(--tm-muted,#6b7785); margin:.4rem 0 0 0; } .ss-key i { display:inline-block; width:1.1rem; height:.28rem; border-radius:3px; margin-right:.35rem; vertical-align:middle; }
@@ -80,14 +80,14 @@ CSS = """<style>
 .fg-box.open { max-height:none; overflow:visible; }
 .fg-box { max-height:330px; overflow-y:auto; border:1px solid var(--tm-line,#dfe3ea); border-radius:10px; padding:1rem 1.2rem; margin-top:.8rem; background:rgba(128,128,128,.04); }
 .fg-title { font-weight:700; font-size:1.05rem; } .fg-title small { font-weight:400; color:var(--tm-muted,#6b7785); margin-left:.5rem; font-size:.85rem; }
-.fg-here { margin:.7rem 0; padding:.6rem .85rem; border-left:4px solid #2962ff; background:rgba(41,98,255,.07); border-radius:0 8px 8px 0; font-size:.95rem; line-height:1.5; }
+.fg-here { margin:.7rem 0; padding:.6rem .85rem; border-left:4px solid var(--tm-accent,#2f5597); background:rgba(128,128,128,.08); border-radius:0 8px 8px 0; font-size:.95rem; line-height:1.5; }
 .fg-h { font-weight:700; margin:1rem 0 .3rem 0; font-size:.95rem; } .fg-box ul { margin:.2rem 0 0 1.1rem; padding:0; font-size:.93rem; line-height:1.55; }
 .fg-note { font-size:.88rem; color:var(--tm-muted,#6b7785); margin-top:.5rem; line-height:1.5; }
 .fg-cards { display:grid; grid-template-columns:repeat(2,1fr); gap:.7rem; }
 .fg-card { border:1px solid var(--tm-line,#dfe3ea); border-left-width:5px; border-radius:10px; padding:.7rem .9rem; font-size:.92rem; }
 .fg-card.g-up { border-left-color:#26a69a; } .fg-card.g-flat { border-left-color:#d98e04; } .fg-card.g-down { border-left-color:#ef5350; }
-.fg-card.here { background:rgba(41,98,255,.07); box-shadow:0 0 0 2px #2962ff inset; }
-.fg-name { font-weight:700; font-size:1rem; } .fg-tag { margin-left:.5rem; font-size:.72rem; font-weight:700; color:#2962ff; text-transform:uppercase; letter-spacing:.05em; }
+.fg-card.here { background:rgba(128,128,128,.08); box-shadow:0 0 0 2px var(--tm-accent,#2f5597) inset; }
+.fg-name { font-weight:700; font-size:1rem; } .fg-tag { margin-left:.5rem; font-size:.72rem; font-weight:700; color:var(--tm-accent,#2f5597); text-transform:uppercase; letter-spacing:.05em; }
 .fg-rule { color:var(--tm-muted,#6b7785); margin:.15rem 0 .3rem 0; } .fg-verdict { margin-top:.4rem; font-size:.88rem; line-height:1.45; }
 @media (max-width:1100px){ .fg-cards { grid-template-columns:1fr; } }
 .bm { text-align:center; } .bm .up { color:var(--pp-up,#158a7e); } .bm .down { color:var(--pp-down,#d6453d); } .bm .flat { color:var(--pp-flat,#6b7785); } .bm svg { width:100%; max-width:10rem; height:auto; display:block; margin:.2rem auto 0 auto; }
@@ -169,7 +169,7 @@ def bars(rule_pct, coin_pct):
     def row(label, pct, colour):
         return (f'<div class="row"><div class="lab">{e(label)}</div><div class="bar"><div class="fill" style="width:{pct:.0f}%;background:{colour}"></div>'
                 f'<div class="half"></div></div><div class="num">{pct:.0f}%</div></div>')
-    return '<div class="dc-bars">' + row("This rule", rule_pct, "#2962ff") + row("Coin toss", coin_pct, FLAT_C) + "</div>"
+    return '<div class="dc-bars">' + row("This rule", rule_pct, "#4a76b8") + row("Coin toss", coin_pct, FLAT_C) + "</div>"
 
 
 # Pop-up (hover) descriptions for the Terminal view's indicator panel: what it is and how to read where it stands.
@@ -285,7 +285,7 @@ def _tick(ok):
 
 def strategy_view(name, v, fusion=None):
     """The full view of one strategy: a chart of what it looks at, a key, and a few plain lines on what it is doing today."""
-    ink, amber, blue, teal, red = "#5b6573", "#d98e04", "#2962ff", UP_C, DOWN_C
+    ink, amber, blue, teal, red = "#5b6573", "#d98e04", "#4a76b8", UP_C, DOWN_C
     d = v["dates"]
     if name == "Fusion stage":
         f = v["fusion"]

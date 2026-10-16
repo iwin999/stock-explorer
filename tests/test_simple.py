@@ -245,3 +245,36 @@ def test_the_dashboard_has_no_today_so_far_card_but_keeps_the_strategies_table()
         text = " ".join(m.value for m in app.markdown)
         assert "Today so far" not in text and "Model reading for today" not in text
         assert "The strategies behind the reading" in text and len([x for x in app.button if x.key and x.key.startswith("sv_")]) == 6
+
+
+def test_the_dashboard_offers_a_tour_once_and_walks_through_every_part():
+    store, app = _app("DashTour", tour_seen=False, phone=False)
+    a, b = _patches(store)
+    with a, b:
+        app.run()
+        assert not app.exception and not _errors(app)
+        assert [x for x in app.button if x.key == "tour_yes"] and [x for x in app.button if x.key == "tour_btn_top"]
+        [x for x in app.button if x.key == "tour_yes"][0].click().run()
+        for step in range(len(tour.DASH_STEPS)):
+            assert not app.exception and not _errors(app), step
+            assert app.session_state["tour_step"] == step
+            assert any("Step %d of %d" % (step + 1, len(tour.DASH_STEPS)) in c.value for c in app.caption)
+            [x for x in app.button if x.key == "tour_next"][0].click().run()
+        assert app.session_state["tour_step"] is None
+        assert acc.load_account(store, "DashTour").tour_seen is True
+        assert not [x for x in app.button if x.key == "tour_yes"], "the prompt must not come back"
+
+
+def test_the_tour_button_is_there_in_both_layouts():
+    store, app = _app("BothTours", phone=False)
+    a, b = _patches(store)
+    with a, b:
+        app.run()
+        assert not app.exception
+        [x for x in app.button if x.key == "tour_btn_top"][0].click().run()          # the Tour button in the dashboard top bar
+        assert app.session_state["tour_kind"] == "dash" and app.session_state["tour_step"] == 0
+        app.session_state["tour_step"] = None
+        app.toggle(key="terminal_view").set_value(False).run()
+        assert [x for x in app.button if x.key == "tour_btn_top"], "the phone layout has a Tour button too"
+        [x for x in app.button if x.key == "tour_btn_top"][0].click().run()
+        assert app.session_state["tour_kind"] == "phone" and not app.exception

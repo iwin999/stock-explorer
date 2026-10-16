@@ -15,6 +15,7 @@ from core import daily_ui
 from core import daily_visuals as vis
 from core import ml_model
 from core import price_panel
+from core import tour
 from core import trading_ui as tu
 from core.charts import allocation_donut, show as show_chart
 from core.errors import guard
@@ -44,7 +45,7 @@ CSS = """<style>
 .st-key-tm_strat [data-testid="stVerticalBlock"] { gap:.35rem; } .st-key-tm_strat [data-testid="stHorizontalBlock"] { border-bottom:1px solid var(--tm-line,#dfe3ea); padding:.4rem 0; }
 .st-key-tm_strat .ss-h { font-size:.85rem; font-weight:600; color:var(--tm-muted,#6b7785); } .st-key-tm_strat .ss-c { font-size:1rem; }
 .st-key-tm_strat .up { color:var(--pp-up,#158a7e); } .st-key-tm_strat .down { color:var(--pp-down,#d6453d); } .st-key-tm_strat .flat { color:var(--pp-flat,#6b7785); }
-.st-key-tm_strat button { min-height:2rem; padding:.1rem .6rem; font-weight:700; color:#2962ff; }
+.st-key-tm_strat button { min-height:2rem; padding:.1rem .6rem; font-weight:700; color:var(--tm-accent,#2f5597); }
 .tm-row { display:flex; justify-content:space-between; gap:.5rem; padding:.35rem 0; border-bottom:1px solid rgba(128,128,128,.25); font-size:.92rem; }
 .tm-row .s { opacity:.65; font-size:.8rem; } .tm-h { font-weight:800; font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin:.5rem 0 .2rem 0; }
 .dc-card.tm { padding:.5rem .7rem .05rem .7rem; margin-bottom:.45rem; cursor:help; }
@@ -60,7 +61,7 @@ def _theme_css(dark):
     panel, line = ("#1e222d", "#2a2e39") if dark else ("#ffffff", "#dfe3ea")
     pick, hover = ("#3b5b8c", "rgba(255,255,255,.07)") if dark else ("#1d3557", "rgba(29,53,87,.07)")
     return f"""<style>
-:root {{ --tm-panel:{panel}; --tm-line:{line}; --tm-muted:{muted}; --tm-ink:{ink}; --pp-up:{"#26a69a" if dark else "#158a7e"}; --pp-down:{"#ef5350" if dark else "#d6453d"}; --pp-flat:{muted}; }}
+:root {{ --tm-panel:{panel}; --tm-line:{line}; --tm-muted:{muted}; --tm-ink:{ink}; --pp-up:{"#26a69a" if dark else "#158a7e"}; --pp-down:{"#ef5350" if dark else "#d6453d"}; --pp-flat:{muted}; --tm-accent:{"#8fa8d4" if dark else "#2f5597"}; --tm-fill:{"#3f5f94" if dark else "#2f5597"}; }}
 .st-key-tm_top, .st-key-tm_trade {{ background:{panel}; border:1px solid {line}; border-radius:12px; padding:.6rem 1.2rem !important;
   box-shadow:0 1px 3px rgba(16,24,40,.07); margin-bottom:.8rem; }}
 .st-key-tm_trade {{ border:1px solid {line}; border-radius:12px; padding:.55rem 1.2rem !important; box-shadow:0 1px 3px rgba(16,24,40,.07); margin-bottom:0 !important; }}
@@ -325,6 +326,17 @@ def _order_tabs(mode, symbol, name, price, offline):
 
 
 # ---------------- the page ----------------
+def _start_tour():
+    tour.start(lambda page: None, "dash")
+
+
+def _finish_tour():
+    """Mark the tour as offered (finished, skipped or declined) for this account so the first-visit prompt does not come back."""
+    pf = tu._get_portfolio()
+    pf.tour_seen = True
+    tu._save(pf)
+
+
 def run():
     pf = tu._get_portfolio()
     tu.housekeeping()
@@ -336,22 +348,30 @@ def run():
 
     # top bar
     with st.container(key="tm_top"):
-        c_title, c_value, c_dark, c_term, c_info = st.columns([3.1, 2.7, 1.5, 1.8, 0.5], vertical_alignment="center")
+        c_title, c_value, c_dark, c_term, c_tour, c_info = st.columns([3.0, 2.6, 1.4, 1.7, 0.9, 0.5], vertical_alignment="center")
         c_title.markdown(f'<div class="tm-brand">{about._crest_html()}<div class="t">MCGS Stock Explorer</div></div>', unsafe_allow_html=True)
         with c_value:
             st.fragment(run_every=every)(_portfolio_value)()
         c_dark.toggle("Dark mode", key="dark_site", on_change=about._dark_changed)
         c_term.toggle("Dashboard view", key="terminal_view", on_change=switched)
+        c_tour.button("Tour", key="tour_btn_top", on_click=_start_tour, help="A quick guided tour of this screen, one part at a time.")
         with c_info:
             about.icon()
+
+    if not pf.tour_seen and tour.active() is None:                   # first visit: offer the tour once
+        with st.container(border=True):
+            say, yes, no = st.columns([4, 1.2, 1], vertical_alignment="center")
+            say.markdown("**New here?** A one-minute tour points out each part of this screen and says what it does.")
+            yes.button("Show me around", type="primary", key="tour_yes", width="stretch", on_click=_start_tour)
+            no.button("Not now", key="tour_no", width="stretch", on_click=_finish_tour)
 
     left, mid, right = st.columns([1.2, 3.3, 1.45], gap="small")
 
     with left:
         lists_box = st.container(height=290, border=True, key="tm_lists")
         ring_box = st.container(border=True)
-        board_box = st.container(border=True)
-        baro_box = st.container(border=True)
+        board_box = st.container(border=True, key="tm_board")
+        baro_box = st.container(border=True, key="tm_baro")
     with lists_box:
         st.fragment(run_every=every)(_lists)()
     with board_box:
@@ -360,7 +380,8 @@ def run():
         st.fragment(run_every=every)(_ring)()
 
     with mid:
-        symbol = company_search.choose(compact=True)
+        with st.container(key="tm_search"):
+            symbol = company_search.choose(compact=True)
         name = _name(symbol)
         hist, source, last_date = _history(symbol)
         offline = source == "offline"
@@ -369,7 +390,8 @@ def run():
             show_disclaimer()
             return
         st.fragment(run_every=every)(_headline)(symbol, name, hist, offline)
-        price_panel.render(hist, symbol, name, header=False, height=520, explain=False, compact=True)
+        with st.container(key="tm_chartarea"):
+            price_panel.render(hist, symbol, name, header=False, height=520, explain=False, compact=True)
 
         price = float(live_quote(symbol)["price"]) if (not offline and live_quote(symbol)) else float(hist["Close"].iloc[-1])
         with st.container(key="tm_trade"):
@@ -398,3 +420,5 @@ def run():
 
     # the strategies table has its own row, as wide as the whole page (left edge of the left column to right edge of the right panel)
     _strategies(symbol, hist, offline)
+
+    tour.render(lambda page: None, _finish_tour, dark=bool(st.session_state.get("dark_site")))

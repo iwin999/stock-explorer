@@ -133,10 +133,11 @@ def span(text, kind):
 with st.container(key="simplehead"):
     st.markdown(f'<div class="brand">{about._crest_html()}<h1 style="font-size:1.9rem !important">Stock Explorer</h1></div>',
                 unsafe_allow_html=True)
-    left, middle, right = st.columns([3, 3, 1])
+    left, middle, tour_col, right = st.columns([2.6, 2.8, 1.5, 1])
     left.toggle("Dark mode", key="dark_site", on_change=about._dark_changed)
     middle.toggle("Dashboard view", key="terminal_view", on_change=terminal_ui.switched,
                   help="Everything on one wide screen, for a laptop or a big display: your holdings, the chart and the indicators side by side.")
+    tour_col.button("Tour", key="tour_btn_top", on_click=start_tour, help="A quick guided tour, one part at a time.")
     with right:
         about.icon()
 tu.housekeeping()

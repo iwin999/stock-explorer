@@ -414,5 +414,8 @@ The slim "Today so far" card was removed from the second site's dashboard: it re
 ## New in Step 72 (dark-mode and dashboard-off check)
 A check in Dark mode and with Dashboard view off found four small things, now fixed: the selects and number boxes inside the order pop-up stayed light with grey text in Dark mode (low contrast); the "You are looking at" bar was white in Dark mode; the phone layout still said "Call was right / wrong" (now "The reading matched / did not match"); and two hint chips pointed at parts that no longer exist (the typical range and the model reading card).
 
+## New in Step 73 (a tour in both layouts, calmer dark-mode colours)
+A **Tour** button now sits in the top bar of both the dashboard (Dashboard view on) and the phone layout (off). The dashboard has its own nine-step tour (top bar, search, chart, Buy/Sell, indicators, barometer, holdings, leaderboard, strategies) and offers it once to first-time visitors; the phone tour is unchanged. In Dark mode the bright blues (the selected Buy box, the Fibonacci/charts accents, the tour outline, the FS circle) are replaced by a muted steel blue; the Dashboard view switch shows clearly when off; the small "?" buttons and `code` chips in the About box are dark instead of white; and the About text no longer mentions the removed model-reading card.
+
 ## Status
 All 8 features are built.

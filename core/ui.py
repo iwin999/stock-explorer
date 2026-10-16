@@ -160,7 +160,7 @@ DARK_CSS = """
 .stApp [data-testid="stMetricDelta"] svg { filter: none; }
 .stApp [data-testid="stTab"], .stApp button[data-baseweb="tab"] { color: #868993 !important; }
 .stApp [data-testid="stTab"] p { color: #868993 !important; }
-.stApp [data-testid="stTab"][aria-selected="true"], .stApp button[data-baseweb="tab"][aria-selected="true"] { border-bottom-color: #2962ff; }
+.stApp [data-testid="stTab"][aria-selected="true"], .stApp button[data-baseweb="tab"][aria-selected="true"] { border-bottom-color: #7c9bd1; }
 .stApp [data-testid="stTab"][aria-selected="true"] p { color: #ffffff !important; }
 .stApp [data-testid="stExpander"], .stApp details { background: #1e222d; border-color: #2a2e39 !important; }
 .stApp [data-testid="stExpander"] summary:hover { background: #2a2e39; }
@@ -172,9 +172,10 @@ DARK_CSS = """
 [data-baseweb="popover"] li:hover, [data-baseweb="popover"] [aria-selected="true"] { background: #2a2e39 !important; }
 [data-baseweb="popover"] *, [data-baseweb="menu"] * { color: #d1d4dc; }
 .stApp button[kind="secondary"], .stApp button[kind="tertiary"], .stApp [data-testid="stBaseButton-secondary"] { background: #1e222d; color: #d1d4dc; border-color: #363a45; }
-.stApp [data-testid="stBaseButton-secondary"]:hover { background: #2a2e39; border-color: #2962ff; }
+.stApp [data-testid="stBaseButton-secondary"]:hover { background: #2a2e39; border-color: #7c9bd1; }
 .stApp [data-testid="stBaseButton-secondary"] p { color: #d1d4dc; }
-.stApp [data-testid="stBaseButton-primary"] { background: #2962ff; border-color: #2962ff; }
+.stApp [data-testid="stBaseButton-primary"] { background: #34507f; border-color: #34507f; }
+.stApp [data-testid="stBaseButton-primary"]:hover { background: #3f5f94; border-color: #3f5f94; }
 .stApp [data-testid="stBaseButton-primary"] p { color: #ffffff; }
 .stApp [data-testid="stAlert"] { background: #1e222d; }
 .stApp [data-testid="stAlert"] * { color: #d1d4dc; }
@@ -187,7 +188,7 @@ DARK_CSS = """
 [data-testid="stDialog"] [data-baseweb="select"] *, [data-testid="stDialog"] [data-baseweb="select"] svg { color: #d1d4dc !important; fill: #d1d4dc; }
 [data-testid="stDialog"] [data-testid="stBaseButton-secondary"] { background: #1e222d; border-color: #363a45; }
 [data-testid="stDialog"] [data-testid="stNumberInputContainer"], [data-testid="stDialog"] [data-testid="stNumberInputContainer"] button { background: #1e222d !important; }
-.callout { background: #1e222d; border-left-color: #2962ff; color: #d1d4dc; }
+.callout { background: #1e222d; border-left-color: #7c9bd1; color: #d1d4dc; }
 .notice { background: #2a2312; color: #f1dfae; border-left-color: #c8962e; }
 .error-card { background: #1e222d; border-color: #363a45; }
 .error-card.warn { background: #2a2312; border-color: #8a6b22; }
@@ -199,14 +200,20 @@ DARK_CSS = """
 .swap .lay { color: #4dc9b0; }
 .scale-pin { background: #ffffff; box-shadow: 0 0 0 2px #131722; }
 .scale-verdict, .scale-verdict * { color: #d1d4dc; }
-.help-bubble, .stApp .st-key-about_btn button { background: #1e222d; color: #d1d4dc; border-color: #2962ff; }
-.stApp .st-key-about_btn button:hover { background: #2962ff; color: #131722; }
+.help-bubble, .stApp .st-key-about_btn button { background: #1e222d; color: #d1d4dc; border-color: #7c9bd1; }
+.stApp .st-key-about_btn button:hover { background: #4a6fa5; color: #ffffff; }
 .stApp .st-key-about_btn button:hover p { color: #131722; }
 .brand h1 { color: #ffffff; }
-.companybar { background: #1e222d; border-color: #2962ff; box-shadow: 0 4px 14px rgba(0,0,0,0.5); }
+.stApp [data-testid="stToggle"] label > div:not([data-testid="stWidgetLabel"]) { background: #4a5160 !important; }
+.stApp [data-testid="stToggle"] label:has(input:checked) > div:not([data-testid="stWidgetLabel"]) { background: #3f5f94 !important; }
+.companybar { background: #1e222d; border-color: #7c9bd1; box-shadow: 0 4px 14px rgba(0,0,0,0.5); }
 .companybar-name { color: #ffffff; } .companybar-label, .companybar-code { color: #868993; }
 .disclaimer { border-top-color: #2a2e39; }
-.monogram { background: #2962ff; }
+.monogram { background: #34507f; color: #e6ebf5; }
+.stApp [data-testid="stPopover"] button, [data-testid="stDialog"] [data-testid="stPopover"] button { background: #1e222d; border-color: #4a5160; color: #d1d4dc; }
+.stApp [data-testid="stPopover"] button:hover { background: #2a2e39; border-color: #7c9bd1; }
+.stApp [data-testid="stPopover"] button p, .stApp [data-testid="stPopover"] button svg, [data-testid="stDialog"] [data-testid="stPopover"] button p, [data-testid="stDialog"] [data-testid="stPopover"] button svg { color: #d1d4dc !important; fill: #d1d4dc; }
+.stApp code, [data-testid="stDialog"] code, [data-testid="stMarkdownContainer"] code { background: #2a2e39 !important; color: #c9d4ea !important; }
 .brand-crest { background: #ffffff; border-radius: 10px; padding: 3px; }
 </style>
 """

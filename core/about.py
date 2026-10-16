@@ -128,7 +128,7 @@ Supabase or any broker.*"""
 # ---- the same dialog for the second (dashboard) site: only what that site actually has ----
 WHAT_IT_IS_SIMPLE = """\
 **Stock Explorer** is an educational dashboard that makes Indian (NSE and BSE) stocks easier to understand. Search a company, read its \
-price chart in daily, weekly or monthly candles, see a **model reading for today** made by five strategies from the CMT curriculum and a \
+price chart in daily, weekly or monthly candles, see a **combined model reading** made by five strategies from the CMT curriculum and a \
 small machine-learning model, check the main indicators, and practise buying and selling shares with **virtual money**. Nothing here is \
 real money, and nothing here is investment advice."""
 
@@ -143,7 +143,7 @@ Fibonacci confluence) and the ML model, each with a **Full view** that opens a c
 6. **Left side:** what you hold, what you sold, where your money is, the leaderboard, and a barometer that combines the five strategies.
 7. **Right side:** six indicators: RSI, MACD, ADX, Z-score, Supertrend and Bollinger band.
 
-Hover over the small **?** chips at the bottom of the model-reading card for a short explanation of each piece of analysis."""
+Hover over the small **i** marks next to each indicator for a short explanation. The **Tour** button in the top bar walks through every part of the screen."""
 
 LIMITATIONS_SIMPLE = """\
 - **Not advice, and close to a coin toss for one day.** The model reading describes what some methods show, for learning; it is not a recommendation to buy or sell. In our tests the five CMT strategies and the \
