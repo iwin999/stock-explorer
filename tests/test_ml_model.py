@@ -53,7 +53,7 @@ def test_the_dashboard_panel_has_six_indicators_with_a_zscore_and_no_votes_tag_a
     card = vis.terminal_card(names["RSI (speed)"])
     assert "VOTES" not in card and "context" not in card and "title=" in card
     strip = vis.learn_strip()
-    assert strip.count('class="lh"') == len(vis.HINTS) >= 14 and "Fusion stage" in strip and "ML model" in strip
+    assert strip.count('class="lh"') == len(vis.HINTS) >= 12 and "Typical range" not in strip and "The model reading" not in strip and "Fusion stage" in strip and "ML model" in strip
 
 
 def test_the_ml_full_view_explains_the_model_and_its_honest_results():

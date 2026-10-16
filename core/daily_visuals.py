@@ -211,8 +211,6 @@ HINTS = {
     "RSI": EXPLAIN["RSI (speed)"], "MACD": EXPLAIN["MACD (momentum)"], "ADX": EXPLAIN["Trend strength (ADX)"],
     "Z-score": EXPLAIN["Z-score"], "Supertrend": EXPLAIN["Supertrend"], "Bollinger band": EXPLAIN["Bollinger band"],
     "ML model": "A small machine-learning model (a logistic regression) that looks at the five CMT readings and a dozen indicator readings and gives a modelled chance that the next day closes higher. It was trained on 137 NSE companies and checked on dates it had never seen. It describes what the model reads, not what will happen.",
-    "Typical range": "Yesterday's close plus or minus a typical day's swing. About two days in three finish inside it. The blue marker is today's price and the tick is yesterday's close.",
-    "The model reading": "The five CMT strategies each read Up, Down or Neutral from yesterday\'s data. Two or more net readings decide: Up, Down or Sideways. This is a description of what the methods show, not a recommendation.",
 }
 
 

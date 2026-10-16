@@ -411,5 +411,8 @@ The big "Model reading for today" card is gone. In its place: a slim **Today so 
 ## New in Step 71 (the Today so far card is gone)
 The slim "Today so far" card was removed from the second site's dashboard: it repeated what the barometer and the strategies already show. The strategies table now follows straight after the chart and the paper-trading bar. The outcome comparison and typical-range bar are no longer on the dashboard (the real site's Daily check tab still has them).
 
+## New in Step 72 (dark-mode and dashboard-off check)
+A check in Dark mode and with Dashboard view off found four small things, now fixed: the selects and number boxes inside the order pop-up stayed light with grey text in Dark mode (low contrast); the "You are looking at" bar was white in Dark mode; the phone layout still said "Call was right / wrong" (now "The reading matched / did not match"); and two hint chips pointed at parts that no longer exist (the typical range and the model reading card).
+
 ## Status
 All 8 features are built.

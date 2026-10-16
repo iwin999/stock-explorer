@@ -27,6 +27,7 @@ POPULAR = ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS", "INFY.NS", "ITC.NS", "SBIN.NS
 if "dash_init" not in st.session_state:
     st.session_state["dash_init"] = True
     st.session_state.setdefault("terminal_view", True)
+st.session_state["site"] = "simple"                    # tells the About dialog which site it is on
 dashboard = bool(st.session_state.get("terminal_view"))          # the wide, one-screen Dashboard view
 st.set_page_config(page_title="Stock Explorer (simple)", layout="wide" if dashboard else "centered")
 st.markdown(STYLE_CSS, unsafe_allow_html=True)
@@ -247,7 +248,7 @@ def company():
         else:
             st.markdown(dc.headline(res))
             if res["matched"] is not None:
-                badge = "Call was right" if res["matched"] else "Call was wrong"
+                badge = "The reading matched" if res["matched"] else "The reading did not match"
                 st.markdown(f'<span class="{"up" if res["matched"] else "down"}">{badge}</span>', unsafe_allow_html=True)
             st.caption("A simple rule of thumb on yesterday's data, not a forecast and not advice. One day proves nothing.")
 

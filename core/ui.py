@@ -182,6 +182,11 @@ DARK_CSS = """
 .stApp hr { border-color: #2a2e39; }
 [data-testid="stDialog"] > div, [data-testid="stDialog"] [role="dialog"], [data-baseweb="modal"] [role="dialog"] { background: #131722 !important; }
 [data-testid="stDialog"] *:not(svg):not(path) { color: #d1d4dc; }
+[data-testid="stDialog"] [data-baseweb="input"], [data-testid="stDialog"] [data-baseweb="base-input"], [data-testid="stDialog"] [data-baseweb="select"] > div,
+[data-testid="stDialog"] input, [data-testid="stDialog"] textarea { background: #1e222d !important; color: #d1d4dc !important; border-color: #363a45 !important; }
+[data-testid="stDialog"] [data-baseweb="select"] *, [data-testid="stDialog"] [data-baseweb="select"] svg { color: #d1d4dc !important; fill: #d1d4dc; }
+[data-testid="stDialog"] [data-testid="stBaseButton-secondary"] { background: #1e222d; border-color: #363a45; }
+[data-testid="stDialog"] [data-testid="stNumberInputContainer"], [data-testid="stDialog"] [data-testid="stNumberInputContainer"] button { background: #1e222d !important; }
 .callout { background: #1e222d; border-left-color: #2962ff; color: #d1d4dc; }
 .notice { background: #2a2312; color: #f1dfae; border-left-color: #c8962e; }
 .error-card { background: #1e222d; border-color: #363a45; }
@@ -198,6 +203,8 @@ DARK_CSS = """
 .stApp .st-key-about_btn button:hover { background: #2962ff; color: #131722; }
 .stApp .st-key-about_btn button:hover p { color: #131722; }
 .brand h1 { color: #ffffff; }
+.companybar { background: #1e222d; border-color: #2962ff; box-shadow: 0 4px 14px rgba(0,0,0,0.5); }
+.companybar-name { color: #ffffff; } .companybar-label, .companybar-code { color: #868993; }
 .disclaimer { border-top-color: #2a2e39; }
 .monogram { background: #2962ff; }
 .brand-crest { background: #ffffff; border-radius: 10px; padding: 3px; }
