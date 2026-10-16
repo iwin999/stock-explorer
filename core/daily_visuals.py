@@ -78,6 +78,21 @@ CSS = """<style>
 .lh:nth-child(n+8) .tip { left:auto; right:0; }
 .pb-main.four { grid-template-columns:1fr 1fr 1fr 1.7fr; }
 @media (max-width:1100px){ .sc-row { grid-template-columns:repeat(2,1fr); } .pb-main { grid-template-columns:1fr; } }
+.pb { position:relative; overflow:hidden; }
+.pb::before { content:""; position:absolute; left:0; right:0; top:0; height:3px; background:linear-gradient(90deg,#26a69a,#2962ff 55%,#ef5350); }
+.pb-head { padding-bottom:.8rem; border-bottom:1px dashed var(--tm-line,#dfe3ea); background-image:radial-gradient(rgba(128,128,128,.16) 1px, transparent 1px); background-size:14px 14px; margin:-.3rem -1.6rem .9rem -1.6rem; padding:.7rem 1.6rem .8rem 1.6rem; }
+.pb-right { display:flex; align-items:center; gap:1rem; }
+.mono, .pb-word, .pb-line, .pb-meterl, .pb-rng, .sc-v, .sc-t, .pb-verdict, .pb-sub, .pb-pill, .pb-l { font-family:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace; }
+.pb-l { letter-spacing:.14em; font-size:.66rem; } .pb-l b { color:#2962ff; margin-right:.4rem; font-weight:700; }
+.pb-box { background:linear-gradient(180deg,rgba(128,128,128,.06),rgba(128,128,128,.02)); }
+.led-row { display:flex; gap:.5rem; margin-top:.75rem; } .led { width:.8rem; height:.8rem; border-radius:50%; display:inline-block; }
+.pb-gauge { display:block; width:100%; max-width:11rem; margin:.1rem 0 -.2rem 0; }
+.pb-gauge-n { font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-size:1.55rem; font-weight:800; line-height:1; text-align:center; }
+.pb-ml { text-align:center; }
+.pb-ml .pb-l { text-align:left; } .pb-ml .pb-word { font-size:.95rem !important; font-weight:700; margin-top:.25rem; } .pb-ml .pb-meterl { text-align:center; }
+.sc { background:linear-gradient(90deg,var(--sc-glow,transparent),transparent 40%); }
+.sc-v { font-size:.74rem; } .sc-t { letter-spacing:.01em; }
+.spark { display:block; }
 @media (max-width:640px){ .dc-hero{gap:.7rem;padding:.8rem} .dc-badge{width:3.6rem;height:3.6rem;font-size:1.6rem} .dc-call{font-size:1.5rem} .dc-bars .lab{width:6rem} }
 </style>"""
 
@@ -119,7 +134,7 @@ def range_bar(low, high, prev_close, price, price_label="Now", ends=True):
     pin = ""
     if price:
         inside = low <= price <= high
-        crowded = abs((price - prev_close) / span) < 0.14             # keep the two labels apart when the prices are close
+        crowded = abs((price - prev_close) / span) < 0.32             # keep the two labels apart when the prices are close
         pin = (f'<div class="dc-pin" style="left:{at(price)};background:{UP_C if inside else DOWN_C}"></div>'
                f'<div class="dc-lbl{"" if crowded else " b"}" style="left:{at(price)};{"top:-1.15rem;" if crowded else ""}">{e(price_label)} {price:,.2f}</div>')
     return (f'<div class="dc-range"><div class="dc-track"></div>'
@@ -207,60 +222,97 @@ def strategy_tiles(entries, stats=None):
             d20 = rec["next 20 days"]["last 30% of dates"]["accuracy"] * 100
             tested = f'<div class="sc-t">Back-test: {d1:.0f}% next day &middot; {d20:.0f}% in 20 days</div>'
             tip += f" Back-tested on past data: right {d1:.0f}% of the time for the next day and {d20:.0f}% over the next 20 days."
-        tiles.append(f'<div class="sc" style="border-left-color:{colour}" title="{e(tip)}"><div class="sc-top"><span class="sc-n">{e(en["name"])}</span>'
+        tiles.append(f'<div class="sc" style="border-left-color:{colour};--sc-glow:{_tint(colour, .10)}" title="{e(tip)}"><div class="sc-top"><span class="sc-n">{e(en["name"])}</span>'
                      f'<span class="sc-v" style="color:{colour}">{word}</span></div><div class="sc-src">{e(en.get("source", ""))}</div>'
                      f'<div class="sc-r">{e(en["reading"])}</div>{tested}</div>')
     return '<div class="sc-head">The five strategies behind the call (hover a tile to read why)</div><div class="sc-row">' + "".join(tiles) + "</div>"
 
 
-def prediction_bar(result, status_text="", footer="", strategies="", note="", ml=None, learn=""):
-    """The prediction panel: a header with a status pill, three boxes (the call with a vote meter, what happened so far, the expected
-    range), then the strategy tiles, a one-paragraph note and the footer."""
+def _arc(cx, cy, r, p0, p1):
+    """An SVG arc along the top half of a circle from fraction p0 to p1 of the way round (0 = far left, 1 = far right)."""
+    import math
+    a0, a1 = math.pi * (1 - p0), math.pi * (1 - p1)
+    x0, y0, x1, y1 = cx + r * math.cos(a0), cy - r * math.sin(a0), cx + r * math.cos(a1), cy - r * math.sin(a1)
+    return f"M {x0:.2f} {y0:.2f} A {r} {r} 0 0 1 {x1:.2f} {y1:.2f}"
+
+
+def gauge_svg(p_up, colour):
+    """A semicircle dial: red below 46%, grey between 46% and 54%, green above 54%, with a needle at the model's chance of 'up'."""
+    import math
+    cx, cy, r = 50, 50, 38
+    ang = math.pi * (1 - min(max(p_up, 0.0), 1.0))
+    nx, ny = cx + (r - 6) * math.cos(ang), cy - (r - 6) * math.sin(ang)
+    seg = lambda p0, p1, c: f'<path d="{_arc(cx, cy, r, p0, p1)}" stroke="{c}" stroke-width="7" fill="none"/>'
+    return (f'<svg class="pb-gauge" viewBox="0 0 100 58" aria-hidden="true">{seg(0.0, 0.46, DOWN_C)}{seg(0.46, 0.54, "#868993")}{seg(0.54, 1.0, UP_C)}'
+            f'<line x1="{cx}" y1="{cy}" x2="{nx:.2f}" y2="{ny:.2f}" stroke="{colour}" stroke-width="2.2" stroke-linecap="round"/>'
+            f'<circle cx="{cx}" cy="{cy}" r="3.4" fill="{colour}"/></svg>')
+
+
+def spark_svg(values, colour, width=150, height=34):
+    """A tiny price line for the header, with a dot on the last price."""
+    vals = [float(v) for v in values]
+    if len(vals) < 3:
+        return ""
+    lo, hi = min(vals), max(vals)
+    span = (hi - lo) or 1.0
+    pts = [(i / (len(vals) - 1) * (width - 6) + 3, height - 4 - (v - lo) / span * (height - 8)) for i, v in enumerate(vals)]
+    path = " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
+    return (f'<svg class="spark" width="{width}" height="{height}" viewBox="0 0 {width} {height}" aria-hidden="true">'
+            f'<polyline points="{path}" fill="none" stroke="{colour}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" opacity=".9"/>'
+            f'<circle cx="{pts[-1][0]:.1f}" cy="{pts[-1][1]:.1f}" r="3" fill="{colour}"/></svg>')
+
+
+def prediction_bar(result, status_text="", footer="", strategies="", note="", ml=None, learn="", spark=None):
+    """The prediction panel, in a tech-console style: a header with a tiny price line and a live pill, four numbered boxes (the call
+    with one LED per strategy, the ML dial, what happened, the expected range), the strategy tiles, the hint chips and the footer."""
     p = result["prediction"]
     voters = [v for v in result["votes"] if v["voting"]]
     ups = sum(1 for v in voters if v["vote"] > 0)
     downs = sum(1 for v in voters if v["vote"] < 0)
     neutral = len(voters) - ups - downs
     colour = COLOUR[p]
-    meter = "".join(f'<span style="background:{COLOUR[VOTE_NAME[v["vote"]]]}" title="{e(v["name"])}: {VOTE_NAME[v["vote"]]}"></span>' for v in voters)
-    call = (f'<div class="pb-box"><div class="pb-l">The call</div><div class="pb-big"><div class="pb-badge" style="background:{_tint(colour, .16)};color:{colour}">{GLYPH[p]}</div>'
-            f'<div><div class="pb-word" style="color:{colour}">{p}</div></div></div><div class="pb-meter">{meter}</div>'
+    leds = "".join(f'<i class="led" title="{e(v["name"])}: {VOTE_NAME[v["vote"]]}" style="background:{COLOUR[VOTE_NAME[v["vote"]]]};'
+                   f'box-shadow:0 0 7px {COLOUR[VOTE_NAME[v["vote"]]]}"></i>' for v in voters)
+    call = (f'<div class="pb-box"><div class="pb-l"><b>01</b>THE CALL</div><div class="pb-big"><div class="pb-badge" style="background:{_tint(colour, .16)};color:{colour}">{GLYPH[p]}</div>'
+            f'<div><div class="pb-word" style="color:{colour}">{p.upper()}</div></div></div><div class="led-row">{leds}</div>'
             f'<div class="pb-meterl">{ups} up &middot; {downs} down &middot; {neutral} neutral</div></div>')
+    ml_html = ""
+    if ml:
+        lean = ml["lean"]
+        mcol = COLOUR.get(lean, FLAT_C)
+        word = {"Up": "LEANS UP", "Down": "LEANS DOWN", "None": "NO CLEAR VIEW"}[lean]
+        held = ml["tested"].get("last 30% of dates (held back)", {})
+        conf = held.get("confident_accuracy")
+        drivers = ", ".join(f"{n} ({'up' if v > 0 else 'down'})" for n, v in ml["top"])
+        tested = (f'held-back test: {held["accuracy"] * 100:.0f}% overall, {conf * 100:.0f}% when confident' if conf else "")
+        ml_html = (f'<div class="pb-box pb-ml" title="Biggest influences today: {e(drivers)}.">'
+                   f'<div class="pb-l"><b>02</b>ML ESTIMATE</div>{gauge_svg(ml["p_up"], mcol)}'
+                   f'<div class="pb-gauge-n" style="color:{mcol}">{ml["p_up"] * 100:.1f}%</div>'
+                   f'<div class="pb-word" style="color:{mcol}">{word}</div><div class="pb-meterl">chance of closing higher<br>{e(tested)}</div></div>')
+    n_what, n_rng = ("03", "04") if ml else ("02", "03")
     low, high = result["range"]
     if result["actual"] is None:
-        what = ('<div class="pb-box"><div class="pb-l">What happened</div><div class="pb-big"><div class="pb-badge" style="background:rgba(128,128,128,.12);color:#868993">&hellip;</div>'
-                '<div><div class="pb-word" style="color:#868993">Not yet</div></div></div><div class="pb-line">Waiting for today\'s price</div></div>')
-        rng = (f'<div class="pb-box"><div class="pb-l">Expected range</div><div class="pb-rng"><span>Rs {low:,.0f}</span><span>Rs {high:,.0f}</span></div>'
+        what = (f'<div class="pb-box"><div class="pb-l"><b>{n_what}</b>OUTCOME</div><div class="pb-big"><div class="pb-badge" style="background:rgba(128,128,128,.12);color:#868993">&hellip;</div>'
+                '<div><div class="pb-word" style="color:#868993">NOT YET</div></div></div><div class="pb-line">waiting for today\'s price</div></div>')
+        rng = (f'<div class="pb-box"><div class="pb-l"><b>{n_rng}</b>EXPECTED RANGE</div><div class="pb-rng"><span>Rs {low:,.0f}</span><span>Rs {high:,.0f}</span></div>'
                f'{range_bar(low, high, result["prev_close"], None, ends=False)}</div>')
     else:
         a = result["actual_direction"]
         ac = COLOUR[a]
         ok = result["matched"]
         vc = UP_C if ok else DOWN_C
-        what = (f'<div class="pb-box"><div class="pb-l">What happened</div><div class="pb-big"><div class="pb-badge" style="background:{_tint(ac, .16)};color:{ac}">{GLYPH[a]}</div>'
-                f'<div><div class="pb-word" style="color:{ac}">{a}</div></div></div>'
+        what = (f'<div class="pb-box"><div class="pb-l"><b>{n_what}</b>OUTCOME</div><div class="pb-big"><div class="pb-badge" style="background:{_tint(ac, .16)};color:{ac}">{GLYPH[a]}</div>'
+                f'<div><div class="pb-word" style="color:{ac}">{a.upper()}</div></div></div>'
                 f'<div class="pb-line">{result["change"] * 100:+.2f}% &middot; Rs {result["actual"]:,.2f}</div>'
-                f'<span class="pb-verdict" style="background:{_tint(vc, .14)};color:{vc}">{"&#10003; The call was right" if ok else "&#10007; The call was wrong"}</span></div>')
-        inside = "Inside" if result["in_range"] else "Outside"
-        rng = (f'<div class="pb-box"><div class="pb-l">Expected range &middot; {inside.lower()} so far</div><div class="pb-rng"><span>Rs {low:,.0f}</span><span>Rs {high:,.0f}</span></div>'
+                f'<span class="pb-verdict" style="background:{_tint(vc, .14)};color:{vc}">{"&#10003; CALL RIGHT" if ok else "&#10007; CALL WRONG"}</span></div>')
+        inside = "inside" if result["in_range"] else "outside"
+        rng = (f'<div class="pb-box"><div class="pb-l"><b>{n_rng}</b>EXPECTED RANGE &middot; {inside}</div><div class="pb-rng"><span>Rs {low:,.0f}</span><span>Rs {high:,.0f}</span></div>'
                f'{range_bar(low, high, result["prev_close"], result["actual"], "Now" if result["status"] == "live" else "Close", ends=False)}</div>')
-    ml_html = ""
-    if ml:
-        lean = ml["lean"]
-        mcol = COLOUR.get(lean, FLAT_C)
-        word = {"Up": "Up", "Down": "Down", "None": "No clear view"}[lean]
-        held = ml["tested"].get("last 30% of dates (held back)", {})
-        conf = held.get("confident_accuracy")
-        drivers = ", ".join(f"{n} ({'up' if v > 0 else 'down'})" for n, v in ml["top"])
-        tested = (f'Held-back test: right {held["accuracy"] * 100:.0f}% overall, {conf * 100:.0f}% on its confident days' if conf else "")
-        ml_html = (f'<div class="pb-box" title="Biggest influences today: {e(drivers)}. {e(tested)}.">'
-                   f'<div class="pb-l">ML estimate</div><div class="pb-big"><div class="pb-badge" style="background:{_tint(mcol, .16)};color:{mcol}">{GLYPH.get(lean, "&bull;")}</div>'
-                   f'<div><div class="pb-word" style="color:{mcol};font-size:{1.9 if lean != "None" else 1.25}rem">{word}</div></div></div>'
-                   f'<div class="pb-line">{ml["p_up"] * 100:.0f}% chance it closes higher</div>'
-                   f'<div class="pb-meterl">{e(tested)}</div></div>')
     live = "live" in status_text.lower()
-    pill = f'<span class="pb-pill{" live" if live else ""}"><i></i>{e(status_text)}</span>' if status_text else ""
-    head = (f'<div class="pb-head"><div><div class="pb-title">Today\'s prediction</div><div class="pb-sub">Based on data up to {result["basis_date"]:%A %d %b} (close Rs {result["prev_close"]:,.2f})</div></div>{pill}</div>')
+    pill = f'<span class="pb-pill{" live" if live else ""}"><i></i>{e(status_text.upper())}</span>' if status_text else ""
+    sk = spark_svg(spark, colour) if spark is not None and len(spark) else ""
+    head = (f'<div class="pb-head"><div><div class="pb-title">Today\'s prediction</div><div class="pb-sub">data to {result["basis_date"]:%a %d %b} &middot; close Rs {result["prev_close"]:,.2f}</div></div>'
+            f'<div class="pb-right">{sk}{pill}</div></div>')
     note_html = f'<div class="pb-note">{note}</div>' if note else ""
     foot = f'<div class="pb-foot">{footer}</div>' if footer else ""
     return f'<div class="pb">{head}<div class="pb-main{" four" if ml_html else ""}">{call}{ml_html}{what}{rng}</div>{strategies}{learn}{note_html}{foot}</div>'

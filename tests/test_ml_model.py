@@ -62,5 +62,5 @@ def test_the_prediction_bar_shows_the_ml_box_next_to_the_call():
     result = dc.evaluate(plan["basis"], plan)
     est = ml.estimate(hist, bench)
     html = vis.prediction_bar(result, "Live", "", "", "", ml=est, learn=vis.learn_strip())
-    assert "ML estimate" in html and "pb-main four" in html and "chance it closes higher" in html
+    assert "ML ESTIMATE" in html and "pb-main four" in html and "chance of closing higher" in html and "pb-gauge" in html
     assert "pb-main four" not in vis.prediction_bar(result, "Live")

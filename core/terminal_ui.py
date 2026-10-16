@@ -200,7 +200,7 @@ def _prediction(symbol, name, hist, offline):
         note = ""                                  # the tiles carry their own back-test lines, so no paragraph is needed
     else:
         note = "Not enough history for the CMT strategies on this company, so the six-indicator vote is used instead."
-    st.markdown(vis.prediction_bar(result, status, f"<b>Disclaimer.</b> {DISCLAIMER}", tiles, note, ml=ml, learn=vis.learn_strip()),
+    st.markdown(vis.prediction_bar(result, status, f"<b>Disclaimer.</b> {DISCLAIMER}", tiles, note, ml=ml, learn=vis.learn_strip(), spark=info["basis"]["Close"].tail(40).tolist()),
                 unsafe_allow_html=True)
     if info["note"]:
         st.caption(info["note"])

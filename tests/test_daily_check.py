@@ -162,8 +162,8 @@ def test_the_prediction_bar_reads_left_to_right_and_handles_a_day_with_no_price_
     h = _hist()
     live = dc.plan(h, datetime(2026, 10, 14, 13, 0), live_price=float(h["Close"].iloc[-1]) * 1.02, market_open=True)
     html = vis.prediction_bar(dc.evaluate(live["basis"], live), "Live: market open")
-    for part in ("The call", "What happened", "Expected range", "Today's prediction", "Live: market open", "The call was"):
+    for part in ("THE CALL", "OUTCOME", "EXPECTED RANGE", "Today's prediction", "LIVE: MARKET OPEN", "CALL "):
         assert part in html
     pending = dc.plan(h, datetime(2026, 10, 14, 8, 30), live_price=None, market_open=False)
     waiting = vis.prediction_bar(dc.evaluate(pending["basis"], pending), "Waiting for the market to open")
-    assert "Not yet" in waiting and "The call was" not in waiting
+    assert "NOT YET" in waiting and "CALL RIGHT" not in waiting and "CALL WRONG" not in waiting
