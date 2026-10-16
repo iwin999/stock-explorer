@@ -32,6 +32,14 @@ CSS = """<style>
 .stApp [data-testid="stMainBlockContainer"], .stApp .block-container { padding-top: 3.2rem !important; max-width: 100% !important; }
 .stApp [data-testid="stLayoutWrapper"]:has(> .st-key-tm_ind), .stApp [data-testid="stLayoutWrapper"]:has(> .st-key-tm_lists) { flex:1 1 0 !important; height:auto !important; min-height:150px; }
 .st-key-tm_ind, .st-key-tm_lists { height:100% !important; }
+[data-testid="stDialog"] [data-testid="stMetric"] { background:rgba(128,128,128,.06); border:1px solid rgba(128,128,128,.28); border-radius:10px; padding:.7rem .95rem; }
+[data-testid="stDialog"] [data-testid="stMetricLabel"], [data-testid="stDialog"] [data-testid="stMetricLabel"] * { font-size:.85rem !important; font-weight:500; letter-spacing:.01em; opacity:.75; }
+[data-testid="stDialog"] [data-testid="stMetricValue"], [data-testid="stDialog"] [data-testid="stMetricValue"] * { font-size:1.55rem !important; font-weight:650 !important; line-height:1.25; letter-spacing:-.01em; font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1, "lnum" 1; }
+[data-testid="stDialog"] [data-testid="stMetricDelta"], [data-testid="stDialog"] [data-testid="stMetricDelta"] * { font-size:.82rem !important; font-weight:600; font-variant-numeric:tabular-nums; }
+[data-testid="stDialog"] button { min-height:2.6rem; font-size:.98rem !important; font-weight:600; border-radius:8px; font-variant-numeric:tabular-nums; }
+[data-testid="stDialog"] [role="tab"] button, [data-testid="stDialog"] button[role="tab"] { min-height:0; }
+[data-testid="stDialog"] input[type="number"], [data-testid="stDialog"] [data-testid="stNumberInput"] input { font-variant-numeric:tabular-nums; font-weight:600; font-size:1.05rem; }
+[data-testid="stDialog"] [data-testid="stAlert"] strong, [data-testid="stDialog"] [data-testid="stAlert"] b { font-variant-numeric:tabular-nums; }
 .tm-row { display:flex; justify-content:space-between; gap:.5rem; padding:.35rem 0; border-bottom:1px solid rgba(128,128,128,.25); font-size:.92rem; }
 .tm-row .s { opacity:.65; font-size:.8rem; } .tm-h { font-weight:800; font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin:.5rem 0 .2rem 0; }
 .dc-card.tm { padding:.5rem .7rem .05rem .7rem; margin-bottom:.45rem; cursor:help; }

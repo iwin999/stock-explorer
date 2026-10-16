@@ -390,5 +390,8 @@ The Buy / Sell pop-up on the second site now has four tabs: **Stocks** (as befor
 ## New in Step 64 (model-reading wording on the second site)
 So that nothing reads like a tip, the second site's panel no longer says "prediction" or "call". It is now **Model reading for today**, with a standing line under the title ("Educational only: what the methods read, not a recommendation to buy or sell"). "Our call" became **Model reading**; "The call was right / wrong" became "The reading matched / did not match what happened"; the ML box is **ML model reading** with a "modelled chance of a higher close"; "expected range" is **typical range**; the strategies table is "behind the reading" and its back-test column says how often each matched the next move; the hover hints and the About dialog use the same words. The real site is unchanged.
 
+## New in Step 65 (nicer numbers in the order pop-up)
+In the Buy / Sell pop-up the figures (price, units owned, cash, premium, lot size, total cost) now sit in softly bordered boxes with a smaller grey label, a semi-bold value with aligned digits (tabular figures), and a tidier change chip. The quick-amount and action buttons are a little larger and bolder, and the number inputs use the same aligned digits.
+
 ## Status
 All 8 features are built.
