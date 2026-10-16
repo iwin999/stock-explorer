@@ -77,6 +77,18 @@ CSS = """<style>
 .ss-view ul { margin:.6rem 0 0 1.1rem; padding:0; font-size:.98rem; line-height:1.6; } .ss-view li b { font-weight:700; }
 .ss-key { display:flex; flex-wrap:wrap; gap:.4rem 1.2rem; font-size:.85rem; color:var(--tm-muted,#6b7785); margin:.4rem 0 0 0; } .ss-key i { display:inline-block; width:1.1rem; height:.28rem; border-radius:3px; margin-right:.35rem; vertical-align:middle; }
 @media (max-width:1100px){ .ss-grid { grid-template-columns:1.4fr .8fr .8fr; } .ss-grid > :nth-child(3), .ss-grid > :nth-child(4) { display:none; } }
+.fg-box { max-height:330px; overflow-y:auto; border:1px solid var(--tm-line,#dfe3ea); border-radius:10px; padding:1rem 1.2rem; margin-top:.8rem; background:rgba(128,128,128,.04); }
+.fg-title { font-weight:700; font-size:1.05rem; } .fg-title small { font-weight:400; color:var(--tm-muted,#6b7785); margin-left:.5rem; font-size:.85rem; }
+.fg-here { margin:.7rem 0; padding:.6rem .85rem; border-left:4px solid #2962ff; background:rgba(41,98,255,.07); border-radius:0 8px 8px 0; font-size:.95rem; line-height:1.5; }
+.fg-h { font-weight:700; margin:1rem 0 .3rem 0; font-size:.95rem; } .fg-box ul { margin:.2rem 0 0 1.1rem; padding:0; font-size:.93rem; line-height:1.55; }
+.fg-note { font-size:.88rem; color:var(--tm-muted,#6b7785); margin-top:.5rem; line-height:1.5; }
+.fg-cards { display:grid; grid-template-columns:repeat(2,1fr); gap:.7rem; }
+.fg-card { border:1px solid var(--tm-line,#dfe3ea); border-left-width:5px; border-radius:10px; padding:.7rem .9rem; font-size:.92rem; }
+.fg-card.up { border-left-color:#26a69a; } .fg-card.flat { border-left-color:#d98e04; } .fg-card.down { border-left-color:#ef5350; }
+.fg-card.here { background:rgba(41,98,255,.07); box-shadow:0 0 0 2px #2962ff inset; }
+.fg-name { font-weight:700; font-size:1rem; } .fg-tag { margin-left:.5rem; font-size:.72rem; font-weight:700; color:#2962ff; text-transform:uppercase; letter-spacing:.05em; }
+.fg-rule { color:var(--tm-muted,#6b7785); margin:.15rem 0 .3rem 0; } .fg-verdict { margin-top:.4rem; font-size:.88rem; line-height:1.45; }
+@media (max-width:1100px){ .fg-cards { grid-template-columns:1fr; } }
 @media (max-width:640px){ .dc-hero{gap:.7rem;padding:.8rem} .dc-badge{width:3.6rem;height:3.6rem;font-size:1.6rem} .dc-call{font-size:1.5rem} .dc-bars .lab{width:6rem} }
 </style>"""
 
@@ -339,7 +351,7 @@ def _tick(ok):
     return '<b class="up">&#10003;</b>' if ok else '<b class="down">&#10007;</b>'
 
 
-def strategy_view(name, v):
+def strategy_view(name, v, fusion=None):
     """The full view of one strategy: a chart of what it looks at, a key, and a few plain lines on what it is doing today."""
     ink, amber, blue, teal, red = "#5b6573", "#d98e04", "#2962ff", UP_C, DOWN_C
     d = v["dates"]
@@ -347,12 +359,7 @@ def strategy_view(name, v):
         f = v["fusion"]
         chart = _chart([(v["close"], ink, 2.2, False), (v["sma50"], amber, 1.8, False), (v["sma200"], blue, 1.8, False)], dates=d)
         key = _key([("Price", ink), ("50-day average", amber), ("200-day average", blue)])
-        pts = [f"{_tick(f['above200'])} Price is {'above' if f['above200'] else 'below'} its 200-day average.",
-               f"{_tick(f['s50_over_s200'])} The 50-day average is {'above' if f['s50_over_s200'] else 'below'} the 200-day average.",
-               f"{_tick(f['rising200'])} The 200-day average is {'rising' if f['rising200'] else 'not rising'} (higher than 20 days ago)."]
-        if f["ret6"] is not None and f["bench6"] is not None:
-            pts.append(f"{_tick(f['ret6'] > 0 and f['ret6'] > f['bench6'])} Six-month return <b>{f['ret6'] * 100:+.1f}%</b> against the market's <b>{f['bench6'] * 100:+.1f}%</b>.")
-        pts.append("A stock passes the <b>Winner's Circle trend test</b> only when all four are true: a clear uptrend that is also beating the market.")
+        return chart + key + fusion_guide(fusion, f)
     elif name == "Dow Theory":
         hi, lo = v["dow_high"], v["dow_low"]
         marks = [(i, val, red, "down") for i, val in hi] + [(i, val, teal, "up") for i, val in lo]
@@ -395,7 +402,56 @@ def strategy_view(name, v):
     return chart + key + "<ul>" + "".join(f"<li>{p}</li>" for p in pts) + "</ul>"
 
 
-def strategies_panel(result, stats=None, learn="", footer=""):
+# The four Winner's Circle groups (CMT Level III, Chapter 8), with plain English names instead of numbers
+GROUPS = [
+    ("Winner's Circle", "Trend and momentum, quality and valuation all pass.",
+     ["Passes the trend and momentum test.", "Passes the quality-of-fundamentals test.", "Passes the valuation test."],
+     "Confirm. The market's trend backs up the fundamentals and the valuation. Aim for many of these.", "up"),
+    ("Strong contender", "Trend and momentum pass, plus one of quality or valuation.",
+     ["Passes the trend and momentum test.", "Passes the quality test OR the valuation test, but not both."],
+     "Confirm, with a caveat. The trend is confirmed and one of fundamentals or valuation supports it; keep an eye on the other. Some of these.", "up"),
+    ("Momentum only", "Trend and momentum pass, but neither quality nor valuation does.",
+     ["Passes the trend and momentum test.", "Fails the quality test.", "Fails the valuation test."],
+     "Divergence: trend without fundamentals. When the two disagree, give risk management more weight: smaller positions, tighter stops, reassess. Few of these.", "flat"),
+    ("Watchlist", "The price trend and momentum have not (yet) confirmed.",
+     ["Fails the trend and momentum test (whatever the fundamentals say)."],
+     "If quality and valuation both look fine: Delay, wait for the trend to confirm. Otherwise: Reject for now. Avoid these.", "down"),
+]
+
+
+def fusion_guide(row, f):
+    """A scrollable box with everything that decides which of the four groups a company is in, and where this one stands now."""
+    here = None
+    if row:
+        here = int(row["group"]) - 1
+    checks = [f.get("above200"), f.get("s50_over_s200"), f.get("rising200"),
+              (f.get("ret6") is not None and f["ret6"] > 0), (f.get("ret6") is not None and f.get("bench6") is not None and f["ret6"] > f["bench6"])]
+    passed = sum(1 for c in checks if c)
+    if row:
+        status = (f'<div class="fg-here"><b>This company today: {e(GROUPS[here][0])}.</b> Trend stage: {e(row["stage_name"])}. '
+                  f'Quality {"passes" if row["quality_ok"] else "does not pass"}; valuation {"passes" if row["value_ok"] else "does not pass"}.</div>')
+    else:
+        status = (f'<div class="fg-here"><b>This company today:</b> company results are not available for it, so only the price trend can be '
+                  f'checked: {passed} of the 5 trend and momentum checks pass.</div>')
+    trend = ('<div class="fg-h">The gate: trend and momentum (all must pass for the top three groups)</div><ul>'
+             '<li><b>Clear uptrend:</b> the price is above its 200-day average, the 50-day average is above the 200-day average, and the 200-day average is rising (higher than 20 days ago).</li>'
+             '<li><b>Positive momentum:</b> the six-month return is above zero.</li>'
+             '<li><b>Outperformance:</b> the six-month return is ahead of the Nifty 50 (Sensex for a BSE listing).</li></ul>'
+             '<div class="fg-note">The trend stage itself has four English names, from how many of the three uptrend checks pass: '
+             '<b>Clear uptrend</b> (3), <b>Base of an uptrend</b> (2), <b>Base of a downtrend</b> (1) and <b>Clear downtrend</b> (0).</div>')
+    tests = ('<div class="fg-h">The two other tests (each a 0 to 100 score against the other companies; 50 or more passes)</div><ul>'
+             '<li><b>Quality of fundamentals:</b> the average of growth (revenue growth and earnings growth), returns (return on equity and operating margin) and low debt-to-equity.</li>'
+             '<li><b>Valuation:</b> the average rank of a low price-to-earnings ratio and a low price-to-book ratio.</li></ul>')
+    cards = ""
+    for i, (name, rule, reqs, verdict, tone) in enumerate(GROUPS):
+        mark = '<span class="fg-tag">this company</span>' if i == here else ""
+        cards += (f'<div class="fg-card {tone}{" here" if i == here else ""}"><div class="fg-name">{e(name)}{mark}</div><div class="fg-rule">{e(rule)}</div>'
+                  f'<ul>{"".join(f"<li>{e(r)}</li>" for r in reqs)}</ul><div class="fg-verdict">{e(verdict)}</div></div>')
+    return (f'<div class="fg-box" tabindex="0"><div class="fg-title">The four groups of the Winner\'s Circle<small>CMT Level III, Chapter 8 (scroll)</small></div>'
+            f'{status}{trend}{tests}<div class="fg-h">The four groups</div><div class="fg-cards">{cards}</div></div>')
+
+
+def strategies_panel(result, stats=None, learn="", footer="", fusion=None):
     """The second card: the five strategies as rows (strategy, vote, what it sees, back-test) with a Full view column. Clicking a row
     opens that strategy's chart and plain-words explanation in place."""
     cls = {"Up": "up", "Down": "down", "Sideways": "flat"}
@@ -414,7 +470,7 @@ def strategies_panel(result, stats=None, learn="", footer=""):
                  f'<span>{e(en["reading"])}</span><span class="pp-test">{tested}</span>')
         if view:
             rows.append(f'<details class="ss-det" title="{e(en["why"])}"><summary class="ss-grid">{cells}<span class="ss-open">Full view</span></summary>'
-                        f'<div class="ss-view">{strategy_view(en["name"], view)}</div></details>')
+                        f'<div class="ss-view">{strategy_view(en["name"], view, fusion)}</div></details>')
         else:
             rows.append(f'<div class="ss-det"><div class="ss-grid">{cells}<span></span></div></div>')
     head = ('<div class="ss-grid ss-head"><span>Strategy</span><span>Vote</span><span>What it sees</span>'

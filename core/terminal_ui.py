@@ -245,7 +245,12 @@ def _strategies(symbol, hist, offline):
     if result is None:
         show_disclaimer()
         return
-    st.markdown(vis.strategies_panel(result, cmt.load_stats(), vis.learn_strip(), f"<b>Disclaimer.</b> {DISCLAIMER}"), unsafe_allow_html=True)
+    try:
+        from core import fusion_ui
+        rating = fusion_ui.company_row(symbol)            # the company's Winner's Circle group, if its company results are available
+    except Exception:
+        rating = None
+    st.markdown(vis.strategies_panel(result, cmt.load_stats(), vis.learn_strip(), f"<b>Disclaimer.</b> {DISCLAIMER}", rating), unsafe_allow_html=True)
 
 
 @guard()

@@ -85,3 +85,18 @@ def test_every_strategy_has_a_full_view_with_a_chart_and_plain_lines():
     no_volume = hist.drop(columns=["Volume"])
     plan2 = dc.plan(no_volume, datetime(2026, 10, 14, 13, 0), live_price=float(hist["Close"].iloc[-1]), market_open=True)
     assert "no usable trading volume" in vis.strategy_view("Wyckoff effort vs result", cmt.evaluate(plan2["basis"], bench, plan2)["view"])
+
+
+def test_the_fusion_full_view_has_a_scrollable_guide_with_english_group_names():
+    hist, bench = _prices(drift=0.002)
+    plan = dc.plan(hist, datetime(2026, 10, 14, 13, 0), live_price=float(hist["Close"].iloc[-1]), market_open=True)
+    result = cmt.evaluate(plan["basis"], bench, plan)
+    row = {"group": 2, "stage_name": "Clear uptrend", "verdict": "Confirm", "quality_ok": True, "value_ok": False}
+    html = vis.strategy_view("Fusion stage", result["view"], row)
+    assert 'class="fg-box"' in html and "<svg" in html
+    for name in ("Winner's Circle", "Strong contender", "Momentum only", "Watchlist"):
+        assert name in html
+    assert "Group 1" not in html and "Group 4" not in html and "&#10007;" not in html          # names, not numbers; no crosses
+    assert "Clear uptrend" in html and "200-day" in html and "price-to-book" in html and "Chapter 8" in html
+    assert html.count("this company</span>") == 1 and "Strong contender" in html.split("fg-card up here")[1][:200]
+    assert "company results are not available" in vis.strategy_view("Fusion stage", result["view"], None)
