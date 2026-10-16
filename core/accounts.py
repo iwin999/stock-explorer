@@ -195,6 +195,48 @@ class SupabaseStore:
         self._call("delete", f"?key=eq.{quote(key, safe='')}")
 
 
+class NamespacedStore:
+    """A view of one store for one site, so the real site and the second site can share a single database without ever mixing
+    their accounts or leaderboards.
+
+    The second site's accounts are saved under keys that start with its prefix (for example "s2:freya"); this wrapper adds the prefix
+    going in, strips it coming out, and only ever lists its own site's accounts. The real site uses an empty prefix and, for its
+    listings, skips every key that carries another site's prefix.
+    """
+    OTHER_SITES = ("s2:",)
+
+    def __init__(self, inner, prefix=""):
+        self.inner, self.prefix = inner, prefix
+        self.label = inner.label
+
+    def _k(self, key):
+        return self.prefix + key
+
+    def _mine(self, key):
+        return key.startswith(self.prefix) if self.prefix else not key.startswith(self.OTHER_SITES)
+
+    def create(self, key, name, data):
+        return self.inner.create(self._k(key), name, data)
+
+    def update(self, key, data):
+        return self.inner.update(self._k(key), data)
+
+    def put(self, key, name, data):
+        return self.inner.put(self._k(key), name, data)
+
+    def get(self, key):
+        return self.inner.get(self._k(key))
+
+    def delete(self, key):
+        return self.inner.delete(self._k(key))
+
+    def all(self):
+        return [{**r, "key": r["key"][len(self.prefix):]} for r in self.inner.all() if self._mine(r["key"])]
+
+    def names(self):
+        return sorted((r["name"] for r in self.all()), key=str.casefold)
+
+
 def _now():
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 

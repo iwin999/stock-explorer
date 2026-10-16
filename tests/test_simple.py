@@ -211,3 +211,26 @@ def test_the_about_dialog_on_the_second_site_shows_the_second_sites_text():
         assert not app.exception
         text = " ".join(m.value for m in app.markdown)
         assert "Search stock" in text and "Possible outcomes" not in text and "Black-Scholes" not in text
+
+
+def test_the_second_site_has_its_own_leaderboard_and_its_own_accounts():
+    import streamlit as st
+    from core import accounts as acc
+    st.cache_data.clear()                       # the leaderboard is cached for 10 seconds, so start from a clean slate
+    inner = acc.FileStore(tempfile.mkdtemp())
+    real = acc.NamespacedStore(inner, "")
+    acc.create_account(real, "RealOnly", 100000)                                       # an account on the real site
+    second = acc.NamespacedStore(inner, "s2:")
+    for n in ("Zed", "Yara"):
+        pf = acc.create_account(second, n, 100000)
+        pf.tour_seen = True
+        acc.save_account(second, pf)
+    app = AppTest.from_file(APP, default_timeout=240)
+    app.query_params["user"] = "Zed"
+    app.session_state["dash_init"] = True
+    app.session_state["terminal_view"] = True
+    with mock.patch("core.trading_ui._file_store", lambda: inner), mock.patch("core.trading_ui.st.secrets", {}):
+        app.run()
+        assert not app.exception
+        text = " ".join(m.value for m in app.markdown)
+        assert "Leaderboard" in text and "Zed" in text and "Yara" in text and "RealOnly" not in text

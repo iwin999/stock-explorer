@@ -382,5 +382,10 @@ The prediction panel was rebuilt to be easy to read instead of busy. It opens wi
 ## New in Step 62 (ETFs, bonds, futures and options in the order pop-up)
 The Buy / Sell pop-up on the second site now has four tabs: **Stocks** (as before), **ETFs and bonds**, **Futures** and **Options**, using the same tickets as the real site's Paper trading tab (calculated prices, simplified lots and margins, and only buying options). The Sell button is enabled whenever you hold anything.
 
+## New in Step 63 (own accounts and leaderboard for the second site, and a sturdier safety net)
+**Separate accounts, same database.** The second site now saves its accounts in the same Supabase database but under its own prefix (`s2:`), through `NamespacedStore` in `core/accounts.py`. Each site only ever sees its own accounts: the sign-in list, the leaderboard and the saved portfolios are completely separate, so a name made on one site does not exist on the other and the same name can be used on both. No new table or secret is needed. (The real site's list now also skips keys that carry the second site's prefix. Nothing about its existing accounts changes.) **Leaderboard on the second site:** a box in the left column shows the top five by return since starting, and your own rank.
+
+**Safety net.** A visitor on the second site saw a raw `KeyError` traceback (it came from importing `core.errors` while another visitor's page was reloading our modules after an update). `bootstrap.py` now wraps both `app.py` and `simple.py`: the import is retried, modules are dropped under a lock and only for the two update-time symptoms, and if the site still cannot load, the visitor sees a friendly "being updated" card with a reference code instead of a traceback.
+
 ## Status
 All 8 features are built.

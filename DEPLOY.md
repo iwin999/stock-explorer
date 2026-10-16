@@ -89,6 +89,9 @@ The repository holds two sites that share the same code, accounts and leaderboar
 - **Full site:** main file `app.py` (everything, including the CMT Level III tools).
 - **Second site (exhibition display):** main file `simple.py`. It opens straight into the wide one-screen Dashboard (light look; Dark mode is one click away) (holdings on the left, chart in the middle, indicators on the right). The phone layout and guided tour are still in the code behind the "Dashboard view" switch but are on hold.
 
+Both sites can share ONE Supabase database (paste the same Secrets into both). The second site keeps its accounts under their own
+prefix (`s2:`), so the two sites never see each other's accounts or leaderboard, and nothing extra has to be set up in Supabase.
+
 To publish the second site: on share.streamlit.io choose **Create app**, pick this same repository and branch, set **Main file
 path** to `simple.py`, choose a short address (for example `mayo-stock-simple`), and under Advanced settings paste the same
 Secrets as the full site (so both use the same Supabase database). 

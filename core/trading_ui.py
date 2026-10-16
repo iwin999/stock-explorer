@@ -47,9 +47,11 @@ def get_store():
     """
     try:
         cfg = st.secrets["supabase"]
-        return _supabase_store(str(cfg["url"]).strip(), str(cfg["key"]).strip())
+        inner = _supabase_store(str(cfg["url"]).strip(), str(cfg["key"]).strip())
     except Exception:
-        return _file_store()
+        inner = _file_store()
+    # one database, two sites: each site only ever sees its own accounts and leaderboard
+    return acc.NamespacedStore(inner, "s2:" if st.session_state.get("site") == "simple" else "")
 
 
 def storage_diagnosis():

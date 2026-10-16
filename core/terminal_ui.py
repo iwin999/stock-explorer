@@ -141,13 +141,41 @@ def _lists():
                     f'<div style="text-align:right" class="{kind}">{format_inr(o["pnl"], 0)}</div></div>', unsafe_allow_html=True)
 
 
+@st.cache_data(ttl=10, show_spinner=False)
+def _leaderboard_rows(site):
+    """Everyone's rank on THIS site, best return first (cached for 10 seconds; `site` keeps the two sites' lists apart)."""
+    from core import portfolio_ui
+    return portfolio_ui._ranked(tu.get_store().all())
+
+
+@guard()
+def _leaderboard():
+    me = tu._get_portfolio().name
+    rows = _leaderboard_rows(st.session_state.get("site", "full"))
+    st.markdown('<div class="tm-h">Leaderboard</div>', unsafe_allow_html=True)
+    if not rows:
+        st.caption("No portfolios yet.")
+        return
+    shown = rows[:5]
+    mine = next((r for r in rows if r["Name"] == me), None)
+    if mine and mine not in shown:
+        shown = shown[:4] + [mine]
+    for r in shown:
+        kind = "up" if r["Return"] >= 0 else "down"
+        you = r["Name"] == me
+        st.markdown(f'<div class="tm-row"><div>{"<b>" if you else ""}#{r["Rank"]} {r["Name"]}{" (you)" if you else ""}{"</b>" if you else ""}</div>'
+                    f'<div class="{kind}">{r["Return"]:+.2f}%</div></div>', unsafe_allow_html=True)
+    if mine:
+        st.caption(f"You are ranked {mine['Rank']} of {len(rows)}, by return since you started.")
+
+
 @guard()
 def _ring():
     pf = tu._get_portfolio()
     snap = tu.snapshot_now(pf)
     st.markdown('<div class="tm-h">Where your money is</div>', unsafe_allow_html=True)
     donut = allocation_donut(snap["by_class"])
-    donut.update_layout(height=230, margin=dict(l=0, r=0, t=0, b=0), legend=dict(orientation="h", y=-0.05, font=dict(size=11)))
+    donut.update_layout(height=190, margin=dict(l=0, r=0, t=0, b=0), legend=dict(orientation="h", y=-0.05, font=dict(size=11)))
     show_chart(donut, key="term_ring")
 
 
@@ -258,6 +286,7 @@ def run():
     with left:
         lists_box = st.container(height=290, border=True, key="tm_lists")
         ring_box = st.container(border=True)
+        board_box = st.container(border=True)
         refresh_box = st.container(border=True)
     with refresh_box:
         st.selectbox("Refreshing at intervals configured", list(REFRESH), key="term_refresh",
@@ -266,6 +295,8 @@ def run():
         st.caption(f"{status_message()}." + (" Updating automatically." if every else " Not updating by itself."))
     with lists_box:
         st.fragment(run_every=every)(_lists)()
+    with board_box:
+        st.fragment(run_every=every)(_leaderboard)()
     with ring_box:
         st.fragment(run_every=every)(_ring)()
 
