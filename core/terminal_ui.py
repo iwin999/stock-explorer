@@ -8,6 +8,7 @@
 import streamlit as st
 
 from core import about, company_search, companies
+from core import cmt_strategies as cmt
 from core import daily_check as dc
 from core import daily_ui
 from core import daily_visuals as vis
@@ -162,15 +163,42 @@ def _headline(symbol, name, hist, offline):
                 unsafe_allow_html=True)
 
 
+def _cmt_result(symbol, hist, offline):
+    """(result, plan) of the five-CMT-strategy call, or (None, plan) when there is too little history or no index data."""
+    now = now_ist().replace(tzinfo=None)
+    quote = None if offline else live_quote(symbol)
+    open_now = is_market_open() and not offline
+    info = dc.plan(hist, now, live_price=quote["price"] if quote else None, market_open=open_now)
+    bench_symbol, _ = companies.benchmark_for(symbol)
+    bench, _, _ = _history(bench_symbol)
+    bench_close = bench["Close"] if bench is not None else None
+    return cmt.evaluate(info["basis"], bench_close, info), info
+
+
 @guard()
 def _prediction(symbol, name, hist, offline):
-    result, info = daily_ui.evaluate_now(symbol, hist, offline)
+    result, info = _cmt_result(symbol, hist, offline)
+    by_cmt = result is not None
+    if result is None:                                   # a young listing: fall back to the indicator vote so the bar still works
+        result, info = daily_ui.evaluate_now(symbol, hist, offline)
     if result is None:
         st.caption("Not enough history for this company to make a call.")
         show_disclaimer()
         return
     status = {"live": "Live: market open, updating", "final": "Final for the day", "pending": "Waiting for the market to open"}[result["status"]]
-    st.markdown(vis.prediction_bar(result, status, f"<b>Disclaimer.</b> {DISCLAIMER}"), unsafe_allow_html=True)       # the disclaimer sits inside the bar
+    stats = cmt.load_stats()
+    tiles, note = "", ""
+    if by_cmt:
+        tiles = vis.strategy_tiles(result["votes"], stats)
+        comb = stats.get("combined", {}).get("next day", {}).get("last 30% of dates")
+        note = ("<b>Called by five CMT strategies</b> (two or more net votes decide). "
+                + (f"Tested on {stats.get('companies', 0)} NSE companies, checking on the last 30% of the dates: right {comb['accuracy'] * 100:.0f}% of "
+                   f"clear next-day calls, against {comb['yardstick'] * 100:.0f}% for always guessing the usual direction. " if comb else "")
+                + "These methods are built for weeks and months, so for a single day they are close to a coin toss. The panel reports that "
+                  "honestly instead of hiding it. Not advice.")
+    else:
+        note = "Not enough history for the CMT strategies on this company, so the six-indicator vote is used instead."
+    st.markdown(vis.prediction_bar(result, status, f"<b>Disclaimer.</b> {DISCLAIMER}", tiles, note), unsafe_allow_html=True)
     if info["note"]:
         st.caption(info["note"])
 

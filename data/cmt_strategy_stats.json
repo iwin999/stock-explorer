@@ -1,0 +1,206 @@
+{
+ "companies": 137,
+ "days": 191507,
+ "split_date": "2024-12-31",
+ "made_on": "2026-10-16",
+ "strategies": {
+  "Fusion stage": {
+   "next day": {
+    "first 70% of dates": {
+     "accuracy": 0.5159991371251887,
+     "calls": 83442
+    },
+    "last 30% of dates": {
+     "accuracy": 0.49916947971923054,
+     "calls": 37326
+    }
+   },
+   "next 5 days": {
+    "first 70% of dates": {
+     "accuracy": 0.5382953066609358,
+     "calls": 83757
+    },
+    "last 30% of dates": {
+     "accuracy": 0.504297163344933,
+     "calls": 37932
+    }
+   },
+   "next 20 days": {
+    "first 70% of dates": {
+     "accuracy": 0.5599618684461392,
+     "calls": 83920
+    },
+    "last 30% of dates": {
+     "accuracy": 0.49600084192801513,
+     "calls": 38008
+    }
+   }
+  },
+  "Dow Theory": {
+   "next day": {
+    "first 70% of dates": {
+     "accuracy": 0.5038281352967254,
+     "calls": 83461
+    },
+    "last 30% of dates": {
+     "accuracy": 0.4981177173588288,
+     "calls": 33470
+    }
+   },
+   "next 5 days": {
+    "first 70% of dates": {
+     "accuracy": 0.509618138424821,
+     "calls": 83800
+    },
+    "last 30% of dates": {
+     "accuracy": 0.49732132344283525,
+     "calls": 33972
+    }
+   },
+   "next 20 days": {
+    "first 70% of dates": {
+     "accuracy": 0.5141775587458038,
+     "calls": 84006
+    },
+    "last 30% of dates": {
+     "accuracy": 0.5044520849863352,
+     "calls": 34029
+    }
+   }
+  },
+  "Relative strength": {
+   "next day": {
+    "first 70% of dates": {
+     "accuracy": 0.5008642249495466,
+     "calls": 103561
+    },
+    "last 30% of dates": {
+     "accuracy": 0.4962069280687323,
+     "calls": 43764
+    }
+   },
+   "next 5 days": {
+    "first 70% of dates": {
+     "accuracy": 0.5064620588263556,
+     "calls": 104069
+    },
+    "last 30% of dates": {
+     "accuracy": 0.4975351716375914,
+     "calls": 44425
+    }
+   },
+   "next 20 days": {
+    "first 70% of dates": {
+     "accuracy": 0.5137576923445022,
+     "calls": 104487
+    },
+    "last 30% of dates": {
+     "accuracy": 0.5008537407324197,
+     "calls": 44510
+    }
+   }
+  },
+  "Wyckoff effort vs result": {
+   "next day": {
+    "first 70% of dates": {
+     "accuracy": 0.498133296460177,
+     "calls": 14464
+    },
+    "last 30% of dates": {
+     "accuracy": 0.48892825509300264,
+     "calls": 4516
+    }
+   },
+   "next 5 days": {
+    "first 70% of dates": {
+     "accuracy": 0.5113667677046018,
+     "calls": 14516
+    },
+    "last 30% of dates": {
+     "accuracy": 0.49912165129556435,
+     "calls": 4554
+    }
+   },
+   "next 20 days": {
+    "first 70% of dates": {
+     "accuracy": 0.5102195306585919,
+     "calls": 14531
+    },
+    "last 30% of dates": {
+     "accuracy": 0.4949561403508772,
+     "calls": 4560
+    }
+   }
+  },
+  "Fibonacci confluence": {
+   "next day": {
+    "first 70% of dates": {
+     "accuracy": 0.5143974790829078,
+     "calls": 27609
+    },
+    "last 30% of dates": {
+     "accuracy": 0.5088552568024473,
+     "calls": 12422
+    }
+   },
+   "next 5 days": {
+    "first 70% of dates": {
+     "accuracy": 0.5315704263356719,
+     "calls": 27795
+    },
+    "last 30% of dates": {
+     "accuracy": 0.5166706264354162,
+     "calls": 12627
+    }
+   },
+   "next 20 days": {
+    "first 70% of dates": {
+     "accuracy": 0.5494348261553871,
+     "calls": 27956
+    },
+    "last 30% of dates": {
+     "accuracy": 0.5245357566179376,
+     "calls": 12655
+    }
+   }
+  }
+ },
+ "combined": {
+  "next day": {
+   "first 70% of dates": {
+    "accuracy": 0.5109562744400995,
+    "calls": 70325,
+    "yardstick": 0.5260575897618202
+   },
+   "last 30% of dates": {
+    "accuracy": 0.4977542932628798,
+    "calls": 30280,
+    "yardstick": 0.5029062087186261
+   }
+  },
+  "next 5 days": {
+   "first 70% of dates": {
+    "accuracy": 0.5283844650293192,
+    "calls": 70602,
+    "yardstick": 0.5639075380300841
+   },
+   "last 30% of dates": {
+    "accuracy": 0.500374117570513,
+    "calls": 30739,
+    "yardstick": 0.508962555710986
+   }
+  },
+  "next 20 days": {
+   "first 70% of dates": {
+    "accuracy": 0.54716047987113,
+    "calls": 70769,
+    "yardstick": 0.5993302152072235
+   },
+   "last 30% of dates": {
+    "accuracy": 0.5045931119550752,
+    "calls": 30807,
+    "yardstick": 0.5393254779757847
+   }
+  }
+ }
+}

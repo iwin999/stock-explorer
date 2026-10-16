@@ -359,5 +359,10 @@ The prediction comparison bar on the second site now has a row of its own, as wi
 ## New in Step 55 (prediction card fills the whole box)
 On the second site the prediction bar is now one card filling the whole area at the bottom of the page, edge to edge with the page, and the disclaimer sits inside it (under a thin divider) instead of floating below. The disclaimer wording is unchanged.
 
+## New in Step 56 (the prediction panel is called by five CMT strategies)
+The prediction comparison on the second site is now made by five strategies from the CMT curriculum instead of generic indicators. Each votes Up, Down or Neutral from data up to the previous day, and two or more net votes decide the call: **Fusion stage** (Winner's Circle trend test, Level III Chapter 8, from `core/fusion.py`), **Dow Theory** (higher highs and higher lows, or lower and lower), **Relative strength** against the Nifty (or Sensex for a BSE listing), **Wyckoff effort vs result** (does heavy volume move the price, or stall at the lows or highs) and **Fibonacci confluence** (a pullback or bounce sitting on the 38.2%, 50% or 61.8% level). Each strategy has a tile in the panel with its source, its vote, what it sees and how it fared in testing. Code: `core/cmt_strategies.py`; the test is `scripts/test_cmt_strategies.py`, which writes `data/cmt_strategy_stats.json`.
+
+**Honest result of the test** (137 NSE companies, 2019 to 2026, rules fixed on the first 70% of the dates, checked on the last 30%): none of the five predicts the NEXT DAY better than a coin toss (49% to 51%), and the combined call did not beat always guessing the usual direction. Fusion and Fibonacci were the steadiest, rising to 50% to 52% over 20 days. These are medium-term methods, and the panel says so on screen. A young listing with under a year of history falls back to the six-indicator vote.
+
 ## Status
 All 8 features are built.

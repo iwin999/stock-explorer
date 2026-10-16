@@ -44,6 +44,15 @@ CSS = """<style>
 .pb-title { font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--tm-muted,#6b7785); }
 .pb-status { font-size:.78rem; color:var(--tm-muted,#6b7785); }
 .pb-foot { margin-top:.9rem; padding-top:.8rem; border-top:1px solid var(--tm-line,#dfe3ea); font-size:.8rem; line-height:1.5; color:var(--tm-muted,#6b7785); }
+.sc-row { display:grid; grid-template-columns:repeat(5,1fr); gap:.7rem; margin-top:.9rem; padding-top:.8rem; border-top:1px solid var(--tm-line,#dfe3ea); }
+.sc { border:1px solid var(--tm-line,#dfe3ea); border-radius:10px; padding:.55rem .75rem .5rem .75rem; min-width:0; }
+.sc-h { display:flex; justify-content:space-between; align-items:center; gap:.4rem; } .sc-n { font-weight:700; font-size:.92rem; line-height:1.15; }
+.sc-chip { font-size:.72rem !important; padding:.08rem .55rem !important; }
+.sc-src { font-size:.68rem; letter-spacing:.06em; text-transform:uppercase; color:var(--tm-muted,#6b7785); margin:.1rem 0 .3rem 0; }
+.sc-r { font-size:.86rem; font-weight:600; line-height:1.25; } .sc-w { font-size:.78rem; color:var(--tm-muted,#6b7785); line-height:1.3; margin-top:.2rem; }
+.sc-t { font-size:.72rem; color:var(--tm-muted,#6b7785); margin-top:.35rem; padding-top:.3rem; border-top:1px dashed var(--tm-line,#dfe3ea); }
+.pb-note { margin-top:.7rem; font-size:.8rem; line-height:1.45; color:var(--tm-muted,#6b7785); }
+@media (max-width:1100px){ .sc-row { grid-template-columns:repeat(2,1fr); } }
 .pb-row { display:grid; grid-template-columns:1fr 1fr .9fr 2.4fr; align-items:center; }
 .pb-cell { padding:0 1.6rem; border-left:1px solid var(--tm-line,#dfe3ea); line-height:1.2; min-width:0; }
 .pb-cell:first-child { padding-left:0; border-left:0; }
@@ -95,8 +104,9 @@ def range_bar(low, high, prev_close, price, price_label="Now"):
     pin = ""
     if price:
         inside = low <= price <= high
+        crowded = abs((price - prev_close) / span) < 0.14             # keep the two labels apart when the prices are close
         pin = (f'<div class="dc-pin" style="left:{at(price)};background:{UP_C if inside else DOWN_C}"></div>'
-               f'<div class="dc-lbl b" style="left:{at(price)}">{e(price_label)} {price:,.2f}</div>')
+               f'<div class="dc-lbl{"" if crowded else " b"}" style="left:{at(price)};{"top:-1.15rem;" if crowded else ""}">{e(price_label)} {price:,.2f}</div>')
     return (f'<div class="dc-range"><div class="dc-track"></div>'
             f'<div class="dc-band" style="left:{at(low)};width:{(high - low) / span * 100:.1f}%"></div>'
             f'<div class="dc-tick" style="left:{at(prev_close)}"></div>'
@@ -161,7 +171,27 @@ def terminal_card(entry):
             f'{scale_html(entry["gauge"])}</div>')
 
 
-def prediction_bar(result, status_text="", footer=""):
+def strategy_tiles(entries, stats=None):
+    """One tile per CMT strategy: its name and source, its vote, what it sees, and how it fared in testing."""
+    tiles = []
+    for en in entries:
+        name = VOTE_NAME[en["vote"]]
+        word = "n/a" if not en.get("available", True) else ("Neutral" if name == "Sideways" else name)
+        colour = FLAT_C if not en.get("available", True) else COLOUR[name]
+        tested = ""
+        rec = (stats or {}).get("strategies", {}).get(en["name"])
+        if rec:
+            d1 = rec["next day"]["last 30% of dates"]["accuracy"] * 100
+            d20 = rec["next 20 days"]["last 30% of dates"]["accuracy"] * 100
+            tested = f'<div class="sc-t">Tested: right {d1:.0f}% next day, {d20:.0f}% over 20 days</div>'
+        tiles.append(f'<div class="sc"><div class="sc-h"><span class="sc-n">{e(en["name"])}</span>'
+                     f'<span class="pb-chip sc-chip" style="background:{colour}">{GLYPH[name] if en.get("available", True) else ""} {word}</span></div>'
+                     f'<div class="sc-src">{e(en.get("source", ""))}</div><div class="sc-r">{e(en["reading"])}</div>'
+                     f'<div class="sc-w">{e(en["why"])}</div>{tested}</div>')
+    return '<div class="sc-row">' + "".join(tiles) + "</div>"
+
+
+def prediction_bar(result, status_text="", footer="", strategies="", note=""):
     """The prediction comparison as one tidy bar: THE CALL | WHAT HAPPENED | RESULT | EXPECTED RANGE, all on one line."""
     p = result["prediction"]
     voters = [v for v in result["votes"] if v["voting"]]
@@ -191,4 +221,5 @@ def prediction_bar(result, status_text="", footer=""):
                f'{range_bar(low, high, result["prev_close"], result["actual"], "Now" if result["status"] == "live" else "Close")}</div>')
     head = f'<div class="pb-head"><span class="pb-title">Prediction comparison for today</span><span class="pb-status">{e(status_text)}</span></div>'
     foot = f'<div class="pb-foot">{footer}</div>' if footer else ""
-    return f'<div class="pb">{head}<div class="pb-row">{call}{what}{outcome}{rng}</div>{foot}</div>'
+    note_html = f'<div class="pb-note">{note}</div>' if note else ""
+    return f'<div class="pb">{head}<div class="pb-row">{call}{what}{outcome}{rng}</div>{strategies}{note_html}{foot}</div>'
