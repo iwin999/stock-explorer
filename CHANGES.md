@@ -364,5 +364,8 @@ The prediction comparison on the second site is now made by five strategies from
 
 **Honest result of the test** (137 NSE companies, 2019 to 2026, rules fixed on the first 70% of the dates, checked on the last 30%): none of the five predicts the NEXT DAY better than a coin toss (49% to 51%), and the combined call did not beat always guessing the usual direction. Fusion and Fibonacci were the steadiest, rising to 50% to 52% over 20 days. These are medium-term methods, and the panel says so on screen. A young listing with under a year of history falls back to the six-indicator vote.
 
+## New in Step 57 (a cleaner prediction panel)
+The prediction panel was redesigned. A header ("Today's prediction", with the date and close it is based on) carries a status pill that pulses while the market is live. Under it are three clear boxes: **The call** (a large coloured arrow, the word, and a five-segment vote meter), **What happened** (the actual direction, the move, and a tinted "The call was right / wrong" badge) and **Expected range** (with the price ends and one bar). The five CMT strategies are tiles with a coloured edge and a vote word, each with its name, source and reading; hover one for the longer explanation and its back-test. One short "how to read this" paragraph and the disclaimer close the card.
+
 ## Status
 All 8 features are built.

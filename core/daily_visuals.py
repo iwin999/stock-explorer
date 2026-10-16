@@ -39,30 +39,37 @@ CSS = """<style>
 .dc-bars .lab { width:8.5rem; font-size:.92rem; } .dc-bars .bar { flex:1; height:1.1rem; border-radius:99px; background:rgba(128,128,128,.25); position:relative; overflow:hidden; }
 .dc-bars .fill { height:100%; border-radius:99px; } .dc-bars .num { width:3.2rem; font-weight:700; text-align:right; }
 .dc-bars .half { position:absolute; left:50%; top:0; bottom:0; width:2px; background:rgba(0,0,0,.45); }
-.pb { background:var(--tm-panel,#fff); border:1px solid var(--tm-line,#dfe3ea); border-radius:12px; padding:.8rem 1.5rem .7rem 1.5rem; box-shadow:0 1px 3px rgba(16,24,40,.07); }
-.pb-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:.35rem; }
-.pb-title { font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--tm-muted,#6b7785); }
-.pb-status { font-size:.78rem; color:var(--tm-muted,#6b7785); }
-.pb-foot { margin-top:.9rem; padding-top:.8rem; border-top:1px solid var(--tm-line,#dfe3ea); font-size:.8rem; line-height:1.5; color:var(--tm-muted,#6b7785); }
-.sc-row { display:grid; grid-template-columns:repeat(5,1fr); gap:.7rem; margin-top:.9rem; padding-top:.8rem; border-top:1px solid var(--tm-line,#dfe3ea); }
-.sc { border:1px solid var(--tm-line,#dfe3ea); border-radius:10px; padding:.55rem .75rem .5rem .75rem; min-width:0; }
-.sc-h { display:flex; justify-content:space-between; align-items:center; gap:.4rem; } .sc-n { font-weight:700; font-size:.92rem; line-height:1.15; }
-.sc-chip { font-size:.72rem !important; padding:.08rem .55rem !important; }
-.sc-src { font-size:.68rem; letter-spacing:.06em; text-transform:uppercase; color:var(--tm-muted,#6b7785); margin:.1rem 0 .3rem 0; }
-.sc-r { font-size:.86rem; font-weight:600; line-height:1.25; } .sc-w { font-size:.78rem; color:var(--tm-muted,#6b7785); line-height:1.3; margin-top:.2rem; }
-.sc-t { font-size:.72rem; color:var(--tm-muted,#6b7785); margin-top:.35rem; padding-top:.3rem; border-top:1px dashed var(--tm-line,#dfe3ea); }
-.pb-note { margin-top:.7rem; font-size:.8rem; line-height:1.45; color:var(--tm-muted,#6b7785); }
-@media (max-width:1100px){ .sc-row { grid-template-columns:repeat(2,1fr); } }
-.pb-row { display:grid; grid-template-columns:1fr 1fr .9fr 2.4fr; align-items:center; }
-.pb-cell { padding:0 1.6rem; border-left:1px solid var(--tm-line,#dfe3ea); line-height:1.2; min-width:0; }
-.pb-cell:first-child { padding-left:0; border-left:0; }
-.pb-l { font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color:var(--tm-muted,#6b7785); margin-bottom:.15rem; }
-.pb-v { font-size:1.55rem; font-weight:700; white-space:nowrap; } .pb-g { font-size:.95rem; margin-right:.2rem; }
-.pb-s { font-size:.88rem; color:var(--tm-muted,#6b7785); margin-top:.1rem; white-space:nowrap; }
-.pb-dots { display:flex; gap:.25rem; margin-top:.25rem; } .pb-dots .dc-dot { width:.7rem; height:.7rem; }
-.pb-chip { display:inline-block; white-space:nowrap; color:#fff; font-weight:700; font-size:1.05rem; padding:.2rem .8rem; border-radius:99px; }
-.pb .dc-range { margin:.9rem .2rem 1.35rem .2rem; height:2rem; }
-@media (max-width:900px){ .pb-row { grid-template-columns:1fr 1fr; row-gap:.6rem; } }
+.pb { background:var(--tm-panel,#fff); border:1px solid var(--tm-line,#dfe3ea); border-radius:14px; padding:1.1rem 1.6rem 1rem 1.6rem; box-shadow:0 1px 3px rgba(16,24,40,.07); }
+.pb-head { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; margin-bottom:.9rem; }
+.pb-title { font-size:1.15rem; font-weight:700; color:var(--tm-ink,#1d3557); line-height:1.2; }
+.pb-sub { font-size:.85rem; color:var(--tm-muted,#6b7785); margin-top:.15rem; }
+.pb-pill { display:inline-flex; align-items:center; gap:.45rem; font-size:.8rem; font-weight:600; padding:.25rem .8rem; border-radius:99px; border:1px solid var(--tm-line,#dfe3ea); color:var(--tm-muted,#6b7785); white-space:nowrap; }
+.pb-pill i { width:.5rem; height:.5rem; border-radius:50%; background:#868993; display:inline-block; } .pb-pill.live { color:#1f8f84; border-color:rgba(38,166,154,.35); background:rgba(38,166,154,.08); }
+.pb-pill.live i { background:#26a69a; box-shadow:0 0 0 0 rgba(38,166,154,.6); animation:pbpulse 1.8s infinite; }
+@keyframes pbpulse { 70% { box-shadow:0 0 0 .45rem rgba(38,166,154,0); } 100% { box-shadow:0 0 0 0 rgba(38,166,154,0); } }
+.pb-main { display:grid; grid-template-columns:1fr 1fr 1.7fr; gap:.9rem; }
+.pb-box { border:1px solid var(--tm-line,#dfe3ea); border-radius:12px; padding:.85rem 1.1rem; min-width:0; background:rgba(128,128,128,.035); }
+.pb-l { font-size:.7rem; letter-spacing:.09em; text-transform:uppercase; color:var(--tm-muted,#6b7785); font-weight:600; margin-bottom:.45rem; }
+.pb-big { display:flex; align-items:center; gap:.8rem; }
+.pb-badge { width:3.1rem; height:3.1rem; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.35rem; flex:0 0 auto; }
+.pb-word { font-size:1.9rem; font-weight:800; line-height:1; letter-spacing:.01em; }
+.pb-line { font-size:.88rem; color:var(--tm-muted,#6b7785); margin-top:.35rem; }
+.pb-meter { display:flex; gap:.25rem; margin-top:.7rem; } .pb-meter span { flex:1; height:.4rem; border-radius:99px; }
+.pb-meterl { font-size:.78rem; color:var(--tm-muted,#6b7785); margin-top:.35rem; }
+.pb-verdict { display:inline-flex; align-items:center; gap:.4rem; font-weight:700; font-size:.92rem; padding:.28rem .8rem; border-radius:99px; margin-top:.55rem; }
+.pb-rng { display:flex; justify-content:space-between; font-size:.9rem; font-weight:600; margin-bottom:.1rem; } .pb-rng span:last-child { text-align:right; }
+.pb-box .dc-range { margin:1.1rem .2rem 1.5rem .2rem; height:2rem; }
+.sc-head { font-size:.7rem; letter-spacing:.09em; text-transform:uppercase; color:var(--tm-muted,#6b7785); font-weight:600; margin:1.1rem 0 .5rem 0; }
+.sc-row { display:grid; grid-template-columns:repeat(5,1fr); gap:.75rem; }
+.sc { border:1px solid var(--tm-line,#dfe3ea); border-left-width:4px; border-radius:10px; padding:.65rem .85rem .6rem .85rem; min-width:0; cursor:help; }
+.sc-top { display:flex; justify-content:space-between; align-items:baseline; gap:.5rem; } .sc-n { font-weight:700; font-size:.95rem; line-height:1.2; }
+.sc-v { font-size:.78rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; white-space:nowrap; }
+.sc-src { font-size:.68rem; letter-spacing:.07em; text-transform:uppercase; color:var(--tm-muted,#6b7785); margin:.15rem 0 .4rem 0; }
+.sc-r { font-size:.92rem; font-weight:600; line-height:1.3; min-height:2.4em; }
+.sc-t { font-size:.74rem; color:var(--tm-muted,#6b7785); margin-top:.45rem; }
+.pb-note { margin-top:.9rem; font-size:.84rem; line-height:1.5; color:var(--tm-muted,#6b7785); }
+.pb-foot { margin-top:.8rem; padding-top:.7rem; border-top:1px solid var(--tm-line,#dfe3ea); font-size:.76rem; line-height:1.5; color:var(--tm-muted,#6b7785); }
+@media (max-width:1100px){ .sc-row { grid-template-columns:repeat(2,1fr); } .pb-main { grid-template-columns:1fr; } }
 @media (max-width:640px){ .dc-hero{gap:.7rem;padding:.8rem} .dc-badge{width:3.6rem;height:3.6rem;font-size:1.6rem} .dc-call{font-size:1.5rem} .dc-bars .lab{width:6rem} }
 </style>"""
 
@@ -95,7 +102,7 @@ def versus(prediction, actual_direction, matched):
             f'<div class="v">{GLYPH[actual_direction]} {actual_direction}</div></div></div>')
 
 
-def range_bar(low, high, prev_close, price, price_label="Now"):
+def range_bar(low, high, prev_close, price, price_label="Now", ends=True):
     """A horizontal bar: the expected range (blue band), yesterday's close (tick) and today's price (round pin)."""
     lo = min(low, price if price else low) * 0.998
     hi = max(high, price if price else high) * 1.002
@@ -110,7 +117,7 @@ def range_bar(low, high, prev_close, price, price_label="Now"):
     return (f'<div class="dc-range"><div class="dc-track"></div>'
             f'<div class="dc-band" style="left:{at(low)};width:{(high - low) / span * 100:.1f}%"></div>'
             f'<div class="dc-tick" style="left:{at(prev_close)}"></div>'
-            f'<div class="dc-lbl" style="left:{at(low)}">{low:,.0f}</div><div class="dc-lbl" style="left:{at(high)}">{high:,.0f}</div>'
+            + (f'<div class="dc-lbl" style="left:{at(low)}">{low:,.0f}</div><div class="dc-lbl" style="left:{at(high)}">{high:,.0f}</div>' if ends else "") +
             f'<div class="dc-lbl b" style="left:{at(prev_close)}">Yesterday {prev_close:,.2f}</div>{pin}</div>')
 
 
@@ -171,55 +178,67 @@ def terminal_card(entry):
             f'{scale_html(entry["gauge"])}</div>')
 
 
+def _tint(colour, alpha=0.12):
+    r, g, b = int(colour[1:3], 16), int(colour[3:5], 16), int(colour[5:7], 16)
+    return f"rgba({r},{g},{b},{alpha})"
+
+
 def strategy_tiles(entries, stats=None):
-    """One tile per CMT strategy: its name and source, its vote, what it sees, and how it fared in testing."""
+    """One tile per CMT strategy: a coloured edge and vote word, its name and source, what it sees, and how it fared in testing.
+    Hover a tile for the longer explanation."""
     tiles = []
     for en in entries:
+        avail = en.get("available", True)
         name = VOTE_NAME[en["vote"]]
-        word = "n/a" if not en.get("available", True) else ("Neutral" if name == "Sideways" else name)
-        colour = FLAT_C if not en.get("available", True) else COLOUR[name]
-        tested = ""
+        colour = COLOUR[name] if avail else FLAT_C
+        word = "n/a" if not avail else (f"{GLYPH[name]} " + ("Neutral" if name == "Sideways" else name))
+        tested, tip = "", en["why"]
         rec = (stats or {}).get("strategies", {}).get(en["name"])
         if rec:
             d1 = rec["next day"]["last 30% of dates"]["accuracy"] * 100
             d20 = rec["next 20 days"]["last 30% of dates"]["accuracy"] * 100
-            tested = f'<div class="sc-t">Tested: right {d1:.0f}% next day, {d20:.0f}% over 20 days</div>'
-        tiles.append(f'<div class="sc"><div class="sc-h"><span class="sc-n">{e(en["name"])}</span>'
-                     f'<span class="pb-chip sc-chip" style="background:{colour}">{GLYPH[name] if en.get("available", True) else ""} {word}</span></div>'
-                     f'<div class="sc-src">{e(en.get("source", ""))}</div><div class="sc-r">{e(en["reading"])}</div>'
-                     f'<div class="sc-w">{e(en["why"])}</div>{tested}</div>')
-    return '<div class="sc-row">' + "".join(tiles) + "</div>"
+            tested = f'<div class="sc-t">Back-test: {d1:.0f}% next day &middot; {d20:.0f}% in 20 days</div>'
+            tip += f" Back-tested on past data: right {d1:.0f}% of the time for the next day and {d20:.0f}% over the next 20 days."
+        tiles.append(f'<div class="sc" style="border-left-color:{colour}" title="{e(tip)}"><div class="sc-top"><span class="sc-n">{e(en["name"])}</span>'
+                     f'<span class="sc-v" style="color:{colour}">{word}</span></div><div class="sc-src">{e(en.get("source", ""))}</div>'
+                     f'<div class="sc-r">{e(en["reading"])}</div>{tested}</div>')
+    return '<div class="sc-head">The five strategies behind the call (hover a tile to read why)</div><div class="sc-row">' + "".join(tiles) + "</div>"
 
 
 def prediction_bar(result, status_text="", footer="", strategies="", note=""):
-    """The prediction comparison as one tidy bar: THE CALL | WHAT HAPPENED | RESULT | EXPECTED RANGE, all on one line."""
+    """The prediction panel: a header with a status pill, three boxes (the call with a vote meter, what happened so far, the expected
+    range), then the strategy tiles, a one-paragraph note and the footer."""
     p = result["prediction"]
     voters = [v for v in result["votes"] if v["voting"]]
     ups = sum(1 for v in voters if v["vote"] > 0)
     downs = sum(1 for v in voters if v["vote"] < 0)
-    dots = "".join(f'<span class="dc-dot" title="{e(v["name"])}: {VOTE_NAME[v["vote"]]}" style="background:{COLOUR[VOTE_NAME[v["vote"]]]}"></span>'
-                   for v in voters)
-    call = (f'<div class="pb-cell"><div class="pb-l">The call</div><div class="pb-v" style="color:{COLOUR[p]}"><span class="pb-g">{GLYPH[p]}</span>{p}</div>'
-            f'<div class="pb-s">{ups} up &middot; {downs} down &middot; {len(voters) - ups - downs} neutral</div><div class="pb-dots">{dots}</div></div>')
+    neutral = len(voters) - ups - downs
+    colour = COLOUR[p]
+    meter = "".join(f'<span style="background:{COLOUR[VOTE_NAME[v["vote"]]]}" title="{e(v["name"])}: {VOTE_NAME[v["vote"]]}"></span>' for v in voters)
+    call = (f'<div class="pb-box"><div class="pb-l">The call</div><div class="pb-big"><div class="pb-badge" style="background:{_tint(colour, .16)};color:{colour}">{GLYPH[p]}</div>'
+            f'<div><div class="pb-word" style="color:{colour}">{p}</div></div></div><div class="pb-meter">{meter}</div>'
+            f'<div class="pb-meterl">{ups} up &middot; {downs} down &middot; {neutral} neutral</div></div>')
+    low, high = result["range"]
     if result["actual"] is None:
-        what = ('<div class="pb-cell"><div class="pb-l">What happened</div><div class="pb-v" style="color:#868993">Not yet</div>'
-                '<div class="pb-s">Waiting for today\'s price</div></div>')
-        outcome = '<div class="pb-cell"><div class="pb-l">Result</div><div class="pb-v" style="color:#868993">&ndash;</div></div>'
-        low, high = result["range"]
-        rng = (f'<div class="pb-cell"><div class="pb-l">Expected range</div>'
-               f'{range_bar(low, high, result["prev_close"], None)}</div>')
+        what = ('<div class="pb-box"><div class="pb-l">What happened</div><div class="pb-big"><div class="pb-badge" style="background:rgba(128,128,128,.12);color:#868993">&hellip;</div>'
+                '<div><div class="pb-word" style="color:#868993">Not yet</div></div></div><div class="pb-line">Waiting for today\'s price</div></div>')
+        rng = (f'<div class="pb-box"><div class="pb-l">Expected range</div><div class="pb-rng"><span>Rs {low:,.0f}</span><span>Rs {high:,.0f}</span></div>'
+               f'{range_bar(low, high, result["prev_close"], None, ends=False)}</div>')
     else:
         a = result["actual_direction"]
-        what = (f'<div class="pb-cell"><div class="pb-l">What happened</div><div class="pb-v" style="color:{COLOUR[a]}"><span class="pb-g">{GLYPH[a]}</span>{a}</div>'
-                f'<div class="pb-s">{result["change"] * 100:+.2f}% &middot; Rs {result["actual"]:,.2f}</div></div>')
+        ac = COLOUR[a]
         ok = result["matched"]
-        outcome = (f'<div class="pb-cell"><div class="pb-l">Result</div><span class="pb-chip" style="background:{UP_C if ok else DOWN_C}">'
-                   f'{"&#10003; Right" if ok else "&#10007; Wrong"}</span>'
-                   f'<div class="pb-s">{"Inside" if result["in_range"] else "Outside"} the range</div></div>')
-        low, high = result["range"]
-        rng = (f'<div class="pb-cell"><div class="pb-l">Expected range</div>'
-               f'{range_bar(low, high, result["prev_close"], result["actual"], "Now" if result["status"] == "live" else "Close")}</div>')
-    head = f'<div class="pb-head"><span class="pb-title">Prediction comparison for today</span><span class="pb-status">{e(status_text)}</span></div>'
-    foot = f'<div class="pb-foot">{footer}</div>' if footer else ""
+        vc = UP_C if ok else DOWN_C
+        what = (f'<div class="pb-box"><div class="pb-l">What happened</div><div class="pb-big"><div class="pb-badge" style="background:{_tint(ac, .16)};color:{ac}">{GLYPH[a]}</div>'
+                f'<div><div class="pb-word" style="color:{ac}">{a}</div></div></div>'
+                f'<div class="pb-line">{result["change"] * 100:+.2f}% &middot; Rs {result["actual"]:,.2f}</div>'
+                f'<span class="pb-verdict" style="background:{_tint(vc, .14)};color:{vc}">{"&#10003; The call was right" if ok else "&#10007; The call was wrong"}</span></div>')
+        inside = "Inside" if result["in_range"] else "Outside"
+        rng = (f'<div class="pb-box"><div class="pb-l">Expected range &middot; {inside.lower()} so far</div><div class="pb-rng"><span>Rs {low:,.0f}</span><span>Rs {high:,.0f}</span></div>'
+               f'{range_bar(low, high, result["prev_close"], result["actual"], "Now" if result["status"] == "live" else "Close", ends=False)}</div>')
+    live = "live" in status_text.lower()
+    pill = f'<span class="pb-pill{" live" if live else ""}"><i></i>{e(status_text)}</span>' if status_text else ""
+    head = (f'<div class="pb-head"><div><div class="pb-title">Today\'s prediction</div><div class="pb-sub">Based on data up to {result["basis_date"]:%A %d %b} (close Rs {result["prev_close"]:,.2f})</div></div>{pill}</div>')
     note_html = f'<div class="pb-note">{note}</div>' if note else ""
-    return f'<div class="pb">{head}<div class="pb-row">{call}{what}{outcome}{rng}</div>{strategies}{note_html}{foot}</div>'
+    foot = f'<div class="pb-foot">{footer}</div>' if footer else ""
+    return f'<div class="pb">{head}<div class="pb-main">{call}{what}{rng}</div>{strategies}{note_html}{foot}</div>'

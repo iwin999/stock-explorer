@@ -191,11 +191,11 @@ def _prediction(symbol, name, hist, offline):
     if by_cmt:
         tiles = vis.strategy_tiles(result["votes"], stats)
         comb = stats.get("combined", {}).get("next day", {}).get("last 30% of dates")
-        note = ("<b>Called by five CMT strategies</b> (two or more net votes decide). "
-                + (f"Tested on {stats.get('companies', 0)} NSE companies, checking on the last 30% of the dates: right {comb['accuracy'] * 100:.0f}% of "
-                   f"clear next-day calls, against {comb['yardstick'] * 100:.0f}% for always guessing the usual direction. " if comb else "")
-                + "These methods are built for weeks and months, so for a single day they are close to a coin toss. The panel reports that "
-                  "honestly instead of hiding it. Not advice.")
+        note = ("<b>How to read this:</b> five CMT strategies vote and two or more net votes decide. "
+                + (f"Tested on {stats.get('companies', 0)} NSE companies (checked on the last 30% of the dates), clear next-day calls were right "
+                   f"{comb['accuracy'] * 100:.0f}% of the time, against {comb['yardstick'] * 100:.0f}% for always guessing the usual direction. " if comb else "")
+                + "These methods are built for weeks and months, so for a single day they are close to a coin toss, and the panel says so "
+                  "instead of hiding it.")
     else:
         note = "Not enough history for the CMT strategies on this company, so the six-indicator vote is used instead."
     st.markdown(vis.prediction_bar(result, status, f"<b>Disclaimer.</b> {DISCLAIMER}", tiles, note), unsafe_allow_html=True)
