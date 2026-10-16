@@ -31,16 +31,20 @@ EPAT_BATCH = "EPAT (Batch-72)"
 CMT_EXPLAINER = """\
 **CMT: Chartered Market Technician**
 
-A global professional qualification in **technical analysis**: reading price and volume to understand what the market is \
-doing. It is awarded by the CMT Association and is taken in three levels.
+The global professional designation in **technical analysis**, awarded by the **CMT Association** after three examinations. It is \
+the credential portfolio managers, traders, strategists and risk professionals hold when their edge comes from price, volume and \
+market structure rather than from fundamentals alone, and it is recognised by practitioners across the world's financial markets.
 
-- **Level I** covers the foundations: charts, indicators, and how markets behave.
-- **Level II** applies them: building and testing analysis, risk management, and combining signals.
-- **Level III** is the most advanced: portfolio construction, behavioural finance, and approaches such as the **fusion \
-analysis** used in this app.
+**Skills gained**
+- **Level I, foundations:** trend analysis (Dow Theory, moving averages, ADX), momentum oscillators (RSI, MACD, stochastics), \
+chart patterns, candlesticks, Fibonacci retracements, volume and breadth, and the logic of supply and demand.
+- **Level II, application:** relative strength and sector rotation, intermarket analysis, volatility (ATR, Bollinger Bands), \
+Elliott Wave and Wyckoff, systematic strategy design, back-testing, position sizing and risk management (expectancy, drawdown).
+- **Level III, integration:** portfolio construction and asset allocation, behavioural finance (herding, anchoring, prospect \
+theory), evaluating quantitative models (overfitting, out-of-sample testing), and **fusion analysis**, which overlays technical \
+confirmation on fundamental and valuation views (the Winner's Circle used in this app).
 
-It is usually pursued by people already working in finance, which makes passing two levels while still at school a real \
-achievement."""
+Passing the levels while still at school is rare: the programme is normally taken by working finance professionals."""
 
 EPAT_EXPLAINER = """\
 **EPAT: Executive Programme in Algorithmic Trading**
