@@ -405,5 +405,8 @@ In the Fusion stage's Full view the tick-and-cross lines are replaced by a **scr
 ## New in Step 69 (a barometer instead of the refresh box)
 On the second site the "Refreshing at intervals" box in the left column is replaced by a **Combined strategy reading** barometer: a half-circle dial in five bands from red (Down) through grey (Neutral) to green (Up), a needle at the net vote of the five CMT strategies, the reading in words (Strongly down, Leans down, Balanced, Leans up, Strongly up) and "3 of 5 strategies read down, 1 up, 1 neutral". The page now simply refreshes every 15 seconds while the market is open. The leaderboard and the allocation ring were made a little more compact so the three columns still end on one line.
 
+## New in Step 70 (the ML model joins the strategies; Full views open as pop-ups)
+The big "Model reading for today" card is gone. In its place: a slim **Today so far** card (how the day is going against the strategies' reading, the typical range, and the live status), and the strategies table now has a sixth row, the **ML model**, with its own back-test numbers. Every row has a **Full view** button that opens a pop-up box (like the About box) instead of unfolding in place: the five strategies show their charts, the Fusion stage shows the four-group guide in full (no inner scrolling), and the **ML model** shows today's reading, a bar chart of what pushed it, and how it was built and tested. The ML model is a second opinion and is not counted in the barometer.
+
 ## Status
 All 8 features are built.

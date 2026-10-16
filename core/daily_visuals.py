@@ -77,6 +77,7 @@ CSS = """<style>
 .ss-view ul { margin:.6rem 0 0 1.1rem; padding:0; font-size:.98rem; line-height:1.6; } .ss-view li b { font-weight:700; }
 .ss-key { display:flex; flex-wrap:wrap; gap:.4rem 1.2rem; font-size:.85rem; color:var(--tm-muted,#6b7785); margin:.4rem 0 0 0; } .ss-key i { display:inline-block; width:1.1rem; height:.28rem; border-radius:3px; margin-right:.35rem; vertical-align:middle; }
 @media (max-width:1100px){ .ss-grid { grid-template-columns:1.4fr .8fr .8fr; } .ss-grid > :nth-child(3), .ss-grid > :nth-child(4) { display:none; } }
+.fg-box.open { max-height:none; overflow:visible; }
 .fg-box { max-height:330px; overflow-y:auto; border:1px solid var(--tm-line,#dfe3ea); border-radius:10px; padding:1rem 1.2rem; margin-top:.8rem; background:rgba(128,128,128,.04); }
 .fg-title { font-weight:700; font-size:1.05rem; } .fg-title small { font-weight:400; color:var(--tm-muted,#6b7785); margin-left:.5rem; font-size:.85rem; }
 .fg-here { margin:.7rem 0; padding:.6rem .85rem; border-left:4px solid #2962ff; background:rgba(41,98,255,.07); border-radius:0 8px 8px 0; font-size:.95rem; line-height:1.5; }
@@ -84,7 +85,7 @@ CSS = """<style>
 .fg-note { font-size:.88rem; color:var(--tm-muted,#6b7785); margin-top:.5rem; line-height:1.5; }
 .fg-cards { display:grid; grid-template-columns:repeat(2,1fr); gap:.7rem; }
 .fg-card { border:1px solid var(--tm-line,#dfe3ea); border-left-width:5px; border-radius:10px; padding:.7rem .9rem; font-size:.92rem; }
-.fg-card.up { border-left-color:#26a69a; } .fg-card.flat { border-left-color:#d98e04; } .fg-card.down { border-left-color:#ef5350; }
+.fg-card.g-up { border-left-color:#26a69a; } .fg-card.g-flat { border-left-color:#d98e04; } .fg-card.g-down { border-left-color:#ef5350; }
 .fg-card.here { background:rgba(41,98,255,.07); box-shadow:0 0 0 2px #2962ff inset; }
 .fg-name { font-weight:700; font-size:1rem; } .fg-tag { margin-left:.5rem; font-size:.72rem; font-weight:700; color:#2962ff; text-transform:uppercase; letter-spacing:.05em; }
 .fg-rule { color:var(--tm-muted,#6b7785); margin:.15rem 0 .3rem 0; } .fg-verdict { margin-top:.4rem; font-size:.88rem; line-height:1.45; }
@@ -242,53 +243,21 @@ def _say(result):
     return f"{first} {verb} <b>{move}</b>{amount}, which <b>{verdict}</b> that reading{' so far' if result['status'] == 'live' else ''}."
 
 
-def prediction_panel(result, status_text="", ml=None):
-    """The live card: a plain sentence about what is going on, three simple cards (the model reading, the ML model reading, what
-    happened) and the typical range. (The strategies table is a separate card: see strategies_panel.)"""
+def today_strip(result, status_text=""):
+    """A slim live card: how today is going against the strategies' reading, and the typical range with the price on it."""
     p = result["prediction"]
-    cls = {"Up": "up", "Down": "down", "Sideways": "flat"}
-    voters = [v for v in result["votes"] if v["voting"]]
-    ups = sum(1 for v in voters if v["vote"] > 0)
-    downs = sum(1 for v in voters if v["vote"] < 0)
-    neutral = len(voters) - ups - downs
     edge = {"Up": "#26a69a", "Down": "#ef5350", "Sideways": "#9aa3b2"}[p]
     live = "live" in status_text.lower()
-    head = (f'<div class="pp-head"><div><div class="pp-title">Model reading for today</div>'
-            f'<div class="pp-sub">Using prices up to {result["basis_date"]:%A %d %b} (close Rs {result["prev_close"]:,.2f}). Educational only: what the methods read, not a recommendation to buy or sell.</div></div>'
-            f'<div class="pp-live{" on" if live else ""}"><i></i>{e(status_text)}</div></div>')
-    say = f'<div class="pp-say" style="border-left-color:{edge}">{_say(result)}</div>'
-    call = (f'<div class="pp-stat"><div class="pp-k">Model reading</div><div class="pp-v {cls[p]}">{GLYPH[p]} {p}</div>'
-            f'<div class="pp-d">{downs} down &middot; {ups} up &middot; {neutral} neutral<br>Two or more net votes decide.</div></div>')
-    if ml:
-        lean = ml["lean"]
-        word = {"Up": "Leans up", "Down": "Leans down", "None": "No clear view"}[lean]
-        mcls = {"Up": "up", "Down": "down", "None": "flat"}[lean]
-        held = ml["tested"].get("last 30% of dates (held back)", {})
-        conf = held.get("confident_accuracy")
-        tested = f"Tested on unseen dates: right {held['accuracy'] * 100:.0f}% overall, {conf * 100:.0f}% when confident." if conf else ""
-        drivers = ", ".join(f"{n} ({'up' if v > 0 else 'down'})" for n, v in ml["top"])
-        mlc = (f'<div class="pp-stat" title="Biggest influences today: {e(drivers)}"><div class="pp-k">ML model reading</div>'
-               f'<div class="pp-v {mcls}">{word}</div><div class="pp-pbar"><i style="width:{ml["p_up"] * 100:.0f}%"></i><u></u></div>'
-               f'<div class="pp-d">{ml["p_up"] * 100:.0f}% modelled chance of a higher close.<br>{e(tested)}</div></div>')
-    else:
-        mlc = ""
-    if result["actual"] is None:
-        out = ('<div class="pp-stat"><div class="pp-k">What happened</div><div class="pp-v flat">Not yet</div>'
-               '<div class="pp-d">Waiting for today\'s price.</div></div>')
-    else:
-        a = result["actual_direction"]
-        out = (f'<div class="pp-stat"><div class="pp-k">What happened {"so far" if result["status"] == "live" else "today"}</div>'
-               f'<div class="pp-v {cls[a]}">{GLYPH[a]} {a}</div>'
-               f'<div class="pp-d">{result["change"] * 100:+.2f}% &middot; Rs {result["actual"]:,.2f}<br>'
-               f'The reading <b class="{"up" if result["matched"] else "down"}">{"matched" if result["matched"] else "did not match"}</b> what happened.</div></div>')
     low, high = result["range"]
     inside = ""
     if result["actual"] is not None:
         inside = f' &middot; the price is <b>{"inside" if result["in_range"] else "outside"}</b> it'
-    rng = (f'<div class="pp-rangebox"><div class="pp-k">Typical range today: Rs {low:,.0f} to Rs {high:,.0f}{inside} '
-           f'<span style="opacity:.7">(yesterday\'s close plus or minus a typical day\'s swing)</span></div>'
-           f'{range_bar(low, high, result["prev_close"], result["actual"], "Now" if result["status"] == "live" else "Close")}</div>')
-    return f'<div class="pp">{head}{say}<div class="pp-stats">{call}{mlc}{out}</div>{rng}</div>'
+    return (f'<div class="pp"><div class="pp-head"><div class="pp-title">Today so far</div>'
+            f'<div class="pp-live{" on" if live else ""}"><i></i>{e(status_text)}</div></div>'
+            f'<div class="pp-say" style="border-left-color:{edge}">{_say(result)}</div>'
+            f'<div class="pp-k">Typical range today: Rs {low:,.0f} to Rs {high:,.0f}{inside} '
+            f'<span style="opacity:.7">(yesterday\'s close plus or minus a typical day\'s swing). Educational only, not a recommendation.</span></div>'
+            f'{range_bar(low, high, result["prev_close"], result["actual"], "Now" if result["status"] == "live" else "Close")}</div>')
 
 
 # ---------------- the strategies card, with a full view of each strategy ----------------
@@ -422,7 +391,7 @@ GROUPS = [
 ]
 
 
-def fusion_guide(row, f):
+def fusion_guide(row, f, scroll=False):
     """A scrollable box with everything that decides which of the four groups a company is in, and where this one stands now."""
     here = None
     if row:
@@ -448,39 +417,77 @@ def fusion_guide(row, f):
     cards = ""
     for i, (name, rule, reqs, verdict, tone) in enumerate(GROUPS):
         mark = '<span class="fg-tag">this company</span>' if i == here else ""
-        cards += (f'<div class="fg-card {tone}{" here" if i == here else ""}"><div class="fg-name">{e(name)}{mark}</div><div class="fg-rule">{e(rule)}</div>'
+        cards += (f'<div class="fg-card g-{tone}{" here" if i == here else ""}"><div class="fg-name">{e(name)}{mark}</div><div class="fg-rule">{e(rule)}</div>'
                   f'<ul>{"".join(f"<li>{e(r)}</li>" for r in reqs)}</ul><div class="fg-verdict">{e(verdict)}</div></div>')
-    return (f'<div class="fg-box" tabindex="0"><div class="fg-title">The four groups of the Winner\'s Circle<small>CMT Level III, Chapter 8 (scroll)</small></div>'
+    return (f'<div class="fg-box{"" if scroll else " open"}" tabindex="0"><div class="fg-title">The four groups of the Winner\'s Circle<small>CMT Level III, Chapter 8</small></div>'
             f'{status}{trend}{tests}<div class="fg-h">The four groups</div><div class="fg-cards">{cards}</div></div>')
 
 
-def strategies_panel(result, stats=None, learn="", footer="", fusion=None):
-    """The second card: the five strategies as rows (strategy, vote, what it sees, back-test) with a Full view column. Clicking a row
-    opens that strategy's chart and plain-words explanation in place."""
+def strategy_rows(result, stats=None, ml=None):
+    """The rows of the strategies table: [{name, word, cls, reading, tested}] for the five strategies, then the ML model."""
     cls = {"Up": "up", "Down": "down", "Sideways": "flat"}
-    view = result.get("view")
-    rows = []
+    out = []
     for en in result["votes"]:
         avail = en.get("available", True)
         name = VOTE_NAME[en["vote"]]
-        word = "n/a" if not avail else f"{GLYPH[name]} " + ("Neutral" if name == "Sideways" else name)
         rec = (stats or {}).get("strategies", {}).get(en["name"])
-        tested = ""
-        if rec:
-            tested = (f'{rec["next day"]["last 30% of dates"]["accuracy"] * 100:.0f}% next day &middot; '
-                      f'{rec["next 20 days"]["last 30% of dates"]["accuracy"] * 100:.0f}% over 20 days')
-        cells = (f'<span class="pp-sname">{e(en["name"])}</span><span class="pp-vote {cls[name] if avail else "flat"}">{word}</span>'
-                 f'<span>{e(en["reading"])}</span><span class="pp-test">{tested}</span>')
-        if view:
-            rows.append(f'<details class="ss-det" title="{e(en["why"])}"><summary class="ss-grid">{cells}<span class="ss-open">Full view</span></summary>'
-                        f'<div class="ss-view">{strategy_view(en["name"], view, fusion)}</div></details>')
-        else:
-            rows.append(f'<div class="ss-det"><div class="ss-grid">{cells}<span></span></div></div>')
-    head = ('<div class="ss-grid ss-head"><span>Strategy</span><span>Vote</span><span>What it sees</span>'
-            '<span>Back-test: how often it matched the next move</span><span>Full view</span></div>')
-    foot = f'<div class="pp-foot">{footer}</div>' if footer else ""
-    return (f'<div class="pp"><div class="pp-sec" style="margin-top:0">The five strategies behind the reading'
-            f'<small>click Full view to see what a strategy is doing</small></div>{head}{"".join(rows)}{learn}{foot}</div>')
+        tested = (f'{rec["next day"]["last 30% of dates"]["accuracy"] * 100:.0f}% next day &middot; '
+                  f'{rec["next 20 days"]["last 30% of dates"]["accuracy"] * 100:.0f}% over 20 days') if rec else ""
+        out.append({"name": en["name"], "word": "n/a" if not avail else f"{GLYPH[name]} " + ("Neutral" if name == "Sideways" else name),
+                    "cls": cls[name] if avail else "flat", "reading": en["reading"], "tested": tested})
+    if ml:
+        held = ml["tested"].get("last 30% of dates (held back)", {})
+        lean = ml["lean"]
+        word = {"Up": f"{GLYPH['Up']} Up", "Down": f"{GLYPH['Down']} Down", "None": "No clear view"}[lean]
+        tested = (f'{held["accuracy"] * 100:.0f}% overall &middot; {held["confident_accuracy"] * 100:.0f}% when confident' if held.get("confident_accuracy") else "")
+        out.append({"name": "ML model", "word": word, "cls": {"Up": "up", "Down": "down", "None": "flat"}[lean],
+                    "reading": f'{ml["p_up"] * 100:.0f}% modelled chance of a higher close', "tested": tested})
+    return out
+
+
+def ml_view(ml):
+    """The full view of the ML model: today's reading, what pushed it, and how it was built and tested, in plain words."""
+    p = ml["p_up"]
+    lean = {"Up": "leans up", "Down": "leans down", "None": "has no clear view"}[ml["lean"]]
+    contrib = ml["contrib"][:8]
+    big = max(abs(v) for _, v in contrib) or 1.0
+    width, row_h, label_w, mid = 820, 30, 230, 540
+    rows = []
+    for i, (label, v) in enumerate(contrib):
+        y = 8 + i * row_h
+        w = abs(v) / big * 190
+        x = mid if v >= 0 else mid - w
+        colour = UP_C if v >= 0 else DOWN_C
+        rows.append(f'<text x="{label_w - 8}" y="{y + 15}" text-anchor="end" font-size="13" fill="currentColor">{e(label)}</text>'
+                    f'<rect x="{x:.1f}" y="{y + 3}" width="{max(w, 2):.1f}" height="17" rx="3" fill="{colour}" opacity=".85"/>'
+                    f'<text x="{(x + w + 6) if v >= 0 else (x - 6):.1f}" y="{y + 16}" text-anchor="{"start" if v >= 0 else "end"}" font-size="12" fill="currentColor" opacity=".7">'
+                    f'{"pushes up" if v >= 0 else "pushes down"}</text>')
+    height = 8 + len(contrib) * row_h + 24
+    svg = (f'<svg viewBox="0 0 {width} {height}" role="img"><line x1="{mid}" x2="{mid}" y1="2" y2="{height - 20}" stroke="currentColor" opacity=".35"/>'
+           f'{"".join(rows)}<text x="{mid - 6}" y="{height - 4}" text-anchor="end" font-size="12" fill="currentColor" opacity=".6">towards a lower close</text>'
+           f'<text x="{mid + 6}" y="{height - 4}" font-size="12" fill="currentColor" opacity=".6">towards a higher close</text></svg>')
+    bar = (f'<div class="pp-pbar" style="margin:1rem 0 .3rem 0"><i style="width:{p * 100:.0f}%"></i><u></u></div>'
+           f'<div class="pp-d">{p * 100:.0f}% modelled chance that the next close is higher (the model says it needs 54% or more to lean up, 46% or less to lean down).</div>')
+    t = ml["tested"].get("last 30% of dates (held back)", {})
+    m = ml.get("model", {})
+    held = (f'<li><b>Overall:</b> right {t["accuracy"] * 100:.1f}% of the time on dates it never saw. Simply guessing "up" every day scores {t["always_up"] * 100:.1f}%, so over all days it adds almost nothing.</li>'
+            f'<li><b>On its confident days</b> (about {t["confident_days"] / t["days"] * 100:.0f}% of days): right {t["confident_accuracy"] * 100:.1f}% of the time over {t["confident_days"]:,} stock-days. '
+            'Those days bunch together on market-wide days, so treat it lightly.</li>') if t else ""
+    return (f'<p>Today this model <b>{lean}</b>.</p>{bar}<div class="fg-h">What pushed today\'s reading</div>{svg}'
+            '<div class="fg-h">How it works</div><ul>'
+            '<li><b>The type of model:</b> a logistic regression, a simple and explainable model (not deep learning). It adds up weighted inputs and turns the total into a chance between 0% and 100%.</li>'
+            '<li><b>Its 18 inputs</b>, all from yesterday and earlier: the five strategy readings (Fusion stage, Dow Theory, relative strength, Wyckoff, Fibonacci), '
+            'RSI, Stochastic RSI, the position in the Bollinger band, the Z-score, MACD, ADX direction and strength, Supertrend, yesterday\'s move, the last 5 days, '
+            'where yesterday closed in its range, volume against usual, volatility and the distance from the 200-day average.</li>'
+            '<li><b>The question it answers:</b> will the next day close higher than today?</li></ul>'
+            '<div class="fg-h">How it was built and tested</div><ul>'
+            f'<li><b>Training data:</b> the saved daily prices of {m.get("companies", "many")} NSE companies, 2019 to 2026, about {m.get("rows", 0):,} company-days, all pooled into one model.</li>'
+            f'<li><b>The test was fair:</b> it learned only from the first 70% of the dates (up to {m.get("split_date", "")}). The last 30% were kept back and used only to check it.</li>'
+            f'{held}</ul>'
+            '<div class="fg-h">What to keep in mind</div><ul>'
+            '<li>It uses prices and volume only: no news, no company results, no sentiment.</li>'
+            '<li>It was trained once and is not updated automatically. The company list is today\'s, so companies that failed are missing.</li>'
+            '<li>It describes what a model reads from past patterns. It is not a recommendation to buy or sell.</li></ul>')
 
 
 def barometer(score, n, ups, downs, neutral):

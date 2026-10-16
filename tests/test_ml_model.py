@@ -56,11 +56,13 @@ def test_the_dashboard_panel_has_six_indicators_with_a_zscore_and_no_votes_tag_a
     assert strip.count('class="lh"') == len(vis.HINTS) >= 14 and "Fusion stage" in strip and "ML model" in strip
 
 
-def test_the_prediction_bar_shows_the_ml_box_next_to_the_call():
+def test_the_ml_full_view_explains_the_model_and_its_honest_results():
     hist, bench = _prices(drift=0.002)
-    plan = dc.plan(hist, datetime(2026, 10, 14, 13, 0), live_price=float(hist["Close"].iloc[-1]), market_open=True)
-    result = dc.evaluate(plan["basis"], plan)
     est = ml.estimate(hist, bench)
-    html = vis.prediction_panel(result, "Live", est)
-    assert "ML model reading" in html and "modelled chance of a higher close" in html and "pp-pbar" in html
-    assert "ML model reading" not in vis.prediction_panel(result, "Live")
+    html = vis.ml_view(est)
+    for part in ("logistic regression", "18 inputs", "first 70% of the dates", "never saw", "always guessing", "<svg", "not a recommendation"):
+        assert part.lower() in html.lower() or part == "always guessing" and "guessing" in html, part
+    from core import cmt_strategies as cmt
+    plan = dc.plan(hist, datetime(2026, 10, 14, 13, 0), live_price=100.0, market_open=True)
+    rows = vis.strategy_rows(cmt.evaluate(plan["basis"], bench, plan), None, est)
+    assert rows[-1]["name"] == "ML model" and len(rows) == 6 and "modelled chance" in rows[-1]["reading"]

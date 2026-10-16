@@ -106,4 +106,6 @@ def estimate(basis_hist, bench_close, model=None):
     p, contrib = probability_up(frame.iloc[-1], model)
     lean = "Up" if p >= 0.54 else "Down" if p <= 0.46 else "None"          # the same 54% / 46% line the confident days were tested at
     top = sorted(contrib.items(), key=lambda kv: -abs(kv[1]))[:3]
-    return {"p_up": p, "lean": lean, "top": [(LABELS[k], v) for k, v in top], "tested": model.get("tested", {})}
+    return {"p_up": p, "lean": lean, "top": [(LABELS[k], v) for k, v in top], "tested": model.get("tested", {}),
+            "contrib": [(LABELS[k], v) for k, v in sorted(contrib.items(), key=lambda kv: -abs(kv[1]))],
+            "model": {k: model.get(k) for k in ("companies", "rows", "split_date", "made_on")}}

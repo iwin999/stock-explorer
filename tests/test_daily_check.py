@@ -157,13 +157,13 @@ def test_the_second_sites_gauges_use_the_real_sites_key_signal_scales_and_the_re
     assert rsi["ends"] == ("Overbought (70)", "Oversold (30)")             # reversal indicators are turned round: red end = stretched high
 
 
-def test_the_prediction_panel_says_what_is_going_on_and_handles_a_day_with_no_price_yet():
+def test_the_today_strip_says_what_is_going_on_and_handles_a_day_with_no_price_yet():
     from core import daily_visuals as vis
     h = _hist()
     live = dc.plan(h, datetime(2026, 10, 14, 13, 0), live_price=float(h["Close"].iloc[-1]) * 1.02, market_open=True)
-    html = vis.prediction_panel(dc.evaluate(live["basis"], live), "Live: market open")
-    for part in ("Model reading", "What happened", "Typical range today", "Model reading for today", "Live: market open", "that reading", "not a recommendation"):
+    html = vis.today_strip(dc.evaluate(live["basis"], live), "Live: market open")
+    for part in ("Today so far", "Typical range today", "Live: market open", "that reading", "not a recommendation"):
         assert part in html
     pending = dc.plan(h, datetime(2026, 10, 14, 8, 30), live_price=None, market_open=False)
-    waiting = vis.prediction_panel(dc.evaluate(pending["basis"], pending), "Waiting for the market to open")
-    assert "Not yet" in waiting and "nothing to compare" in waiting and "matches</b>" not in waiting and "does not match" not in waiting
+    waiting = vis.today_strip(dc.evaluate(pending["basis"], pending), "Waiting for the market to open")
+    assert "nothing to compare" in waiting and "matches</b>" not in waiting and "does not match" not in waiting

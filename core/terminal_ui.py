@@ -40,6 +40,11 @@ CSS = """<style>
 [data-testid="stDialog"] [role="tab"] button, [data-testid="stDialog"] button[role="tab"] { min-height:0; }
 [data-testid="stDialog"] input[type="number"], [data-testid="stDialog"] [data-testid="stNumberInput"] input { font-variant-numeric:tabular-nums; font-weight:600; font-size:1.05rem; }
 [data-testid="stDialog"] [data-testid="stAlert"] strong, [data-testid="stDialog"] [data-testid="stAlert"] b { font-variant-numeric:tabular-nums; }
+.st-key-tm_strat { background:var(--tm-panel,#fff); border:1px solid var(--tm-line,#dfe3ea); border-radius:14px; padding:1.4rem 1.8rem 1.2rem 1.8rem !important; box-shadow:0 1px 3px rgba(16,24,40,.07); }
+.st-key-tm_strat [data-testid="stVerticalBlock"] { gap:.35rem; } .st-key-tm_strat [data-testid="stHorizontalBlock"] { border-bottom:1px solid var(--tm-line,#dfe3ea); padding:.4rem 0; }
+.st-key-tm_strat .ss-h { font-size:.85rem; font-weight:600; color:var(--tm-muted,#6b7785); } .st-key-tm_strat .ss-c { font-size:1rem; }
+.st-key-tm_strat .up { color:var(--pp-up,#158a7e); } .st-key-tm_strat .down { color:var(--pp-down,#d6453d); } .st-key-tm_strat .flat { color:var(--pp-flat,#6b7785); }
+.st-key-tm_strat button { min-height:2rem; padding:.1rem .6rem; font-weight:700; color:#2962ff; }
 .tm-row { display:flex; justify-content:space-between; gap:.5rem; padding:.35rem 0; border-bottom:1px solid rgba(128,128,128,.25); font-size:.92rem; }
 .tm-row .s { opacity:.65; font-size:.8rem; } .tm-h { font-weight:800; font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin:.5rem 0 .2rem 0; }
 .dc-card.tm { padding:.5rem .7rem .05rem .7rem; margin-bottom:.45rem; cursor:help; }
@@ -220,6 +225,7 @@ def _cmt_result(symbol, hist, offline):
 
 @guard()
 def _prediction(symbol, name, hist, offline):
+    """The slim live card: how today is going against the strategies' reading, with the typical range."""
     result, info = _cmt_result(symbol, hist, offline)
     by_cmt = result is not None
     if result is None:                                   # a young listing: fall back to the indicator vote so the card still works
@@ -229,12 +235,59 @@ def _prediction(symbol, name, hist, offline):
         show_disclaimer()
         return
     status = {"live": "Live: market open, updating", "final": "Final for the day", "pending": "Waiting for the market to open"}[result["status"]]
-    ml = ml_model.estimate(info["basis"], _bench_close(symbol)) if by_cmt else None
-    st.markdown(vis.prediction_panel(result, status, ml), unsafe_allow_html=True)
+    st.markdown(vis.today_strip(result, status), unsafe_allow_html=True)
     if not by_cmt:
         st.caption("Not enough history for the CMT strategies on this company, so the six-indicator vote is used instead.")
     if info["note"]:
         st.caption(info["note"])
+
+
+@guard()
+def _full_view_body(name, result, ml, rating):
+    """The inside of a Full view pop-up."""
+    if name == "ML model":
+        body = vis.ml_view(ml)
+    else:
+        body = vis.strategy_view(name, result["view"], rating)
+    st.markdown(f'<div class="ss-view">{body}</div>', unsafe_allow_html=True)
+
+
+def _open_full_view(name, result, ml, rating):
+    """Open a strategy's Full view in a pop-up, like the About box."""
+    st.dialog(f"{name}: full view", width="large")(_full_view_body)(name, result, ml, rating)
+
+
+@guard()
+def _strategies(symbol, hist, offline):
+    """The strategies card: the five CMT strategies and the ML model as rows, each with a Full view pop-up. They only use yesterday's data
+    and earlier, so this card does not change during the day and is not refreshed on a timer."""
+    result, info = _cmt_result(symbol, hist, offline)
+    if result is None:
+        show_disclaimer()
+        return
+    ml = ml_model.estimate(info["basis"], _bench_close(symbol))
+    try:
+        from core import fusion_ui
+        rating = fusion_ui.company_row(symbol)            # the company's Winner's Circle group, if its company results are available
+    except Exception:
+        rating = None
+    rows = vis.strategy_rows(result, cmt.load_stats(), ml)
+    with st.container(key="tm_strat"):
+        st.markdown('<div class="pp-sec" style="margin-top:0">The strategies behind the reading'
+                    '<small>click Full view to see what a strategy is doing</small></div>', unsafe_allow_html=True)
+        widths = [1.5, 0.9, 2.0, 1.9, 0.8]
+        head = st.columns(widths, vertical_alignment="center")
+        for col, label in zip(head, ("Strategy", "Vote", "What it sees", "Back-test: how often it matched the next move", "Full view")):
+            col.markdown(f'<span class="ss-h">{label}</span>', unsafe_allow_html=True)
+        for i, row in enumerate(rows):
+            c1, c2, c3, c4, c5 = st.columns(widths, vertical_alignment="center")
+            c1.markdown(f'<span class="pp-sname">{row["name"]}</span>', unsafe_allow_html=True)
+            c2.markdown(f'<span class="pp-vote {row["cls"]}">{row["word"]}</span>', unsafe_allow_html=True)
+            c3.markdown(f'<span class="ss-c">{row["reading"]}</span>', unsafe_allow_html=True)
+            c4.markdown(f'<span class="pp-test">{row["tested"]}</span>', unsafe_allow_html=True)
+            if c5.button("Full view", key=f"sv_{i}", width="stretch"):
+                _open_full_view(row["name"], result, ml, rating)
+        st.markdown(vis.learn_strip() + f'<div class="pp-foot"><b>Disclaimer.</b> {DISCLAIMER}</div>', unsafe_allow_html=True)
 
 
 @guard()
@@ -248,22 +301,6 @@ def _barometer(symbol, hist, offline):
     ups = sum(1 for v in voters if v["vote"] > 0)
     downs = sum(1 for v in voters if v["vote"] < 0)
     st.markdown(vis.barometer(result["score"], result["n"], ups, downs, len(voters) - ups - downs), unsafe_allow_html=True)
-
-
-@guard()
-def _strategies(symbol, hist, offline):
-    """The strategies card. The strategies only use yesterday's data and earlier, so this card does not change during the day and is
-    not refreshed on a timer (so a Full view you have opened stays open)."""
-    result, _ = _cmt_result(symbol, hist, offline)
-    if result is None:
-        show_disclaimer()
-        return
-    try:
-        from core import fusion_ui
-        rating = fusion_ui.company_row(symbol)            # the company's Winner's Circle group, if its company results are available
-    except Exception:
-        rating = None
-    st.markdown(vis.strategies_panel(result, cmt.load_stats(), vis.learn_strip(), f"<b>Disclaimer.</b> {DISCLAIMER}", rating), unsafe_allow_html=True)
 
 
 @guard()

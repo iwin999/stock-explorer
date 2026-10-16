@@ -103,7 +103,7 @@ def test_exit_all_button_is_first_greyed_out_when_empty_and_enabled_when_somethi
 
 def test_the_second_site_about_leaves_out_what_only_the_real_site_has():
     simple = about.WHAT_IT_IS_SIMPLE + about.HOW_TO_USE_SIMPLE + about.LIMITATIONS_SIMPLE + about.SOURCES_SIMPLE
-    for only_on_the_real_site in ("Possible outcomes", "Strategy tests", "Ask the bot", "leaderboard", "Black-Scholes", "futures and options",
+    for only_on_the_real_site in ("Possible outcomes", "Strategy tests", "Ask the bot", "Black-Scholes", "futures and options",
                                   "Monte Carlo", "Sharpe", "Know how"):
         assert only_on_the_real_site.lower() not in simple.lower(), only_on_the_real_site
     for on_the_second_site in ("Search stock", "Buy, Sell, Exit all", "five strategies", "machine-learning", "Z-score"):

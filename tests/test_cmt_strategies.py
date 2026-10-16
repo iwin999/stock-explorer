@@ -55,13 +55,13 @@ def test_wyckoff_needs_volume_and_follows_big_effort_with_big_result():
     assert pd.isna(cmt.signals_frame(no_volume, bench).iloc[-1]["wyckoff"])
 
 
-def test_evaluate_gives_the_shape_the_prediction_bar_draws():
+def test_evaluate_gives_the_shape_the_strategy_rows_draw():
     hist, bench = _prices(drift=0.002)
     plan = dc.plan(hist, datetime(2026, 10, 14, 13, 0), live_price=float(hist["Close"].iloc[-1]) * 1.02, market_open=True)
     result = cmt.evaluate(plan["basis"], bench, plan)
     assert [v["name"] for v in result["votes"]] == cmt.NAMES and result["n"] == 5 and result["matched"] in (True, False)
-    html = vis.strategies_panel(result, cmt.load_stats(), "", "footer")
-    assert html.count('class="pp-sname"') == 5 and "footer" in html and "Back-test" in html and html.count('class="ss-det"') == 5 and "Full view" in html
+    rows = vis.strategy_rows(result, cmt.load_stats())
+    assert [r["name"] for r in rows] == cmt.NAMES and all(r["tested"] for r in rows)
     assert cmt.evaluate(plan["basis"].iloc[:100], bench, plan) is None                 # too little history
     assert cmt.track_record(plan["complete"], bench)["n"] == 60
 
@@ -77,8 +77,6 @@ def test_every_strategy_has_a_full_view_with_a_chart_and_plain_lines():
     hist, bench = _prices(drift=0.002)
     plan = dc.plan(hist, datetime(2026, 10, 14, 13, 0), live_price=float(hist["Close"].iloc[-1]), market_open=True)
     result = cmt.evaluate(plan["basis"], bench, plan)
-    html = vis.strategies_panel(result, cmt.load_stats())
-    assert html.count('<details class="ss-det"') == 5 and html.count("<svg") == 5 and html.count('class="ss-open"') == 5
     for name in cmt.NAMES:
         view = vis.strategy_view(name, result["view"])
         assert "<svg" in view and "<li>" in view, name
@@ -93,12 +91,12 @@ def test_the_fusion_full_view_has_a_scrollable_guide_with_english_group_names():
     result = cmt.evaluate(plan["basis"], bench, plan)
     row = {"group": 2, "stage_name": "Clear uptrend", "verdict": "Confirm", "quality_ok": True, "value_ok": False}
     html = vis.strategy_view("Fusion stage", result["view"], row)
-    assert 'class="fg-box"' in html and "<svg" in html
+    assert 'class="fg-box open"' in html and "<svg" in html          # inside a pop-up it is not a scroll box
     for name in ("Winner's Circle", "Strong contender", "Momentum only", "Watchlist"):
         assert name in html
     assert "Group 1" not in html and "Group 4" not in html and "&#10007;" not in html          # names, not numbers; no crosses
     assert "Clear uptrend" in html and "200-day" in html and "price-to-book" in html and "Chapter 8" in html
-    assert html.count("this company</span>") == 1 and "Strong contender" in html.split("fg-card up here")[1][:200]
+    assert html.count("this company</span>") == 1 and "Strong contender" in html.split("fg-card g-up here")[1][:200]
     assert "company results are not available" in vis.strategy_view("Fusion stage", result["view"], None)
 
 

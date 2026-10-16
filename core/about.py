@@ -138,10 +138,10 @@ HOW_TO_USE_SIMPLE = """\
 2. **Search stock:** type a company name (a small spelling slip is fine) and press Enter.
 3. **Chart:** show 1, 2 or 4 charts, each in daily, weekly or monthly candles, with optional Fibonacci levels.
 4. **Buy, Sell, Exit all:** practise trading with virtual money from the bar under the chart.
-5. **Model reading for today:** what the five strategies read (Up, Down or Sideways), the machine-learning model's reading, what actually happened so far today, and the \
-typical range. Under it are the five strategies behind the reading: Fusion stage, Dow Theory, relative strength, Wyckoff effort vs \
-result and Fibonacci confluence.
-6. **Left side:** what you hold, what you sold, where your money is, and how often the page refreshes.
+5. **Today so far:** how the day is going against what the strategies read, with the typical range. Below it is a table of the five \
+strategies (Fusion stage, Dow Theory, relative strength, Wyckoff effort vs result and Fibonacci confluence) and the ML model, each with a \
+**Full view** that opens a chart and a plain explanation of what it is doing.
+6. **Left side:** what you hold, what you sold, where your money is, the leaderboard, and a barometer that combines the five strategies.
 7. **Right side:** six indicators: RSI, MACD, ADX, Z-score, Supertrend and Bollinger band.
 
 Hover over the small **?** chips at the bottom of the model-reading card for a short explanation of each piece of analysis."""
