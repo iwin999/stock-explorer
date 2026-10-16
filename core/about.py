@@ -26,7 +26,7 @@ CREDENTIALS = [
     ("CMT Level II", "Passed"),
     ("CMT Level III", "Appearing"),
 ]
-EPAT_BATCH = "EPAT Batch 72"
+EPAT_BATCH = "EPAT (Batch-72)"
 
 CMT_EXPLAINER = """\
 **CMT: Chartered Market Technician**
@@ -165,7 +165,7 @@ def _creator_section():
     with tip:
         with st.popover("?"):
             st.markdown(EPAT_EXPLAINER)
-    row.markdown(f'<span class="chip chip-done">Part of {EPAT_BATCH}</span>', unsafe_allow_html=True)
+    row.markdown(f'<span class="chip chip-done">{EPAT_BATCH}</span>', unsafe_allow_html=True)
     st.write("")
     st.markdown(creator_story())
 
