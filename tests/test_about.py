@@ -21,7 +21,7 @@ def test_about_covers_everything_requested():
 
 def test_creator_details_are_exactly_as_given():
     assert about.CREATOR_NAME == "Freya Shah"
-    assert about.CREATOR_CLASS == "PreSC Commerce - B" and about.CREATOR_SCHOOL == "Mayo College Girls School"
+    assert about.CREATOR_CLASS == "P/2977" and about.CREATOR_SCHOOL == "Mayo College Girls School"
     assert dict(about.CREDENTIALS) == {"CMT Level I": "Passed", "CMT Level II": "Passed", "CMT Level III": "Appearing"}
     assert about.EPAT_BATCH == "EPAT Batch 72"
     assert about._initials("Freya Shah") == "FS"

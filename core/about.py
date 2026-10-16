@@ -19,7 +19,7 @@ SITE_NAME = "Stock Explorer"
 
 # ---- the creator (edit here, or override with [about] in the app's secrets) ----
 CREATOR_NAME = "Freya Shah"
-CREATOR_CLASS = "PreSC Commerce - B"
+CREATOR_CLASS = "P/2977"
 CREATOR_SCHOOL = "Mayo College Girls School"
 CREDENTIALS = [
     ("CMT Level I", "Passed"),
