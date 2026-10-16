@@ -245,6 +245,10 @@ def _show_know_how(markdown):
 
 def know_how_button(key, title, markdown):
     """A 'Know how' button that opens a pop-up with the full method: rules, factors, calculation."""
+    if st.session_state.get("_inline_know_how"):            # already inside a pop-up (those cannot open another), so unfold it in place
+        with st.expander(f"Know how: {title}"):
+            st.markdown(markdown)
+        return
     if st.button("Know how", key=key):
         st.dialog(f"Know how: {title}", width="large")(_show_know_how)(markdown)
 

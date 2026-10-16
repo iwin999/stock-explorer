@@ -412,6 +412,7 @@ def _do_exit_all():
 
 
 @st.dialog("Exit all positions?")
+@guard()
 def _exit_dialog():
     pf = _get_portfolio()
     count = len(pf.holdings) + len(pf.derivatives)

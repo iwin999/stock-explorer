@@ -393,5 +393,8 @@ So that nothing reads like a tip, the second site's panel no longer says "predic
 ## New in Step 65 (nicer numbers in the order pop-up)
 In the Buy / Sell pop-up the figures (price, units owned, cash, premium, lot size, total cost) now sit in softly bordered boxes with a smaller grey label, a semi-bold value with aligned digits (tabular figures), and a tidier change chip. The quick-amount and action buttons are a little larger and bolder, and the number inputs use the same aligned digits.
 
+## New in Step 66 (no red error boxes inside pop-ups)
+The red Streamlit error in the order pop-up came from the **Know how** button in the Futures and Options tabs: it tried to open a pop-up from inside a pop-up, which Streamlit does not allow. Inside a pop-up, Know how now unfolds in place. And a pop-up that fails for any other reason now shows the friendly "Congratulations! You have found an error" card (with the admin's email and a reference number) instead of Streamlit's red box: the order pop-up, the exit-all pop-up and the About pop-up are now all inside the safety net. The raw `KeyError` seen on the second site's startup came from an earlier version of `simple.py`; the startup safety net (`bootstrap.py`, added in Step 63) replaces it.
+
 ## Status
 All 8 features are built.

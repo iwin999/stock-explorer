@@ -240,6 +240,7 @@ def _site():
 
 
 @st.dialog("About Stock Explorer", width="large")
+@er.guard()
 def _dialog():
     simple = _site() == "simple"
     st.markdown("### What this project is")

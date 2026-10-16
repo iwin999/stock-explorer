@@ -94,3 +94,34 @@ def test_the_two_sites_share_a_database_but_never_see_each_others_accounts():
     assert acc.load_account(real, "Asha") is None and acc.load_account(second, "Asha").balance == pf.balance
     second.delete("asha")
     assert second.names() == ["Freya"] and real.names() == ["Freya"]
+
+
+def test_a_know_how_button_inside_a_pop_up_unfolds_in_place_instead_of_opening_a_second_pop_up():
+    def script():
+        import streamlit as st
+        from core import ui
+        st.session_state["_inline_know_how"] = True
+        ui.know_how_button("k1", "Futures", "the full method")
+
+    app = AppTest.from_function(script, default_timeout=30)
+    app.run()
+    assert not app.exception and [e for e in app.expander if "Know how: Futures" in e.label]
+    assert not [b for b in app.button if b.key == "k1"]
+
+
+def test_an_error_inside_the_order_pop_up_shows_the_friendly_card_not_a_red_box():
+    def script():
+        import streamlit as st
+        from unittest import mock
+        from core import terminal_ui, trading_ui as tu, accounts as acc
+        import tempfile
+        store = acc.FileStore(tempfile.mkdtemp())
+        pf = acc.create_account(store, "Pop", 100000)
+        st.session_state.portfolio = pf
+        with mock.patch.object(tu, "_cash_ticket", side_effect=RuntimeError("boom")):
+            terminal_ui._order_dialog("Buy", "RELIANCE.NS", "Reliance", 100.0, True)
+
+    app = AppTest.from_function(script, default_timeout=60)
+    app.run()
+    text = " ".join(m.value for m in app.markdown)
+    assert not app.exception and "Reference: <b>E-" in text and "found an error" in text

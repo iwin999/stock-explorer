@@ -251,8 +251,18 @@ def _indicators(symbol, hist, offline):
 
 
 @st.dialog("Paper trade", width="large")
+@guard()
 def _order_dialog(mode, symbol, name, price, offline):
-    """The order pop-up: stocks first, then ETFs and bonds, futures and options (the same tickets as the real site's Paper trading tab)."""
+    """The order pop-up: stocks first, then ETFs and bonds, futures and options (the same tickets as the real site's Paper trading tab).
+    Pop-ups cannot open other pop-ups, so the 'Know how' buttons inside it unfold in place instead."""
+    st.session_state["_inline_know_how"] = True
+    try:
+        _order_tabs(mode, symbol, name, price, offline)
+    finally:
+        st.session_state.pop("_inline_know_how", None)
+
+
+def _order_tabs(mode, symbol, name, price, offline):
     pf = tu._get_portfolio()
     stocks_tab, funds_tab, fut_tab, opt_tab = st.tabs(["Stocks", "ETFs and bonds", "Futures", "Options"])
     with stocks_tab:
