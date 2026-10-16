@@ -73,7 +73,7 @@ def _theme_css(dark):
 .st-key-tm_chartbar [data-testid="stColumn"] {{ min-width:0 !important; }}
 .st-key-tm_chartbar [data-testid="stElementContainer"] {{ margin:0 !important; }}
 .st-key-tm_chartbar button[data-variant="segmented_control"] {{ background:transparent !important; border:1px solid {line} !important;
-  padding:.2rem .85rem; min-height:2rem; font-size:.88rem !important; font-weight:500; }}
+  padding:.2rem .6rem; min-height:2rem; font-size:.85rem !important; font-weight:500; }}
 .st-key-tm_chartbar button[data-variant="segmented_control"] * {{ color:{muted} !important; }}
 .st-key-tm_chartbar button[data-variant="segmented_control"]:hover {{ background:{hover} !important; }}
 .st-key-tm_chartbar button[data-variant="segmented_control"][data-selected="true"] {{ background:{pick} !important; border-color:{pick} !important; }}
@@ -209,7 +209,7 @@ def _indicators(symbol, hist, offline):
     st.markdown("".join(vis.terminal_card(v) for v in ordered), unsafe_allow_html=True)
 
 
-@st.dialog("Paper trade")
+@st.dialog("Paper trade", width="large")
 def _order_dialog(mode, symbol, name, price, offline):
     pf = tu._get_portfolio()
     st.markdown(f"**{mode} {name}**")
@@ -241,7 +241,7 @@ def run():
 
     with left:
         lists_box = st.container(height=290, border=True, key="tm_lists")
-        ring_box = st.container(height=270, border=True)
+        ring_box = st.container(border=True)
         refresh_box = st.container(border=True)
     with refresh_box:
         st.selectbox("Refreshing at intervals configured", list(REFRESH), key="term_refresh",

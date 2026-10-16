@@ -367,5 +367,8 @@ The prediction comparison on the second site is now made by five strategies from
 ## New in Step 57 (a cleaner prediction panel)
 The prediction panel was redesigned. A header ("Today's prediction", with the date and close it is based on) carries a status pill that pulses while the market is live. Under it are three clear boxes: **The call** (a large coloured arrow, the word, and a five-segment vote meter), **What happened** (the actual direction, the move, and a tinted "The call was right / wrong" badge) and **Expected range** (with the price ends and one bar). The five CMT strategies are tiles with a coloured edge and a vote word, each with its name, source and reading; hover one for the longer explanation and its back-test. One short "how to read this" paragraph and the disclaimer close the card.
 
+## New in Step 58 (multi-timeframe charts, a roomier order pop-up, no scrollbar on the ring)
+On the second site the chart area has a layout switch (1, 2 or 4 charts) and timeframes (Day, Week, Month candles built from the daily history, with moving averages scaled to each: 50 and 200 days, 10 and 40 weeks, 3 and 10 months). One chart has a timeframe switch and the 6M / 1Y / 2Y / 5Y buttons; two or four charts each have a drop-down of views (for example Daily 3 months, Weekly 2 years, Monthly 5 years). The Fibonacci and Dark switches apply to all charts. The Buy / Sell order pop-up is now a large dialog so the price, holdings, cash and quick amounts are no longer cut off. The allocation ring box no longer has a pointless scrollbar.
+
 ## Status
 All 8 features are built.

@@ -11,16 +11,16 @@ NAVY, AMBER, GREY = "#1d3557", "#d98e04", "#8a93a0"
 UP_COLOUR, DOWN_COLOUR = "#2a9d6f", "#c8553d"
 
 
-def price_chart(hist, symbol, name):
+def price_chart(hist, symbol, name, unit="day", ma=(50, 200), volume=True, title=None, title_size=22):
     """Candlesticks + 50/200-day averages + Bollinger Bands, with volume bars underneath when volume is available.
 
     `hist` must contain enough earlier history for the averages to be warmed up;
     the caller decides how much to *show* via x-axis range (see app.py).
     """
     close = hist["Close"]
-    ma50, ma200 = ind.sma(close, 50), ind.sma(close, 200)
+    ma50, ma200 = ind.sma(close, ma[0]), ind.sma(close, ma[1])
     _, upper, lower = ind.bollinger(close)
-    volume = ind.clean_volume(hist)
+    volume = ind.clean_volume(hist) if volume else None
     with_volume = volume is not None
 
     if with_volume:
@@ -39,9 +39,9 @@ def price_chart(hist, symbol, name):
     fig.add_trace(go.Candlestick(x=hist.index, open=hist["Open"], high=hist["High"],
                                  low=hist["Low"], close=close, name="Price",
                                  increasing_line_color=UP_COLOUR, decreasing_line_color=DOWN_COLOUR), **place)
-    fig.add_trace(go.Scatter(x=hist.index, y=ma50, name="50-day average",
+    fig.add_trace(go.Scatter(x=hist.index, y=ma50, name=f"{ma[0]}-{unit} average",
                              line=dict(color=AMBER, width=2.5)), **place)
-    fig.add_trace(go.Scatter(x=hist.index, y=ma200, name="200-day average",
+    fig.add_trace(go.Scatter(x=hist.index, y=ma200, name=f"{ma[1]}-{unit} average",
                              line=dict(color=NAVY, width=2.5)), **place)
 
     if with_volume:
@@ -49,12 +49,12 @@ def price_chart(hist, symbol, name):
         colours = [UP_COLOUR if u else DOWN_COLOUR for u in up_day]
         fig.add_trace(go.Bar(x=hist.index, y=volume, name="Volume", marker_color=colours, marker_opacity=0.6,
                              hovertemplate="%{y:,.0f} shares<extra>Volume</extra>"), row=2, col=1)
-        fig.add_trace(go.Scatter(x=hist.index, y=volume.rolling(20, min_periods=10).mean(), name="20-day average volume",
+        fig.add_trace(go.Scatter(x=hist.index, y=volume.rolling(20, min_periods=10).mean(), name=f"20-{unit} average volume",
                                  line=dict(color=GREY, width=2)), row=2, col=1)
         fig.update_yaxes(title_text="Volume", row=2, col=1)
 
     fig.update_layout(
-        title=dict(text=f"{name} ({symbol.replace('.NS', '')})", font=dict(size=22)),
+        title=dict(text=title or f"{name} ({symbol.replace('.NS', '')})", font=dict(size=title_size)),
         height=640 if with_volume else 560,
         font=dict(size=16),
         xaxis_rangeslider_visible=False,
@@ -175,7 +175,7 @@ def outlook_gauge(chance_up, calendar_days):
     return fig
 
 
-def zoom_to_window(fig, hist, days, include=()):
+def zoom_to_window(fig, hist, days, include=(), ma=(50, 200)):
     """Show only the last `days` trading days, with the price axis fitted to that window.
 
     The averages are calculated on ALL the data (they need the warm-up), but the chart only
@@ -187,9 +187,9 @@ def zoom_to_window(fig, hist, days, include=()):
     n = min(days, len(hist))
     view = slice(len(hist) - n, None)
     lows = [hist["Low"].iloc[view].min(), lower.iloc[view].min(),
-            ind.sma(close, 50).iloc[view].min(), ind.sma(close, 200).iloc[view].min()]
+            ind.sma(close, ma[0]).iloc[view].min(), ind.sma(close, ma[1]).iloc[view].min()]
     highs = [hist["High"].iloc[view].max(), upper.iloc[view].max(),
-             ind.sma(close, 50).iloc[view].max(), ind.sma(close, 200).iloc[view].max()]
+             ind.sma(close, ma[0]).iloc[view].max(), ind.sma(close, ma[1]).iloc[view].max()]
     lows += list(include)                     # extra prices that must stay in view (such as the Fibonacci extensions)
     highs += list(include)
     low = min(v for v in lows if v == v)     # v == v is False for NaN, so NaNs are skipped
@@ -198,7 +198,7 @@ def zoom_to_window(fig, hist, days, include=()):
     fig.update_xaxes(range=[hist.index[-n], hist.index[-1]])
     fig.update_layout(yaxis=dict(range=[low - pad, high + pad]))             # the price axis (the first one)
     volume = ind.clean_volume(hist)
-    if volume is not None and fig.layout.yaxis2.domain:                      # the volume panel, fitted to the same window
+    if volume is not None and hasattr(fig.layout, "yaxis2") and fig.layout.yaxis2.domain:                      # the volume panel, fitted to the same window
         top = volume.iloc[view].max()
         if top == top:
             fig.update_layout(yaxis2=dict(range=[0, float(top) * 1.1]))

@@ -172,3 +172,31 @@ def test_the_dashboard_search_is_one_compact_row_without_the_live_search_drawer(
         assert box.placeholder == "SEARCH STOCK" and box.label == "Search stock"
         assert not [e for e in app.expander if "Yahoo Finance live" in e.label]
         assert not [t for t in app.text_input if t.key == "live_query"]
+
+
+def test_the_dashboard_shows_one_two_or_four_charts_in_any_timeframe_without_errors():
+    store, app = _app("Mtf", phone=False)
+    a, b = _patches(store)
+    with a, b:
+        app.run()
+        assert not app.exception
+        for layout, tf in (("1 chart", "Weekly"), ("2 charts", None), ("4 charts", None), ("1 chart", "Monthly"), ("1 chart", "Daily")):
+            app.session_state["mtf_layout"] = layout
+            if tf:
+                app.session_state["mtf_tf"] = tf
+            app.run()
+            assert not app.exception and not _errors(app), (layout, tf)
+
+
+def test_weekly_and_monthly_candles_are_built_from_the_daily_ones():
+    import numpy as np
+    import pandas as pd
+    from core import multi_chart as mc
+    idx = pd.bdate_range("2025-01-01", periods=300)
+    c = pd.Series(np.linspace(100, 160, 300), index=idx)
+    h = pd.DataFrame({"Open": c, "High": c + 1, "Low": c - 1, "Close": c, "Volume": 1000.0}, index=idx)
+    week = mc.resample(h, "Weekly")
+    assert len(week) < len(h) / 4 and week["Volume"].iloc[1] == 5000.0 and week["High"].iloc[1] == h["High"].iloc[3:8].max()
+    assert mc.resample(h, "Daily") is h and len(mc.resample(h, "Monthly")) <= 15
+    fig = mc.figure(h, "TEST", "Weekly", 52, show_fib=True)
+    assert any("week" in (t.name or "") for t in fig.data)
