@@ -45,12 +45,22 @@ achievement."""
 EPAT_EXPLAINER = """\
 **EPAT: Executive Programme in Algorithmic Trading**
 
-A professional programme from **QuantInsti** that teaches how to trade with code and data: Python programming, statistics, \
-financial markets, and how to design, test and run automated trading strategies.
+A professional programme from **QuantInsti** that teaches how to trade with code and data. It is widely regarded as one of the \
+most respected programmes in the world for algorithmic and quantitative trading: it is taught by practising traders and \
+quants, it is built for working professionals, and its alumni work at trading firms, banks and funds across many countries.
+
+**Skills gained from it**
+- Python programming for finance, and working with market data
+- Statistics, probability and time-series analysis
+- Financial markets, derivatives (futures and options) and how orders are executed
+- Designing, back-testing and optimising trading strategies without fooling yourself
+- Risk and portfolio management
+- Machine learning for trading
+- Building and running automated, live trading systems
 
 "**Batch 72**" is the cohort of learners Freya studied with. Like the CMT, it is usually taken by working professionals, so \
-it is a serious step for a school student, and the skills behind the simulations and strategy tests in this app are exactly \
-the kind the programme teaches."""
+it is a serious step for a school student, and the skills behind the simulations, strategy tests and machine-learning \
+estimate in this app are exactly the kind the programme teaches."""
 
 WHAT_IT_IS = """\
 **Stock Explorer** is an educational website that makes Indian (NSE and BSE) stocks easier to understand. You can look at price charts \
