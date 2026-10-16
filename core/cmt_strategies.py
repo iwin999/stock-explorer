@@ -241,7 +241,7 @@ def track_record(complete, bench_close, days=60):
 
 
 def load_stats():
-    """The tested accuracy of each strategy (made by scripts/test_cmt_strategies.py), or {} if the file is missing."""
+    """The tested accuracy of each strategy (made by scripts/evaluate_cmt_strategies.py), or {} if the file is missing."""
     try:
         with open(STATS_PATH) as f:
             return json.load(f)

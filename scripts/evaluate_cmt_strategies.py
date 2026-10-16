@@ -4,7 +4,7 @@ For each strategy: on the days it voted Up or Down, how often was the NEXT day's
 70% / 30% in time (the strategy rules were fixed before looking at the last 30%), and both parts are reported, together with the
 combined call (two net votes) and a yardstick (always guessing the more common direction).
 
-Run:  python scripts/test_cmt_strategies.py
+Run:  python scripts/evaluate_cmt_strategies.py
 """
 import glob
 import json
