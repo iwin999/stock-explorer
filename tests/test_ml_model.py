@@ -53,7 +53,7 @@ def test_the_dashboard_panel_has_six_indicators_with_a_zscore_and_no_votes_tag_a
     card = vis.terminal_card(names["RSI (speed)"])
     assert "VOTES" not in card and "context" not in card and "title=" in card
     strip = vis.learn_strip()
-    assert strip.count('class="lh"') == len(vis.HINTS) >= 14 and "Fusion stage" in strip and "ML estimate" in strip
+    assert strip.count('class="lh"') == len(vis.HINTS) >= 14 and "Fusion stage" in strip and "ML model" in strip
 
 
 def test_the_prediction_bar_shows_the_ml_box_next_to_the_call():
@@ -62,5 +62,5 @@ def test_the_prediction_bar_shows_the_ml_box_next_to_the_call():
     result = dc.evaluate(plan["basis"], plan)
     est = ml.estimate(hist, bench)
     html = vis.prediction_panel(result, "Live", "", None, est, vis.learn_strip())
-    assert "Machine-learning second opinion" in html and "chance the price closes higher" in html and "pp-pbar" in html
-    assert "Machine-learning second opinion" not in vis.prediction_panel(result, "Live")
+    assert "ML model reading" in html and "modelled chance of a higher close" in html and "pp-pbar" in html
+    assert "ML model reading" not in vis.prediction_panel(result, "Live")

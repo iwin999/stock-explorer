@@ -387,5 +387,8 @@ The Buy / Sell pop-up on the second site now has four tabs: **Stocks** (as befor
 
 **Safety net.** A visitor on the second site saw a raw `KeyError` traceback (it came from importing `core.errors` while another visitor's page was reloading our modules after an update). `bootstrap.py` now wraps both `app.py` and `simple.py`: the import is retried, modules are dropped under a lock and only for the two update-time symptoms, and if the site still cannot load, the visitor sees a friendly "being updated" card with a reference code instead of a traceback.
 
+## New in Step 64 (model-reading wording on the second site)
+So that nothing reads like a tip, the second site's panel no longer says "prediction" or "call". It is now **Model reading for today**, with a standing line under the title ("Educational only: what the methods read, not a recommendation to buy or sell"). "Our call" became **Model reading**; "The call was right / wrong" became "The reading matched / did not match what happened"; the ML box is **ML model reading** with a "modelled chance of a higher close"; "expected range" is **typical range**; the strategies table is "behind the reading" and its back-test column says how often each matched the next move; the hover hints and the About dialog use the same words. The real site is unchanged.
+
 ## Status
 All 8 features are built.

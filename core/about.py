@@ -128,7 +128,7 @@ Supabase or any broker.*"""
 # ---- the same dialog for the second (dashboard) site: only what that site actually has ----
 WHAT_IT_IS_SIMPLE = """\
 **Stock Explorer** is an educational dashboard that makes Indian (NSE and BSE) stocks easier to understand. Search a company, read its \
-price chart in daily, weekly or monthly candles, see a **prediction for today** made by five strategies from the CMT curriculum and a \
+price chart in daily, weekly or monthly candles, see a **model reading for today** made by five strategies from the CMT curriculum and a \
 small machine-learning model, check the main indicators, and practise buying and selling shares with **virtual money**. Nothing here is \
 real money, and nothing here is investment advice."""
 
@@ -138,16 +138,16 @@ HOW_TO_USE_SIMPLE = """\
 2. **Search stock:** type a company name (a small spelling slip is fine) and press Enter.
 3. **Chart:** show 1, 2 or 4 charts, each in daily, weekly or monthly candles, with optional Fibonacci levels.
 4. **Buy, Sell, Exit all:** practise trading with virtual money from the bar under the chart.
-5. **Today's prediction:** the call (Up, Down or Sideways), the machine-learning estimate, what actually happened so far today, and the \
-expected range. Under it are the five strategies behind the call: Fusion stage, Dow Theory, relative strength, Wyckoff effort vs \
+5. **Model reading for today:** what the five strategies read (Up, Down or Sideways), the machine-learning model's reading, what actually happened so far today, and the \
+typical range. Under it are the five strategies behind the reading: Fusion stage, Dow Theory, relative strength, Wyckoff effort vs \
 result and Fibonacci confluence.
 6. **Left side:** what you hold, what you sold, where your money is, and how often the page refreshes.
 7. **Right side:** six indicators: RSI, MACD, ADX, Z-score, Supertrend and Bollinger band.
 
-Hover over the small **?** chips at the bottom of the prediction card for a short explanation of each piece of analysis."""
+Hover over the small **?** chips at the bottom of the model-reading card for a short explanation of each piece of analysis."""
 
 LIMITATIONS_SIMPLE = """\
-- **Not advice, and close to a coin toss for one day.** The prediction is a learning tool. In our tests the five CMT strategies and the \
+- **Not advice, and close to a coin toss for one day.** The model reading describes what some methods show, for learning; it is not a recommendation to buy or sell. In our tests the five CMT strategies and the \
 machine-learning estimate were each right about 50% to 51% of the time on the next day, which is what chance gives. These methods are \
 built for weeks and months.
 - **Prices can be late.** Prices come from Yahoo Finance and can be a few minutes behind. Outside market hours (Monday to Friday, \

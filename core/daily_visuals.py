@@ -184,9 +184,9 @@ HINTS = {
     "Fibonacci confluence": "Prices often pause at 38.2%, 50% and 61.8% of the previous swing. A pullback in an uptrend that stops at one of those levels is a common support; a bounce in a downtrend that stops there is a common resistance.",
     "RSI": EXPLAIN["RSI (speed)"], "MACD": EXPLAIN["MACD (momentum)"], "ADX": EXPLAIN["Trend strength (ADX)"],
     "Z-score": EXPLAIN["Z-score"], "Supertrend": EXPLAIN["Supertrend"], "Bollinger band": EXPLAIN["Bollinger band"],
-    "ML estimate": "A small machine-learning model (a logistic regression) that looks at the five CMT votes and a dozen indicator readings and gives the chance that the next day closes higher. It was trained on 137 NSE companies and checked on dates it had never seen. It is a second opinion, not a promise.",
-    "Expected range": "Yesterday's close plus or minus a typical day's swing. About two days in three finish inside it. The blue marker is today's price and the tick is yesterday's close.",
-    "The call": "The five CMT strategies each vote Up, Down or Neutral. Two or more net votes decide: Up, Down or Sideways. The coloured segments are the five votes.",
+    "ML model": "A small machine-learning model (a logistic regression) that looks at the five CMT readings and a dozen indicator readings and gives a modelled chance that the next day closes higher. It was trained on 137 NSE companies and checked on dates it had never seen. It describes what the model reads, not what will happen.",
+    "Typical range": "Yesterday's close plus or minus a typical day's swing. About two days in three finish inside it. The blue marker is today's price and the tick is yesterday's close.",
+    "The model reading": "The five CMT strategies each read Up, Down or Neutral from yesterday\'s data. Two or more net readings decide: Up, Down or Sideways. This is a description of what the methods show, not a recommendation.",
 }
 
 
@@ -203,18 +203,18 @@ def _say(result):
     ups = sum(1 for v in voters if v["vote"] > 0)
     downs = sum(1 for v in voters if v["vote"] < 0)
     if p == "Sideways":
-        first = f"The strategies are split ({ups} up, {downs} down), so the call is <b>sideways</b>."
+        first = f"The strategies are split ({ups} up, {downs} down), so the model reading is <b>sideways</b>."
     else:
         n = ups if p == "Up" else downs
-        first = f"{n} of the {len(voters)} strategies point <b>{p.lower()}</b>, so the call is <b>{p.lower()}</b>."
+        first = f"{n} of the {len(voters)} strategies read <b>{p.lower()}</b>, so the model reading is <b>{p.lower()}</b>."
     if result["actual"] is None:
         return first + " The market has not opened yet, so there is nothing to compare."
     a = result["actual_direction"]
     move = {"Up": "up", "Down": "down", "Sideways": "flat"}[a]
     verb = "So far today the price is" if result["status"] == "live" else "Today the price was"
     amount = f" {abs(result['change']) * 100:.2f}%" if a != "Sideways" else f" ({result['change'] * 100:+.2f}%)"
-    verdict = "right" if result["matched"] else "wrong"
-    return f"{first} {verb} <b>{move}</b>{amount}, so the call is <b>{verdict}</b>{' so far' if result['status'] == 'live' else ''}."
+    verdict = "matches" if result["matched"] else "does not match"
+    return f"{first} {verb} <b>{move}</b>{amount}, which <b>{verdict}</b> that reading{' so far' if result['status'] == 'live' else ''}."
 
 
 def prediction_panel(result, status_text="", footer="", stats=None, ml=None, learn=""):
@@ -228,12 +228,12 @@ def prediction_panel(result, status_text="", footer="", stats=None, ml=None, lea
     neutral = len(voters) - ups - downs
     edge = {"Up": "#26a69a", "Down": "#ef5350", "Sideways": "#9aa3b2"}[p]
     live = "live" in status_text.lower()
-    head = (f'<div class="pp-head"><div><div class="pp-title">Today\'s prediction</div>'
-            f'<div class="pp-sub">Using prices up to {result["basis_date"]:%A %d %b} (close Rs {result["prev_close"]:,.2f})</div></div>'
+    head = (f'<div class="pp-head"><div><div class="pp-title">Model reading for today</div>'
+            f'<div class="pp-sub">Using prices up to {result["basis_date"]:%A %d %b} (close Rs {result["prev_close"]:,.2f}). Educational only: what the methods read, not a recommendation to buy or sell.</div></div>'
             f'<div class="pp-live{" on" if live else ""}"><i></i>{e(status_text)}</div></div>')
     say = f'<div class="pp-say" style="border-left-color:{edge}">{_say(result)}</div>'
 
-    call = (f'<div class="pp-stat"><div class="pp-k">Our call</div><div class="pp-v {cls[p]}">{GLYPH[p]} {p}</div>'
+    call = (f'<div class="pp-stat"><div class="pp-k">Model reading</div><div class="pp-v {cls[p]}">{GLYPH[p]} {p}</div>'
             f'<div class="pp-d">{downs} down &middot; {ups} up &middot; {neutral} neutral<br>Two or more net votes decide.</div></div>')
     if ml:
         lean = ml["lean"]
@@ -243,9 +243,9 @@ def prediction_panel(result, status_text="", footer="", stats=None, ml=None, lea
         conf = held.get("confident_accuracy")
         tested = f"Tested on unseen dates: right {held['accuracy'] * 100:.0f}% overall, {conf * 100:.0f}% when confident." if conf else ""
         drivers = ", ".join(f"{n} ({'up' if v > 0 else 'down'})" for n, v in ml["top"])
-        mlc = (f'<div class="pp-stat" title="Biggest influences today: {e(drivers)}"><div class="pp-k">Machine-learning second opinion</div>'
+        mlc = (f'<div class="pp-stat" title="Biggest influences today: {e(drivers)}"><div class="pp-k">ML model reading</div>'
                f'<div class="pp-v {mcls}">{word}</div><div class="pp-pbar"><i style="width:{ml["p_up"] * 100:.0f}%"></i><u></u></div>'
-               f'<div class="pp-d">{ml["p_up"] * 100:.0f}% chance the price closes higher.<br>{e(tested)}</div></div>')
+               f'<div class="pp-d">{ml["p_up"] * 100:.0f}% modelled chance of a higher close.<br>{e(tested)}</div></div>')
     else:
         mlc = ""
     if result["actual"] is None:
@@ -256,12 +256,12 @@ def prediction_panel(result, status_text="", footer="", stats=None, ml=None, lea
         out = (f'<div class="pp-stat"><div class="pp-k">What happened {"so far" if result["status"] == "live" else "today"}</div>'
                f'<div class="pp-v {cls[a]}">{GLYPH[a]} {a}</div>'
                f'<div class="pp-d">{result["change"] * 100:+.2f}% &middot; Rs {result["actual"]:,.2f}<br>'
-               f'The call was <b class="{"up" if result["matched"] else "down"}">{"right" if result["matched"] else "wrong"}</b>.</div></div>')
+               f'The reading <b class="{"up" if result["matched"] else "down"}">{"matched" if result["matched"] else "did not match"}</b> what happened.</div></div>')
     low, high = result["range"]
     inside = ""
     if result["actual"] is not None:
         inside = f' &middot; the price is <b>{"inside" if result["in_range"] else "outside"}</b> it'
-    rng = (f'<div class="pp-rangebox"><div class="pp-k">Expected range today: Rs {low:,.0f} to Rs {high:,.0f}{inside} '
+    rng = (f'<div class="pp-rangebox"><div class="pp-k">Typical range today: Rs {low:,.0f} to Rs {high:,.0f}{inside} '
            f'<span style="opacity:.7">(yesterday\'s close plus or minus a typical day\'s swing)</span></div>'
            f'{range_bar(low, high, result["prev_close"], result["actual"], "Now" if result["status"] == "live" else "Close")}</div>')
     rows = []
@@ -276,8 +276,8 @@ def prediction_panel(result, status_text="", footer="", stats=None, ml=None, lea
                       f'{rec["next 20 days"]["last 30% of dates"]["accuracy"] * 100:.0f}% over 20 days')
         rows.append(f'<tr title="{e(en["why"])}"><td class="pp-sname">{e(en["name"])}</td>'
                     f'<td class="pp-vote {cls[name] if avail else "flat"}">{word}</td><td>{e(en["reading"])}</td><td class="pp-test">{tested}</td></tr>')
-    table = ('<div class="pp-sec">The five strategies behind the call<small>hover a row to read why</small></div>'
-             '<table class="pp-table"><tr><th>Strategy</th><th>Vote</th><th>What it sees</th><th>Back-test: how often it was right</th></tr>'
+    table = ('<div class="pp-sec">The five strategies behind the reading<small>hover a row to read why</small></div>'
+             '<table class="pp-table"><tr><th>Strategy</th><th>Vote</th><th>What it sees</th><th>Back-test: how often it matched the next move</th></tr>'
              + "".join(rows) + "</table>") if rows else ""
     foot = f'<div class="pp-foot">{footer}</div>' if footer else ""
     return f'<div class="pp">{head}{say}<div class="pp-stats">{call}{mlc}{out}</div>{rng}{table}{learn}{foot}</div>'
