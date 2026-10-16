@@ -224,25 +224,6 @@ def _cmt_result(symbol, hist, offline):
 
 
 @guard()
-def _prediction(symbol, name, hist, offline):
-    """The slim live card: how today is going against the strategies' reading, with the typical range."""
-    result, info = _cmt_result(symbol, hist, offline)
-    by_cmt = result is not None
-    if result is None:                                   # a young listing: fall back to the indicator vote so the card still works
-        result, info = daily_ui.evaluate_now(symbol, hist, offline)
-    if result is None:
-        st.caption("Not enough history for this company to make a reading.")
-        show_disclaimer()
-        return
-    status = {"live": "Live: market open, updating", "final": "Final for the day", "pending": "Waiting for the market to open"}[result["status"]]
-    st.markdown(vis.today_strip(result, status), unsafe_allow_html=True)
-    if not by_cmt:
-        st.caption("Not enough history for the CMT strategies on this company, so the six-indicator vote is used instead.")
-    if info["note"]:
-        st.caption(info["note"])
-
-
-@guard()
 def _full_view_body(name, result, ml, rating):
     """The inside of a Full view pop-up."""
     if name == "ML model":
@@ -415,6 +396,5 @@ def run():
         with box:
             st.fragment(run_every=every)(_indicators)(symbol, hist, offline)
 
-    # the prediction bar has its own row, as wide as the whole page (left edge of the left column to right edge of the right panel)
-    st.fragment(run_every=every)(_prediction)(symbol, name, hist, offline)
+    # the strategies table has its own row, as wide as the whole page (left edge of the left column to right edge of the right panel)
     _strategies(symbol, hist, offline)

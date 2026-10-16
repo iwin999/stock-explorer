@@ -408,5 +408,8 @@ On the second site the "Refreshing at intervals" box in the left column is repla
 ## New in Step 70 (the ML model joins the strategies; Full views open as pop-ups)
 The big "Model reading for today" card is gone. In its place: a slim **Today so far** card (how the day is going against the strategies' reading, the typical range, and the live status), and the strategies table now has a sixth row, the **ML model**, with its own back-test numbers. Every row has a **Full view** button that opens a pop-up box (like the About box) instead of unfolding in place: the five strategies show their charts, the Fusion stage shows the four-group guide in full (no inner scrolling), and the **ML model** shows today's reading, a bar chart of what pushed it, and how it was built and tested. The ML model is a second opinion and is not counted in the barometer.
 
+## New in Step 71 (the Today so far card is gone)
+The slim "Today so far" card was removed from the second site's dashboard: it repeated what the barometer and the strategies already show. The strategies table now follows straight after the chart and the paper-trading bar. The outcome comparison and typical-range bar are no longer on the dashboard (the real site's Daily check tab still has them).
+
 ## Status
 All 8 features are built.

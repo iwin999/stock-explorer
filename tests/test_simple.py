@@ -234,3 +234,14 @@ def test_the_second_site_has_its_own_leaderboard_and_its_own_accounts():
         assert not app.exception
         text = " ".join(m.value for m in app.markdown)
         assert "Leaderboard" in text and "Zed" in text and "Yara" in text and "RealOnly" not in text
+
+
+def test_the_dashboard_has_no_today_so_far_card_but_keeps_the_strategies_table():
+    store, app = _app("Tidy", phone=False)
+    a, b = _patches(store)
+    with a, b:
+        app.run()
+        assert not app.exception and not _errors(app)
+        text = " ".join(m.value for m in app.markdown)
+        assert "Today so far" not in text and "Model reading for today" not in text
+        assert "The strategies behind the reading" in text and len([x for x in app.button if x.key and x.key.startswith("sv_")]) == 6

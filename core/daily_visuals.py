@@ -222,44 +222,6 @@ def learn_strip():
     return f'<div class="sc-head">Learn the analysis (hover a ? for a quick explanation)</div><div class="lh-row">{chips}</div>'
 
 
-def _say(result):
-    """One plain sentence: how many strategies lean which way, and how the day is going against that call."""
-    p = result["prediction"]
-    voters = [v for v in result["votes"] if v["voting"]]
-    ups = sum(1 for v in voters if v["vote"] > 0)
-    downs = sum(1 for v in voters if v["vote"] < 0)
-    if p == "Sideways":
-        first = f"The strategies are split ({ups} up, {downs} down), so the model reading is <b>sideways</b>."
-    else:
-        n = ups if p == "Up" else downs
-        first = f"{n} of the {len(voters)} strategies read <b>{p.lower()}</b>, so the model reading is <b>{p.lower()}</b>."
-    if result["actual"] is None:
-        return first + " The market has not opened yet, so there is nothing to compare."
-    a = result["actual_direction"]
-    move = {"Up": "up", "Down": "down", "Sideways": "flat"}[a]
-    verb = "So far today the price is" if result["status"] == "live" else "Today the price was"
-    amount = f" {abs(result['change']) * 100:.2f}%" if a != "Sideways" else f" ({result['change'] * 100:+.2f}%)"
-    verdict = "matches" if result["matched"] else "does not match"
-    return f"{first} {verb} <b>{move}</b>{amount}, which <b>{verdict}</b> that reading{' so far' if result['status'] == 'live' else ''}."
-
-
-def today_strip(result, status_text=""):
-    """A slim live card: how today is going against the strategies' reading, and the typical range with the price on it."""
-    p = result["prediction"]
-    edge = {"Up": "#26a69a", "Down": "#ef5350", "Sideways": "#9aa3b2"}[p]
-    live = "live" in status_text.lower()
-    low, high = result["range"]
-    inside = ""
-    if result["actual"] is not None:
-        inside = f' &middot; the price is <b>{"inside" if result["in_range"] else "outside"}</b> it'
-    return (f'<div class="pp"><div class="pp-head"><div class="pp-title">Today so far</div>'
-            f'<div class="pp-live{" on" if live else ""}"><i></i>{e(status_text)}</div></div>'
-            f'<div class="pp-say" style="border-left-color:{edge}">{_say(result)}</div>'
-            f'<div class="pp-k">Typical range today: Rs {low:,.0f} to Rs {high:,.0f}{inside} '
-            f'<span style="opacity:.7">(yesterday\'s close plus or minus a typical day\'s swing). Educational only, not a recommendation.</span></div>'
-            f'{range_bar(low, high, result["prev_close"], result["actual"], "Now" if result["status"] == "live" else "Close")}</div>')
-
-
 # ---------------- the strategies card, with a full view of each strategy ----------------
 def _chart(series, markers=(), hlines=(), dates=None, width=820, height=250, volume=None):
     """A small SVG line chart. series: [(values, colour, width, dashed)]; markers: [(index, value, colour, shape)];
