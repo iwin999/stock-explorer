@@ -12,6 +12,7 @@ from core import cmt_strategies as cmt
 from core import daily_check as dc
 from core import daily_ui
 from core import daily_visuals as vis
+from core import ml_model
 from core import price_panel
 from core import trading_ui as tu
 from core.charts import allocation_donut, show as show_chart
@@ -24,6 +25,7 @@ from core.ui import DISCLAIMER, show_disclaimer
 
 REFRESH = {"Off": None, "15 seconds": 15, "30 seconds": 30, "1 minute": 60}     # live prices are shared for 15 seconds at a time
 PANEL_HEIGHT = 755
+PANEL_INDICATORS = ["RSI (speed)", "MACD (momentum)", "Trend strength (ADX)", "Z-score", "Supertrend", "Bollinger band"]
 
 CSS = """<style>
 .stApp [data-testid="stMainBlockContainer"], .stApp .block-container { padding-top: 3.2rem !important; max-width: 100% !important; }
@@ -163,16 +165,20 @@ def _headline(symbol, name, hist, offline):
                 unsafe_allow_html=True)
 
 
+def _bench_close(symbol):
+    """The Nifty 50 closes (or the Sensex's for a BSE listing), used by relative strength and the ML estimate."""
+    bench_symbol, _ = companies.benchmark_for(symbol)
+    bench, _, _ = _history(bench_symbol)
+    return bench["Close"] if bench is not None else None
+
+
 def _cmt_result(symbol, hist, offline):
     """(result, plan) of the five-CMT-strategy call, or (None, plan) when there is too little history or no index data."""
     now = now_ist().replace(tzinfo=None)
     quote = None if offline else live_quote(symbol)
     open_now = is_market_open() and not offline
     info = dc.plan(hist, now, live_price=quote["price"] if quote else None, market_open=open_now)
-    bench_symbol, _ = companies.benchmark_for(symbol)
-    bench, _, _ = _history(bench_symbol)
-    bench_close = bench["Close"] if bench is not None else None
-    return cmt.evaluate(info["basis"], bench_close, info), info
+    return cmt.evaluate(info["basis"], _bench_close(symbol), info), info
 
 
 @guard()
@@ -187,13 +193,15 @@ def _prediction(symbol, name, hist, offline):
         return
     status = {"live": "Live: market open, updating", "final": "Final for the day", "pending": "Waiting for the market to open"}[result["status"]]
     stats = cmt.load_stats()
-    tiles, note = "", ""
+    tiles, note, ml = "", "", None
     if by_cmt:
         tiles = vis.strategy_tiles(result["votes"], stats)
+        ml = ml_model.estimate(info["basis"], _bench_close(symbol))
         note = ""                                  # the tiles carry their own back-test lines, so no paragraph is needed
     else:
         note = "Not enough history for the CMT strategies on this company, so the six-indicator vote is used instead."
-    st.markdown(vis.prediction_bar(result, status, f"<b>Disclaimer.</b> {DISCLAIMER}", tiles, note), unsafe_allow_html=True)
+    st.markdown(vis.prediction_bar(result, status, f"<b>Disclaimer.</b> {DISCLAIMER}", tiles, note, ml=ml, learn=vis.learn_strip()),
+                unsafe_allow_html=True)
     if info["note"]:
         st.caption(info["note"])
 
@@ -205,8 +213,9 @@ def _indicators(symbol, hist, offline):
         st.caption("Not enough history for the indicators.")
         return
     st.markdown(f'<div class="tm-h">Indicators for {companies.code_of(symbol)} (hover for a description)</div>', unsafe_allow_html=True)
-    ordered = [v for v in result["votes"] if v["voting"]] + [v for v in result["votes"] if not v["voting"]]
-    st.markdown("".join(vis.terminal_card(v) for v in ordered), unsafe_allow_html=True)
+    by_name = {v["name"]: v for v in result["votes"]}
+    chosen = [by_name[n] for n in PANEL_INDICATORS if n in by_name]             # the six that matter most, nicely drawn
+    st.markdown("".join(vis.terminal_card(v) for v in chosen), unsafe_allow_html=True)
 
 
 @st.dialog("Paper trade", width="large")

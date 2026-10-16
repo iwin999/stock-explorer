@@ -69,6 +69,14 @@ CSS = """<style>
 .sc-t { font-size:.74rem; color:var(--tm-muted,#6b7785); margin-top:.45rem; }
 .pb-note { margin-top:.9rem; font-size:.84rem; line-height:1.5; color:var(--tm-muted,#6b7785); }
 .pb-foot { margin-top:.8rem; padding-top:.7rem; border-top:1px solid var(--tm-line,#dfe3ea); font-size:.76rem; line-height:1.5; color:var(--tm-muted,#6b7785); }
+.lh-row { display:flex; flex-wrap:wrap; gap:.45rem .5rem; }
+.lh { position:relative; display:inline-flex; align-items:center; gap:.35rem; border:1px solid var(--tm-line,#dfe3ea); border-radius:99px; padding:.2rem .65rem; font-size:.82rem; cursor:help; color:var(--tm-ink,#1d3557); }
+.lh b { display:inline-flex; width:1.05rem; height:1.05rem; border-radius:50%; background:rgba(128,128,128,.22); align-items:center; justify-content:center; font-size:.7rem; }
+.lh .tip { visibility:hidden; opacity:0; transition:opacity .15s; position:absolute; bottom:calc(100% + .5rem); left:0; z-index:50; width:21rem; max-width:80vw; background:#1e222d; color:#e6e9ef; border-radius:10px; padding:.7rem .85rem; font-size:.82rem; line-height:1.45; box-shadow:0 6px 24px rgba(0,0,0,.35); text-align:left; }
+.lh .tip b { display:inline; width:auto; height:auto; background:none; font-size:.85rem; color:#fff; }
+.lh:hover .tip { visibility:visible; opacity:1; }
+.lh:nth-child(n+8) .tip { left:auto; right:0; }
+.pb-main.four { grid-template-columns:1fr 1fr 1fr 1.7fr; }
 @media (max-width:1100px){ .sc-row { grid-template-columns:repeat(2,1fr); } .pb-main { grid-template-columns:1fr; } }
 @media (max-width:640px){ .dc-hero{gap:.7rem;padding:.8rem} .dc-badge{width:3.6rem;height:3.6rem;font-size:1.6rem} .dc-call{font-size:1.5rem} .dc-bars .lab{width:6rem} }
 </style>"""
@@ -157,24 +165,24 @@ EXPLAIN = {
     "Money flow (MFI)": "RSI that also counts trading volume: the balance of money flowing in and out. Below 20 means selling pressure may be exhausted; above 80 means buying may be crowded.",
     "Where it closed": "Where the last day ended between its low and its high. Closing at the very low often sees a bounce the next day; closing at the very high often sees a pause.",
     "Yesterday's move": "How much the price moved yesterday. After a sharp fall prices often rebound a little; after a sharp jump they often pull back a little.",
-    "RSI (speed)": "A score from 0 to 100 of how fast the price has been rising or falling. Above 70 it has run up quickly; below 30 it has fallen quickly. Shown for context; it does not vote.",
-    "MACD (momentum)": "Compares a quick and a slow average of the price. Above its signal line the momentum is rising; below it, fading. Shown for context; it does not vote.",
-    "Trend strength (ADX)": "How strong a trend is, whichever way it points. Above 20 is a real trend. The pointer shows whether buyers or sellers are in the lead. Shown for context; it does not vote.",
-    "Supertrend": "A line that trails the price and flips when the trend reverses. Price above the line is an uptrend, below it a downtrend. Shown for context; it does not vote.",
-    "Ichimoku cloud": "A shaded zone built from past highs and lows that acts as support and resistance. Price above the cloud is bullish, below it bearish. Shown for context; it does not vote.",
-    "Volume": "Today's trading activity compared with the usual level. Busy trading makes a move more believable. Shown for context; it does not vote.",
+    "RSI (speed)": "A score from 0 to 100 of how fast the price has been rising or falling. Above 70 it has run up quickly; below 30 it has fallen quickly.",
+    "MACD (momentum)": "Compares a quick and a slow average of the price. Above its signal line the momentum is rising; below it, fading.",
+    "Trend strength (ADX)": "How strong a trend is, whichever way it points. Above 20 is a real trend. The pointer shows whether buyers or sellers are in the lead.",
+    "Supertrend": "A line that trails the price and flips when the trend reverses. Price above the line is an uptrend, below it a downtrend.",
+    "Ichimoku cloud": "A shaded zone built from past highs and lows that acts as support and resistance. Price above the cloud is bullish, below it bearish.",
+    "Z-score": "How many standard deviations the price is from its own 20-day average. Above +2 the price is unusually high and often drifts back; below -2 it is unusually low and often bounces. Between is normal.",
+    "Volume": "Today's trading activity compared with the usual level. Busy trading makes a move more believable.",
 }
 
 
 def terminal_card(entry):
-    """A compact indicator card for the Terminal view's right panel. Hover it for the description."""
+    """A compact indicator card for the dashboard's right panel: its name, which way it leans, and a gauge. Hover for a description."""
     name = VOTE_NAME[entry["vote"]]
-    word = ("Neutral" if name == "Sideways" else name) if entry["voting"] else entry["reading"]
+    word = {"Up": "Leans up", "Down": "Leans down", "Sideways": "Neutral"}[name]
     tip = EXPLAIN.get(entry["name"], entry["why"])
-    badge = "VOTES" if entry["voting"] else "context"
-    return (f'<div class="dc-card tm{"" if entry["voting"] else " ctx"}" title="{e(tip)}">'
-            f'<div class="dc-name"><span>{e(entry["name"])} <small style="opacity:.55;font-weight:500">{badge} &#9432;</small></span>'
-            f'<span class="dc-chip" style="background:{COLOUR[name]}">{GLYPH[name]} {e(word)}</span></div>'
+    return (f'<div class="dc-card tm" title="{e(tip)}">'
+            f'<div class="dc-name"><span>{e(entry["name"])} <small style="opacity:.55;font-weight:500">&#9432;</small></span>'
+            f'<span class="dc-chip" style="background:{COLOUR[name]}">{GLYPH[name]} {word}</span></div>'
             f'{scale_html(entry["gauge"])}</div>')
 
 
@@ -205,7 +213,7 @@ def strategy_tiles(entries, stats=None):
     return '<div class="sc-head">The five strategies behind the call (hover a tile to read why)</div><div class="sc-row">' + "".join(tiles) + "</div>"
 
 
-def prediction_bar(result, status_text="", footer="", strategies="", note=""):
+def prediction_bar(result, status_text="", footer="", strategies="", note="", ml=None, learn=""):
     """The prediction panel: a header with a status pill, three boxes (the call with a vote meter, what happened so far, the expected
     range), then the strategy tiles, a one-paragraph note and the footer."""
     p = result["prediction"]
@@ -236,9 +244,44 @@ def prediction_bar(result, status_text="", footer="", strategies="", note=""):
         inside = "Inside" if result["in_range"] else "Outside"
         rng = (f'<div class="pb-box"><div class="pb-l">Expected range &middot; {inside.lower()} so far</div><div class="pb-rng"><span>Rs {low:,.0f}</span><span>Rs {high:,.0f}</span></div>'
                f'{range_bar(low, high, result["prev_close"], result["actual"], "Now" if result["status"] == "live" else "Close", ends=False)}</div>')
+    ml_html = ""
+    if ml:
+        lean = ml["lean"]
+        mcol = COLOUR.get(lean, FLAT_C)
+        word = {"Up": "Up", "Down": "Down", "None": "No clear view"}[lean]
+        held = ml["tested"].get("last 30% of dates (held back)", {})
+        conf = held.get("confident_accuracy")
+        drivers = ", ".join(f"{n} ({'up' if v > 0 else 'down'})" for n, v in ml["top"])
+        tested = (f'Held-back test: right {held["accuracy"] * 100:.0f}% overall, {conf * 100:.0f}% on its confident days' if conf else "")
+        ml_html = (f'<div class="pb-box" title="Biggest influences today: {e(drivers)}. {e(tested)}.">'
+                   f'<div class="pb-l">ML estimate</div><div class="pb-big"><div class="pb-badge" style="background:{_tint(mcol, .16)};color:{mcol}">{GLYPH.get(lean, "&bull;")}</div>'
+                   f'<div><div class="pb-word" style="color:{mcol};font-size:{1.9 if lean != "None" else 1.25}rem">{word}</div></div></div>'
+                   f'<div class="pb-line">{ml["p_up"] * 100:.0f}% chance it closes higher</div>'
+                   f'<div class="pb-meterl">{e(tested)}</div></div>')
     live = "live" in status_text.lower()
     pill = f'<span class="pb-pill{" live" if live else ""}"><i></i>{e(status_text)}</span>' if status_text else ""
     head = (f'<div class="pb-head"><div><div class="pb-title">Today\'s prediction</div><div class="pb-sub">Based on data up to {result["basis_date"]:%A %d %b} (close Rs {result["prev_close"]:,.2f})</div></div>{pill}</div>')
     note_html = f'<div class="pb-note">{note}</div>' if note else ""
     foot = f'<div class="pb-foot">{footer}</div>' if footer else ""
-    return f'<div class="pb">{head}<div class="pb-main">{call}{what}{rng}</div>{strategies}{note_html}{foot}</div>'
+    return f'<div class="pb">{head}<div class="pb-main{" four" if ml_html else ""}">{call}{ml_html}{what}{rng}</div>{strategies}{learn}{note_html}{foot}</div>'
+
+
+# Basic explanations for the "Learn the analysis" strip (hover a ? to read one)
+HINTS = {
+    "Fusion stage": "From CMT Level III, Chapter 8. It asks whether the price is in a clear uptrend (above a rising 200-day average, 50-day above 200-day) and also beating the market over six months. A stock that passes is in the 'Winner's Circle' trend test and tends to keep trending.",
+    "Dow Theory": "From CMT Level I. An uptrend is a series of higher highs and higher lows; a downtrend is lower highs and lower lows. If both the swing highs and the swing lows agree, the trend is confirmed.",
+    "Relative strength": "Compares the stock with the Nifty 50 (or Sensex). If the stock's line against the index is rising, it is beating the market, which usually signals leadership.",
+    "Wyckoff effort vs result": "From the Wyckoff method. Effort is trading volume; result is how far the price moved. Big volume with a big move follows the move. Big volume with little movement means the other side is absorbing it: at lows that can be a bottom, at highs a top.",
+    "Fibonacci confluence": "Prices often pause at 38.2%, 50% and 61.8% of the previous swing. A pullback in an uptrend that stops at one of those levels is a common support; a bounce in a downtrend that stops there is a common resistance.",
+    "RSI": EXPLAIN["RSI (speed)"], "MACD": EXPLAIN["MACD (momentum)"], "ADX": EXPLAIN["Trend strength (ADX)"],
+    "Z-score": EXPLAIN["Z-score"], "Supertrend": EXPLAIN["Supertrend"], "Bollinger band": EXPLAIN["Bollinger band"],
+    "ML estimate": "A small machine-learning model (a logistic regression) that looks at the five CMT votes and a dozen indicator readings and gives the chance that the next day closes higher. It was trained on 137 NSE companies and checked on dates it had never seen. It is a second opinion, not a promise.",
+    "Expected range": "Yesterday's close plus or minus a typical day's swing. About two days in three finish inside it. The blue marker is today's price and the tick is yesterday's close.",
+    "The call": "The five CMT strategies each vote Up, Down or Neutral. Two or more net votes decide: Up, Down or Sideways. The coloured segments are the five votes.",
+}
+
+
+def learn_strip():
+    """A row of small ? chips; hovering one shows a short plain-words explanation of that piece of analysis."""
+    chips = "".join(f'<span class="lh">{e(n)} <b>?</b><span class="tip"><b>{e(n)}</b><br>{e(t)}</span></span>' for n, t in HINTS.items())
+    return f'<div class="sc-head">Learn the analysis (hover a ? for a quick explanation)</div><div class="lh-row">{chips}</div>'

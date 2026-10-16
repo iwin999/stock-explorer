@@ -68,6 +68,7 @@ def indicator_frame(hist):
     span_b = ((high.rolling(52).max() + low.rolling(52).min()) / 2).shift(26)
     frame["cloud_top"], frame["cloud_bot"] = np.maximum(span_a, span_b), np.minimum(span_a, span_b)
     frame["daily_vol"] = close.pct_change().rolling(60, min_periods=20).std()
+    frame["zscore"] = ((close - close.rolling(20).mean()) / close.rolling(20).std().replace(0, np.nan)).clip(-4, 4)
     vol = ind.clean_volume(hist)
     if vol is not None:
         frame["vol_ratio"] = vol.rolling(5).mean() / vol.shift(5).rolling(20).mean()
@@ -94,11 +95,15 @@ def _entry(name, voting, vote, reading, why, gauge):
     return {"name": name, "voting": voting, "vote": vote, "reading": reading, "why": why, "gauge": gauge}
 
 
-def _with_real_gauges(entries, real):
+def _with_real_gauges(entries, real, entries_row=None):
     """Swap each indicator's gauge for the real site's Key-signals style one, and add the Volatility reading."""
     for e in entries:
         if e["name"] in real:
             e["gauge"] = real[e["name"]]
+    if "Z-score" in real and entries_row is not None:
+        z = entries_row["zscore"]
+        entries.append(_entry("Z-score", False, -1 if z > 2 else 1 if z < -2 else 0, f"{z:+.1f} sigma", "How far the price is from its 20-day average",
+                              real["Z-score"]))
     if "Volatility" in real:
         entries.append(_entry("Volatility", False, 0, f"{real['Volatility']['label']}", "How much the price swings in a year", real["Volatility"]))
     return entries
@@ -169,6 +174,9 @@ def key_signal_gauges(row):
         busy = vr >= ind.VOLUME_STRONG and abs(m) > 0.01
         out["Volume"] = _grade(0.5 + max(-1.0, min(1.0, push)) / 2, ("Busy buying" if m > 0 else "Busy selling") if busy else "Normal",
                                "Busy selling", "Busy buying")
+    if pd.notna(row["zscore"]):
+        z = row["zscore"]
+        out["Z-score"] = _grade(0.5 - z / 6, "Stretched high" if z > 2 else "Stretched low" if z < -2 else "Normal", "Stretched high", "Stretched low")
     if pd.notna(row["daily_vol"]):
         vol = row["daily_vol"] * np.sqrt(252) * 100
         out["Volatility"] = _grade(1 - _clip((vol - 10) / 40), "Calm" if vol < 20 else "Moderate" if vol < 35 else "High", "Very bumpy", "Calm")
@@ -250,7 +258,7 @@ def votes(row, scales=False):
         vote = 1 if vr >= ind.VOLUME_STRONG and m > 0.01 else -1 if vr >= ind.VOLUME_STRONG and m < -0.01 else 0
         out.append(_entry("Volume", False, vote, f"{vr:.1f}x usual", "Busy trading makes a move more believable",
                           _gauge(0.5 + (vr - 1) / 2, "Busy" if vr >= 1.15 else "Thin" if vr <= 0.85 else "Normal", "Thin", "Busy")))
-    return _with_real_gauges(out, real) if scales else out
+    return _with_real_gauges(out, real, row) if scales else out
 
 
 def call_from(vote_list):
