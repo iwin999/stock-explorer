@@ -13,7 +13,7 @@ import os
 import re
 import tempfile
 from datetime import datetime, timezone
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 import requests
 
@@ -150,8 +150,10 @@ def _why(error=None, resp=None):
     return reason
 
 
-def _unreachable(error=None, resp=None):
-    return StorageError(f"The online database is not answering right now. Please try again in a moment. (Detail: {_why(error, resp)})")
+def _unreachable(error=None, resp=None, base=""):
+    host = urlsplit(base).netloc if base else ""
+    where = f" at {host}" if host and resp is None and getattr(error, "response", None) is None else ""
+    return StorageError(f"The online database is not answering right now. Please try again in a moment. (Detail: {_why(error, resp)}{where})")
 
 
 class SupabaseStore:
@@ -177,7 +179,7 @@ class SupabaseStore:
             resp.raise_for_status()
             return resp
         except Exception as e:
-            raise _unreachable(e) from e
+            raise _unreachable(e, base=self.base) from e
 
     def create(self, key, name, data):
         """Insert a NEW account. A plain insert (not an upsert) is refused by the database if the key exists."""
@@ -186,13 +188,13 @@ class SupabaseStore:
         try:
             resp = self.http.post(self.base, headers=headers, timeout=15, data=json.dumps([row]))
         except Exception as e:
-            raise _unreachable(e) from e
+            raise _unreachable(e, base=self.base) from e
         if getattr(resp, "status_code", 200) == 409:
             raise NameTaken(f"The name “{name}” is already taken.")
         try:
             resp.raise_for_status()
         except Exception as e:
-            raise _unreachable(e, resp) from e
+            raise _unreachable(e, resp, self.base) from e
 
     def update(self, key, data):
         """Change an EXISTING account only. Returns False if no such account exists (nothing is created)."""
