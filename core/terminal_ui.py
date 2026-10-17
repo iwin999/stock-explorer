@@ -20,7 +20,7 @@ from core import trading_ui as tu
 from core.charts import allocation_donut, show as show_chart
 from core.errors import guard, calm
 from core.formatting import format_inr
-from core.live import live_quote
+from core.live import in_parallel, live_quote
 from core.market_data import get_company_name, get_history_with_source
 from core.market_hours import is_market_open, now_ist, status_message
 from core.ui import DISCLAIMER, show_disclaimer
@@ -155,9 +155,9 @@ def _lists():
                     f'<div style="text-align:right" class="{kind}">{format_inr(o["pnl"], 0)}</div></div>', unsafe_allow_html=True)
 
 
-@st.cache_data(ttl=10, show_spinner=False)
+@st.cache_data(ttl=30, show_spinner=False)
 def _leaderboard_rows(site):
-    """Everyone's rank on THIS site, best return first (cached for 10 seconds; `site` keeps the two sites' lists apart)."""
+    """Everyone's rank on THIS site, best return first (cached for 30 seconds; `site` keeps the two sites' lists apart)."""
     from core import portfolio_ui
     return portfolio_ui._ranked(tu.get_store().all())
 
@@ -215,13 +215,24 @@ def _bench_close(symbol):
     return bench["Close"] if bench is not None else None
 
 
-def _cmt_result(symbol, hist, offline):
-    """(result, plan) of the five-CMT-strategy call, or (None, plan) when there is too little history or no index data."""
+@st.cache_data(ttl=300, show_spinner=False, max_entries=64)
+def _strategy_pack(symbol, last_day, price, open_now, _hist):
+    """(result, plan, ML estimate) for one company. The arguments before `_hist` are what the answer depends on (the company, the
+    last day of data, the live price and whether the market is open), so it is worked out once and reused by every click and by both
+    the barometer and the strategies table, instead of again on each rerun."""
     now = now_ist().replace(tzinfo=None)
+    info = dc.plan(_hist, now, live_price=price, market_open=open_now)
+    bench = _bench_close(symbol)
+    result = cmt.evaluate(info["basis"], bench, info)
+    ml = ml_model.estimate(info["basis"], bench) if result is not None else None
+    return result, info, ml
+
+
+def _cmt_result(symbol, hist, offline):
+    """(result, plan, ML estimate) of the five-CMT-strategy call, or (None, plan, None) when there is too little history or no index data."""
     quote = None if offline else live_quote(symbol)
-    open_now = is_market_open() and not offline
-    info = dc.plan(hist, now, live_price=quote["price"] if quote else None, market_open=open_now)
-    return cmt.evaluate(info["basis"], _bench_close(symbol), info), info
+    price = round(float(quote["price"]), 2) if quote else None
+    return _strategy_pack(symbol, str(hist.index[-1]), price, bool(is_market_open() and not offline), hist)
 
 
 @guard()
@@ -243,11 +254,10 @@ def _open_full_view(name, result, ml, rating):
 def _strategies(symbol, hist, offline):
     """The strategies card: the five CMT strategies and the ML model as rows, each with a Full view pop-up. They only use yesterday's data
     and earlier, so this card does not change during the day and is not refreshed on a timer."""
-    result, info = _cmt_result(symbol, hist, offline)
+    result, info, ml = _cmt_result(symbol, hist, offline)
     if result is None:
         show_disclaimer()
         return
-    ml = ml_model.estimate(info["basis"], _bench_close(symbol))
     try:
         from core import fusion_ui
         rating = fusion_ui.company_row(symbol)            # the company's Winner's Circle group, if its company results are available
@@ -275,7 +285,7 @@ def _strategies(symbol, hist, offline):
 @guard()
 def _barometer(symbol, hist, offline):
     """How the five strategies read together for this company, as a simple dial."""
-    result, _ = _cmt_result(symbol, hist, offline)
+    result, _, _ = _cmt_result(symbol, hist, offline)
     if result is None:
         st.caption("Not enough history for the strategies.")
         return
@@ -382,6 +392,7 @@ def run():
     with mid:
         with st.container(key="tm_search"):
             symbol = company_search.choose(compact=True)
+        in_parallel([(_history, symbol), (_history, companies.benchmark_for(symbol)[0]), (live_quote, symbol), (_name, symbol)])
         name = _name(symbol)
         hist, source, last_date = _history(symbol)
         offline = source == "offline"
@@ -391,7 +402,7 @@ def run():
             return
         st.fragment(run_every=every)(_headline)(symbol, name, hist, offline)
         with st.container(key="tm_chartarea"):
-            price_panel.render(hist, symbol, name, header=False, height=520, explain=False, compact=True)
+            st.fragment(price_panel.render)(hist, symbol, name, header=False, height=520, explain=False, compact=True)    # its own controls redraw only the chart
 
         price = float(live_quote(symbol)["price"]) if (not offline and live_quote(symbol)) else float(hist["Close"].iloc[-1])
         with st.container(key="tm_trade"):

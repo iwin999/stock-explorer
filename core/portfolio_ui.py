@@ -11,7 +11,7 @@ from core import instruments as ins
 from core import valuation as val
 from core.charts import show as show_chart, allocation_donut
 from core.formatting import format_inr, format_ist
-from core.live import spot_price, vol_estimate
+from core.live import prefetch_quotes, spot_price, vol_estimate
 from core.market_hours import now_ist
 from core.trading import Portfolio
 from core.trading_ui import (exit_all_control, _get_portfolio, _refresh_every, _save, _sign_out, admin_pin, get_store,
@@ -180,9 +180,16 @@ def _builder(pf):
 # ---------------- leaderboard (updates live) ----------------
 def _ranked(records):
     rows = []
+    parsed = []
     for rec in records:
         try:
-            pf = Portfolio.from_dict(rec["data"])
+            parsed.append((rec, Portfolio.from_dict(rec["data"])))
+        except Exception:
+            continue
+    # every holding needs a live price: fetch them all at once instead of one after another
+    prefetch_quotes([s for _, pf in parsed for s in list(pf.holdings) + [d["underlying"] for d in pf.derivatives]])
+    for rec, pf in parsed:
+        try:
             snap = val.snapshot(pf, spot_price, vol_estimate)
         except Exception:
             continue

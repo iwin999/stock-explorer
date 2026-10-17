@@ -420,5 +420,8 @@ A **Tour** button now sits in the top bar of both the dashboard (Dashboard view 
 ## New in Step 74 (calm messages, clearer database errors)
 Anything that goes wrong (the online database not answering, a missing portfolio, a file that could not be restored, price data not loading) now shows a quiet grey note in normal text instead of a red box, so it never looks like a panic. When the online database refuses a request, the note now ends with a short detail (for example the web status and Supabase's own wording, never the key) and the same detail goes to the app log, so a set-up mistake such as a wrong key or a missing table can be told apart from a passing network blip.
 
+## New in Step 75 (faster)
+The second site was slow for three reasons, now fixed. (1) The leaderboard looked up the live price of every holding of every user one after another (8 holdings took about 7 seconds, and it grows with every new user); they are now fetched at the same time, and the same is done for a company's price history, the index and its live price when you pick it. (2) The strategies table and the barometer each recalculated all five strategies and the ML model on every click; the answer is now worked out once per company and price and reused. (3) The chart's own buttons (Day/Week/Month, 1/2/4 charts, Fibonacci, Dark) now redraw only the chart instead of the whole page. The leaderboard is also kept for 30 seconds instead of 10, so the database is asked less often. Measured here with real prices: picking a new company went from about 1.7 to 1.1 seconds, and the Dark mode switch from up to 0.9 to 0.1 seconds.
+
 ## Status
 All 8 features are built.
