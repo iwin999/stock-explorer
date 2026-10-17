@@ -90,7 +90,7 @@ CSS = """<style>
 .fg-name { font-weight:700; font-size:1rem; } .fg-tag { margin-left:.5rem; font-size:.72rem; font-weight:700; color:var(--tm-accent,#2f5597); text-transform:uppercase; letter-spacing:.05em; }
 .fg-rule { color:var(--tm-muted,#6b7785); margin:.15rem 0 .3rem 0; } .fg-verdict { margin-top:.4rem; font-size:.88rem; line-height:1.45; }
 @media (max-width:1100px){ .fg-cards { grid-template-columns:1fr; } }
-.bm { text-align:center; } .bm .up { color:var(--pp-up,#158a7e); } .bm .down { color:var(--pp-down,#d6453d); } .bm .flat { color:var(--pp-flat,#6b7785); } .bm svg { width:100%; max-width:10rem; height:auto; display:block; margin:.2rem auto 0 auto; }
+.bm { text-align:center; padding-bottom:1rem; }       /* Streamlit pulls a text block's end up by 1rem; this puts the gap back so the box has equal space on every side */ .bm .up { color:var(--pp-up,#158a7e); } .bm .down { color:var(--pp-down,#d6453d); } .bm .flat { color:var(--pp-flat,#6b7785); } .bm svg { width:100%; max-width:10rem; height:auto; display:block; margin:.2rem auto 0 auto; }
 .bm-word { font-size:1.45rem; font-weight:700; line-height:1.15; margin-top:.1rem; } .bm-sub { font-size:.92rem; color:var(--tm-muted,#6b7785); margin-top:.25rem; line-height:1.4; }
 .bm-ends { display:flex; justify-content:space-between; font-size:.78rem; color:var(--tm-muted,#6b7785); margin:-.1rem .35rem 0 .35rem; }
 @media (max-width:640px){ .dc-hero{gap:.7rem;padding:.8rem} .dc-badge{width:3.6rem;height:3.6rem;font-size:1.6rem} .dc-call{font-size:1.5rem} .dc-bars .lab{width:6rem} }

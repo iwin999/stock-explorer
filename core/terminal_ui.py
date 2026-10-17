@@ -33,6 +33,10 @@ CSS = """<style>
 .stApp [data-testid="stMainBlockContainer"], .stApp .block-container { padding-top: 3.2rem !important; max-width: 100% !important; }
 .stApp [data-testid="stLayoutWrapper"]:has(> .st-key-tm_ind), .stApp [data-testid="stLayoutWrapper"]:has(> .st-key-tm_lists) { flex:1 1 0 !important; height:auto !important; min-height:100px; }
 .st-key-tm_ind, .st-key-tm_lists { height:100% !important; }
+/* the left column gives its spare height to the holdings box only; the other boxes keep their full height, so nothing is squeezed against a border */
+.stApp [data-testid="stLayoutWrapper"]:has(> .st-key-tm_ring), .stApp [data-testid="stLayoutWrapper"]:has(> .st-key-tm_board), .stApp [data-testid="stLayoutWrapper"]:has(> .st-key-tm_baro) { flex:0 0 auto !important; height:auto !important; }
+.st-key-tm_ring > *, .st-key-tm_board > *, .st-key-tm_baro > * { flex-shrink:0 !important; min-height:fit-content; }
+.st-key-tm_ring .tm-h, .st-key-tm_board .tm-h, .st-key-tm_baro .tm-h, .st-key-tm_ind .tm-h { margin-top:0; }     /* the same gap above the heading as below the last line */
 [data-testid="stDialog"] [data-testid="stMetric"] { background:rgba(128,128,128,.06); border:1px solid rgba(128,128,128,.28); border-radius:10px; padding:.7rem .95rem; }
 [data-testid="stDialog"] [data-testid="stMetricLabel"], [data-testid="stDialog"] [data-testid="stMetricLabel"] * { font-size:.85rem !important; font-weight:500; letter-spacing:.01em; opacity:.75; }
 [data-testid="stDialog"] [data-testid="stMetricValue"], [data-testid="stDialog"] [data-testid="stMetricValue"] * { font-size:1.55rem !important; font-weight:650 !important; line-height:1.25; letter-spacing:-.01em; font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1, "lnum" 1; }
@@ -379,7 +383,7 @@ def run():
 
     with left:
         lists_box = st.container(height=290, border=True, key="tm_lists")
-        ring_box = st.container(border=True)
+        ring_box = st.container(border=True, key="tm_ring")
         board_box = st.container(border=True, key="tm_board")
         baro_box = st.container(border=True, key="tm_baro")
     with lists_box:

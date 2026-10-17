@@ -423,5 +423,8 @@ Anything that goes wrong (the online database not answering, a missing portfolio
 ## New in Step 75 (faster)
 The second site was slow for three reasons, now fixed. (1) The leaderboard looked up the live price of every holding of every user one after another (8 holdings took about 7 seconds, and it grows with every new user); they are now fetched at the same time, and the same is done for a company's price history, the index and its live price when you pick it. (2) The strategies table and the barometer each recalculated all five strategies and the ML model on every click; the answer is now worked out once per company and price and reused. (3) The chart's own buttons (Day/Week/Month, 1/2/4 charts, Fibonacci, Dark) now redraw only the chart instead of the whole page. The leaderboard is also kept for 30 seconds instead of 10, so the database is asked less often. Measured here with real prices: picking a new company went from about 1.7 to 1.1 seconds, and the Dark mode switch from up to 0.9 to 0.1 seconds.
 
+## New in Step 76 (even spacing in the left boxes)
+The "Combined strategy reading" box had its last line pressed against the bottom border, and the same squeeze affected the leaderboard box. Two causes: the left column was shrinking the boxes to fit, and Streamlit trims 1rem off the end of every text block, which cut the bottom padding of the dial. The boxes now keep their full height, the gap is put back, and the heading sits the same distance from the top as the last line does from the bottom (about 16 px on the top, left and bottom).
+
 ## Status
 All 8 features are built.
