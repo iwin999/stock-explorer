@@ -1,6 +1,6 @@
 """The Dashboard (terminal) view of the SIMPLE site: the whole job on one screen, laid out like a trading terminal.
 
-    top bar:  MCGS Stock Explorer                                    Portfolio value
+    top bar:  Stock Explorer                                         Portfolio value
     left   :  bought and sold list, allocation ring, refresh setting
     centre :  stock search, chart with analysis tools, Buy / Sell / Exit all, prediction comparison for today
     right  :  every indicator, with a hover description, shown relative to its value
@@ -384,7 +384,7 @@ def run():
     # top bar
     with st.container(key="tm_top"):
         c_title, c_value, c_dark, c_term, c_tour, c_info = st.columns([3.0, 2.6, 1.4, 1.7, 0.9, 0.5], vertical_alignment="center")
-        c_title.markdown(f'<div class="tm-brand">{about._crest_html()}<div class="t">MCGS Stock Explorer</div></div>', unsafe_allow_html=True)
+        c_title.markdown(f'<div class="tm-brand">{about._crest_html()}<div class="t">Stock Explorer</div></div>', unsafe_allow_html=True)
         with c_value:
             st.fragment(run_every=every)(_portfolio_value)()
         c_dark.toggle("Dark mode", key="dark_site", on_change=about._dark_changed)
