@@ -10,15 +10,16 @@ def topic(title, simple, fin, screen=None, num=None, extra=""):
             f'<div class="fin"><span class="chip f">In finance words</span>{fin}</div></div>{extra}{scr}</div>')
 
 
-CONTENTS = [("The story in one minute and the golden rules", 2), ("Part 1. The basics: companies, shares, exchanges", 3),
-            ("Reading a price: volume, candles, trends, risk", 4), ("Your portfolio, practice trading, ETFs and bonds", 5),
-            ("Futures and options", 6), ("Part 2. The screen, part by part", 7), ("The chart and its tools", 8),
-            ("Part 3. The six indicators", "9 to 10"), ("Part 4. The five strategies and the ML model", "11 to 12"),
-            ("The back-test, and why honesty matters", 13), ("Using the site, and a 3-minute demo", 14), ("Questions you will be asked, and a glossary", 15)]
+CONTENTS = [("The story in one minute and the golden rules", "p2", "p2"), ("Part 1. The basics: companies, shares, exchanges", "p3", "p3"),
+            ("Reading a price: volume, candles, trends, risk", "p4", "p4"), ("Your portfolio, practice trading, ETFs and bonds", "p5", "p5"),
+            ("Futures and options", "p6", "p6"), ("Part 2. The screen, part by part", "p7", "p7"), ("The chart and its tools", "p8", "p8"),
+            ("Part 3. The six indicators", "p9", "p10"), ("Part 4. The five strategies and the ML model", "p11", "p12"),
+            ("The back-test, and why honesty matters", "p13", "p13"), ("Using the site, and a 3-minute demo", "p14", "p14"),
+            ("Questions you will be asked, and a glossary", "p15", "p15")]
 
 
 def page1():
-    rows = "".join(f"<tr><td>{t}</td><td style='text-align:right;white-space:nowrap'>{p}</td></tr>" for t, p in CONTENTS)
+    rows = "".join(f"<tr><td>{t}</td><td style='text-align:right;white-space:nowrap'><span class=\"pgn\" data-from=\"{f}\" data-to=\"{to}\"></span></td></tr>" for t, f, to in CONTENTS)
     return f"""
 <div class="page" id="p1">
   <div style="margin-top:6mm"><div class="kicker">Presenter's guide</div>
@@ -39,10 +40,10 @@ def page1():
   <table style="margin-top:3px"><tbody>{rows}</tbody></table>
   <h2 style="margin-top:9mm">The path through this guide</h2>
   <div class="cols" style="grid-template-columns:repeat(4,1fr);gap:7px;margin-top:4px">
-    <div class="topic" style="background:#eef5ff"><div class="kicker" style="letter-spacing:.1em">Step 1</div><h3>The basics</h3><p class="small">Shares, prices, volume, candles, trends, risk, portfolios. Pages 3 to 5.</p></div>
-    <div class="topic" style="background:#eef5ff"><div class="kicker" style="letter-spacing:.1em">Step 2</div><h3>What you can trade</h3><p class="small">ETFs, bonds, futures and options. Pages 5 and 6.</p></div>
-    <div class="topic" style="background:#eef5ff"><div class="kicker" style="letter-spacing:.1em">Step 3</div><h3>The screen</h3><p class="small">A map of every box, and the chart tools. Pages 7 and 8.</p></div>
-    <div class="topic" style="background:#eef5ff"><div class="kicker" style="letter-spacing:.1em">Step 4</div><h3>The readers</h3><p class="small">Six indicators, five strategies, the ML model and the back-test. Pages 9 to 13.</p></div>
+    <div class="topic" style="background:#eef5ff"><div class="kicker" style="letter-spacing:.1em">Step 1</div><h3>The basics</h3><p class="small">Shares, prices, volume, candles, trends, risk, portfolios. [[Pgr:p3:p5]].</p></div>
+    <div class="topic" style="background:#eef5ff"><div class="kicker" style="letter-spacing:.1em">Step 2</div><h3>What you can trade</h3><p class="small">ETFs, bonds, futures and options. [[Pgr:p5:p6]].</p></div>
+    <div class="topic" style="background:#eef5ff"><div class="kicker" style="letter-spacing:.1em">Step 3</div><h3>The screen</h3><p class="small">A map of every box, and the chart tools. [[Pgr:p7:p8]].</p></div>
+    <div class="topic" style="background:#eef5ff"><div class="kicker" style="letter-spacing:.1em">Step 4</div><h3>The readers</h3><p class="small">Six indicators, five strategies, the ML model and the back-test. [[Pgr:p9:p13]].</p></div>
   </div>
   <div class="note" style="margin-top:8mm"><b class="t">Important.</b> {{SITE}} is an <b>educational project</b>. All money in it is <b>virtual</b> and nothing on it is investment advice.
   The prices come from Yahoo Finance and can be a few minutes late. Say this at the start of every presentation.</div>
@@ -77,11 +78,11 @@ def page2():
   </tbody></table>
   <h2 style="margin-top:6mm">How this guide is ordered</h2>
   <div class="cols">
-    <div class="topic tight"><p><b>Part 1, the basics (pages 3 to 6).</b> Companies, shares, prices, volume, candles, trends, risk, portfolios, ETFs, bonds, futures and options. You cannot understand an indicator without these.</p>
-    <p><b>Part 2, the screen (pages 7 and 8).</b> A map of every box on the dashboard, and the tools on the chart.</p></div>
-    <div class="topic tight"><p><b>Part 3, the indicators (pages 9 and 10).</b> The six gauges on the right.</p>
-    <p><b>Part 4, the strategies (pages 11 to 13).</b> The five strategies, the ML model, the dial and the back-test.</p>
-    <p><b>The end (pages 14 and 15).</b> A demo script, likely questions and a glossary.</p></div>
+    <div class="topic tight"><p><b>Part 1, the basics ([[pgr:p3:p6]]).</b> Companies, shares, prices, volume, candles, trends, risk, portfolios, ETFs, bonds, futures and options. You cannot understand an indicator without these.</p>
+    <p><b>Part 2, the screen ([[pgr:p7:p8]]).</b> A map of every box on the dashboard, and the tools on the chart.</p></div>
+    <div class="topic tight"><p><b>Part 3, the indicators ([[pgr:p9:p10]]).</b> The six gauges on the right.</p>
+    <p><b>Part 4, the strategies ([[pgr:p11:p13]]).</b> The five strategies, the ML model, the dial and the back-test.</p>
+    <p><b>The end ([[pgr:p14:p15]]).</b> A demo script, likely questions and a glossary.</p></div>
   </div>
   <div class="foot"><span>{{SITE}}: Presenter's guide</span><span>Educational project. Not investment advice.</span><span>2</span></div>
 </div>"""
@@ -123,8 +124,6 @@ def page4():
   <div class="head"><span class="part">Part 1. The basics</span><span class="site">{{SITE}}</span></div>
   <h1>Reading a price: volume, candles, trends and risk</h1>
   <p class="lead">Now the language of the chart. Every indicator later is built from these.</p>
-  <div class="cols">
-  <div>
   {topic("Volume",
     "<p>Volume is how many shoppers walked into the mall today. A big crowd means lots of interest. A price move that many people joined is more believable than one a few people made.</p>",
     "<p><b>Volume</b> is the number of shares traded in a period. High volume on a move <b>confirms</b> it. Low volume suggests weak conviction. Volume is shown separately from price because it measures participation, not value.</p>",
@@ -132,16 +131,12 @@ def page4():
   {topic("Open, High, Low, Close and the candle",
     "<p>Each day has a little story: where the price <b>started</b>, the <b>highest</b> and <b>lowest</b> it reached, and where it <b>finished</b>. A candle draws that story as one small shape. Green means the day ended higher than it began. Red means lower.</p>",
     "<p>The four daily prices are <b>OHLC</b>: open, high, low, close. A <b>candlestick</b> shows them: the thick <b>body</b> runs from open to close and the thin <b>wicks</b> reach the high and low. A green body means close above open.</p>",
-    "<p>Every bar on the main chart is one candle: a day, a week or a month, depending on the Day, Week and Month buttons.</p>", 2)}
-  </div>
-  <div>
-  <div class="topic" style="margin-bottom:8px"><h3>A candle, drawn</h3>{candle_svg()}<p class="small">Left: a green candle (the price rose). Right: a red candle (the price fell).</p></div>
+    "<p>Every bar on the main chart is one candle: a day, a week or a month, depending on the Day, Week and Month buttons.</p>", 2,
+    extra='<div style="max-width:105mm;margin:6px auto 2px auto">' + candle_svg() + '<p class="small" style="text-align:center">Left: a green candle (the price rose). Right: a red candle (the price fell).</p></div>')}
   {topic("Trend: up, down or sideways",
     "<p>A trend is the direction a price has been walking. Up like climbing stairs, down like descending them, or sideways like walking along a corridor.</p>",
     "<p>A <b>trend</b> is the general direction of price over time: an <b>uptrend</b> (rising highs and lows), a <b>downtrend</b>, or a <b>sideways</b> (range-bound) market. Trend-following aims to go with the trend, not against it.</p>",
     "<p>Most strategies and indicators are really different ways of asking: is there a trend, and how strong is it?</p>", 3)}
-  </div>
-  </div>
   <div class="cols">
   {topic("Risk and return",
     "<p>Return is what you might gain. Risk is how bumpy the road is on the way, and how much you could lose. A very bumpy road can lead somewhere great, or nowhere. Bigger possible gains come with bigger possible losses.</p>",
@@ -230,12 +225,12 @@ def page7():
   <tr><td>6</td><td>Bought and Sold</td><td>What you hold with profit or loss on each, and your last six sales.</td></tr>
   <tr><td>7</td><td>Where your money is</td><td>A ring showing how your money splits between stocks, ETFs, bonds, futures, options and cash. With more than two kinds, the key under it scrolls.</td></tr>
   <tr><td>8</td><td>Leaderboard</td><td>Everyone ranked by <b>percent return</b>, so a small portfolio can beat a big one. Shows the top four and you.</td></tr>
-  <tr><td>9</td><td>Combined strategy reading</td><td>A dial that combines the five strategies' votes (page 11).</td></tr>
+  <tr><td>9</td><td>Combined strategy reading</td><td>A dial that combines the five strategies' votes ([[pgr:p11:p11]]).</td></tr>
   <tr><td>10</td><td>Search stock</td><td>Type a company name, even with a small spelling slip, and press Enter. Both NSE and BSE listings work.</td></tr>
   <tr><td>11</td><td>Chart controls</td><td>1, 2 or 4 charts; Day, Week or Month candles; 6M, 1Y, 2Y or 5Y of history; Fibonacci lines; and a Dark switch for just the chart.</td></tr>
   <tr><td>12</td><td>The chart</td><td>The price history with its tools (next page).</td></tr>
   <tr><td>13</td><td>Buy, Sell, Exit all</td><td>Buy opens the order pop-up. Sell works once you hold something. Exit all sells everything at once; your starting money is not reset.</td></tr>
-  <tr><td>14</td><td>Indicators</td><td>Six gauges that read the chart (pages 9 and 10). Hover over the small i beside a name for a description.</td></tr>
+  <tr><td>14</td><td>Indicators</td><td>Six gauges that read the chart ([[pgr:p9:p10]]). Hover over the small i beside a name for a description.</td></tr>
   <tr><td>15</td><td>The strategies table</td><td>Five CMT strategies and an ML model, each with its vote and its back-test. A Full view button opens a chart and a plain explanation.</td></tr>
   <tr><td>16</td><td>The round chat button</td><td>Stays in the corner while you scroll. It opens 'Ask me anything', a helper that explains words and how the app works.</td></tr>
   </tbody></table>
@@ -248,7 +243,7 @@ def page8():
 <div class="page" id="p8">
   <div class="head"><span class="part">Part 2. The screen</span><span class="site">{{SITE}}</span></div>
   <h1>The chart and its tools</h1>
-  <p class="lead">What the lines, bands and bars on the chart mean. You met candles and volume on page 4.</p>
+  <p class="lead">What the lines, bands and bars on the chart mean. You met candles and volume on [[pgr:p4:p4]].</p>
   <div class="cols">
     <div class="topic"><h3>A chart with its tools</h3>{chart_anatomy_svg()}<p class="small">A made-up example to show the parts. A real chart has candles instead of one line.</p></div>
     <div>
@@ -268,7 +263,7 @@ def page8():
     "<p>After a swing, prices often <b>retrace</b> part of the move before continuing. <b>Fibonacci retracements</b> mark 23.6%, 38.2%, 50%, 61.8% and 78.6% of the swing; <b>extensions</b> (127.2%, 161.8%) mark possible targets beyond it. They are a guide for support and resistance, not a prediction.</p>",
     "<p>Switch on <b>Fibonacci</b> in the chart controls. The lines are drawn from the highest and lowest price in the period you are viewing.</p>")}
   </div>
-  <div class="topic" style="margin-bottom:6px"><h3>Fibonacci levels, drawn</h3><div style="max-width:74mm">{fib_svg()}</div></div>
+  <div class="topic" style="margin-bottom:6px"><h3>Fibonacci levels, drawn</h3><div style="max-width:100mm">{fib_svg()}</div></div>
   <div class="cols">
   {topic("Support and resistance",
     "<p><b>Support</b> is a floor the price bounced off before. <b>Resistance</b> is a ceiling it could not get through. They are like the floor and ceiling of a room.</p>",

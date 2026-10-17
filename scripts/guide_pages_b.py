@@ -49,7 +49,7 @@ def page10():
     "<p><b>On-Balance Volume</b> (Joseph Granville, 1963): a running total that adds a day's volume on an up-close and subtracts it on a down-close. A rising OBV suggests <b>accumulation</b> (buyers in control); a falling OBV suggests <b>distribution</b>. If price makes a new high but OBV does not, that <b>divergence</b> is a warning. The app uses the last 20 days' net flow, from -100% to +100%.</p>",
     "<p>'On-Balance Volume'. The words are 'Buyers backing it' (pointer right), 'Sellers backing it' (pointer left) or 'Balanced'. It is the one gauge that looks at <b>volume</b>, not just price.</p>", 2)}
   {topic("Bollinger band (where the price sits)",
-    "<p>On page 8 the grey band was the price's usual lane. This gauge tells you <b>where in the lane</b> the price is right now: near the top edge, near the bottom edge or in the middle.</p>",
+    "<p>On [[pgr:p8:p8]] the grey band was the price's usual lane. This gauge tells you <b>where in the lane</b> the price is right now: near the top edge, near the bottom edge or in the middle.</p>",
     "<p>%B = (price - lower band) / (upper band - lower band). Near the <b>top</b> of the band the price is <b>stretched high</b>; near the <b>bottom</b> it is <b>stretched low</b>. Outside the band is an extreme. Band width shows volatility.</p>",
     "<p>'Bollinger band'. 'Top of range' is the red left end, 'Bottom of range' the green right end. The words say Stretched high, Inside range or Stretched low.</p>", 3)}
   <h2 style="margin-top:4px">Why do the six gauges often disagree?</h2>
@@ -106,7 +106,7 @@ def page12():
     "<p>From <b>CMT Level II</b> (Richard Wyckoff). <b>Effort</b> = volume at least 1.4 times its 20-day average. <b>Result</b> = the price move compared with a typical day's range (ATR). Big effort with a big result follows the move (Up or Down). Big effort with a small result is a <b>stall</b>: near the low of the recent range that is <b>absorption</b> (Up), near the high it is <b>distribution</b> (Down).</p>",
     "<p>Fourth row. 'What it sees' shows, for example, 'Volume 1.8x usual'.</p>", 2)}
   {topic("Fibonacci confluence",
-    "<p>You saw the staircase on page 8. This strategy checks whether the price is <b>resting on one of the steps</b> right now. A price that dipped after a climb and is pausing on a step may be getting ready to climb again.</p>",
+    "<p>You saw the staircase on [[pgr:p8:p8]]. This strategy checks whether the price is <b>resting on one of the steps</b> right now. A price that dipped after a climb and is pausing on a step may be getting ready to climb again.</p>",
     "<p>From <b>CMT Levels I and II</b>. Over the last six months' swing it checks whether the price sits within 4% of the swing's size from the <b>38.2%, 50% or 61.8%</b> retracement. A pullback in an <b>uptrend</b> that holds there votes <b>Up</b> (support); a bounce in a <b>downtrend</b> that stalls there votes <b>Down</b> (resistance). 'Confluence' means several clues meeting at one level.</p>",
     "<p>Fifth row. 'Not at a key level' means Neutral.</p>", 3)}
   {topic("The ML model (machine learning)",

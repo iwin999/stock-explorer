@@ -1,5 +1,11 @@
 """Building blocks for the presenter's guide (scripts/make_presenter_guide.py): the page design and the small diagrams."""
 import math
+import re
+
+
+def _bigger(svg, k=1.3):
+    """Scale every font-size inside a drawing, so the labels stay readable when the drawing is shown small."""
+    return re.sub(r'font-size="([\d.]+)"', lambda m: f'font-size="{float(m.group(1)) * k:.1f}"', svg)
 
 NAVY, BLUE, GREEN, RED, AMBER, GREY = "#1d3557", "#3f74e6", "#26a69a", "#ef5350", "#d98e04", "#8a93a3"
 
@@ -7,54 +13,61 @@ CSS = """
 @page { size: A4; margin: 0; }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; background: #e9edf3; }
-body { font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif; color: #1b2430; font-size: 10.1px; line-height: 1.42; }
-.page { width: 210mm; height: 297mm; padding: 11mm 13mm 15mm 13mm; background: #fff; margin: 0 auto 10px auto; position: relative; overflow: hidden; page-break-after: always; break-after: page; }
+body { font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif; color: #1b2430; font-size: 12.3px; line-height: 1.46; }
+#src { display: none; }
+#guide-report { display: none; }
+.page { width: 210mm; height: 297mm; padding: 11mm 13mm 0 13mm; background: #fff; margin: 0 auto 10px auto; position: relative; overflow: hidden;
+        page-break-after: always; break-after: page; display: flex; flex-direction: column; }
 @media print { html, body { background: #fff; } .page { margin: 0; } }
 .page:last-of-type { page-break-after: auto; break-after: auto; }
-.head { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #1d3557; padding-bottom: 5px; margin-bottom: 11px; }
-.head .part { font-size: 8.6px; letter-spacing: .12em; text-transform: uppercase; color: #3f74e6; font-weight: 700; }
-.head .site { font-size: 8.6px; color: #8a93a3; }
-.foot { position: absolute; left: 13mm; right: 13mm; bottom: 6mm; display: flex; justify-content: space-between; font-size: 8px; color: #8a93a3; border-top: 1px solid #dfe3ea; padding-top: 4px; }
-h1 { font-size: 21px; line-height: 1.15; margin: 0 0 4px 0; color: #1d3557; }
-h2 { font-size: 16px; margin: 0 0 3px 0; color: #1d3557; }
-h3 { font-size: 12.4px; margin: 0 0 4px 0; color: #1d3557; }
-p { margin: 0 0 5px 0; }
-.lead { font-size: 11px; color: #3a4658; margin-bottom: 7px; }
-.topic { border: 1px solid #dfe3ea; border-radius: 9px; padding: 5px 8px 5px 8px; margin-bottom: 6px; page-break-inside: avoid; break-inside: avoid; }
-.topic h3 { display: flex; align-items: center; gap: 6px; }
-.topic h3 .num { background: #1d3557; color: #fff; border-radius: 50%; width: 16px; height: 16px; font-size: 9px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
-.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.simple, .fin { border-radius: 7px; padding: 4px 7px 2px 7px; }
-.simple { background: #eef5ff; border-left: 3px solid #3f74e6; }
-.fin { background: #f4f5f8; border-left: 3px solid #1d3557; }
-.chip { display: inline-block; font-size: 7.6px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; border-radius: 10px; padding: 1px 7px; margin-bottom: 3px; color: #fff; }
+.page .body { flex: 1 1 auto; overflow: hidden; padding-bottom: 3px; }
+.head { flex: none; display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #1d3557; padding-bottom: 5px; margin-bottom: 11px; }
+.head .part { font-size: 9.7px; letter-spacing: .12em; text-transform: uppercase; color: #3f74e6; font-weight: 700; }
+.head .site { font-size: 9.7px; color: #8a93a3; }
+.foot { flex: none; display: flex; justify-content: space-between; align-items: center; font-size: 9.3px; color: #8a93a3; border-top: 1px solid #dfe3ea; height: 11mm; margin-top: 0; }
+h1 { font-size: 24.2px; line-height: 1.15; margin: 0 0 5px 0; color: #1d3557; }
+h2 { font-size: 17.7px; margin: 6px 0 4px 0; color: #1d3557; }
+h3 { font-size: 14.0px; margin: 0 0 5px 0; color: #1d3557; }
+p { margin: 0 0 6px 0; }
+.lead { font-size: 13.2px; color: #3a4658; margin-bottom: 10px; }
+.topic { border: 1px solid #dfe3ea; border-radius: 10px; padding: 7px 10px 7px 10px; margin-bottom: 9px; }
+.topic h3 { display: flex; align-items: center; gap: 7px; }
+.topic h3 .num { background: #1d3557; color: #fff; border-radius: 50%; width: 20px; height: 20px; font-size: 10.7px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.simple, .fin { border-radius: 8px; padding: 6px 9px 3px 9px; }
+.simple { background: #eef5ff; border-left: 4px solid #3f74e6; }
+.fin { background: #f4f5f8; border-left: 4px solid #1d3557; }
+.chip { display: inline-block; font-size: 8.6px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; border-radius: 10px; padding: 1px 8px; margin-bottom: 4px; color: #fff; }
 .chip.s { background: #3f74e6; } .chip.f { background: #1d3557; } .chip.a { background: #26a69a; }
-.screen { margin-top: 4px; background: #eaf7f4; border-left: 3px solid #26a69a; border-radius: 7px; padding: 4px 8px 3px 8px; }
-.screen p { margin-bottom: 2px; }
-.note { background: #fff7e6; border-left: 3px solid #d98e04; border-radius: 7px; padding: 5px 9px 3px 9px; margin: 6px 0 8px 0; }
+.screen { margin-top: 6px; background: #eaf7f4; border-left: 4px solid #26a69a; border-radius: 8px; padding: 5px 9px 2px 9px; }
+.screen p { margin-bottom: 3px; }
+.note { background: #fff7e6; border-left: 4px solid #d98e04; border-radius: 8px; padding: 6px 10px 3px 10px; margin: 7px 0 9px 0; }
 .note b.t { color: #9a6200; }
-.tight .topic { margin-bottom: 6px; padding: 6px 8px; }
-.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.cols3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-table { border-collapse: collapse; width: 100%; font-size: 9.6px; }
-th { background: #1d3557; color: #fff; text-align: left; padding: 3px 6px; font-weight: 700; }
-td { border-bottom: 1px solid #dfe3ea; padding: 3px 6px; vertical-align: top; }
+.tight .topic { margin-bottom: 7px; padding: 6px 9px; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 0; }
+.cols .two, .cols3 .two { grid-template-columns: 1fr; }
+.cols3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; }
+.cols > .topic, .cols3 > .topic { margin-bottom: 9px; }
+table { border-collapse: collapse; width: 100%; font-size: 11.0px; margin-bottom: 9px; }
+th { background: #1d3557; color: #fff; text-align: left; padding: 4px 7px; font-weight: 700; }
+td { border-bottom: 1px solid #dfe3ea; padding: 4px 7px; vertical-align: top; }
 tr:nth-child(even) td { background: #f7f8fb; }
 .up { color: #158a7e; font-weight: 700; } .down { color: #d6453d; font-weight: 700; } .flat { color: #6b7785; font-weight: 700; }
-.gauge { position: relative; height: 9px; border-radius: 5px; background: linear-gradient(90deg, #ef5350 0%, #f4b04f 50%, #26a69a 100%); margin: 5px 0 2px 0; }
-.gauge .ptr { position: absolute; top: -4px; width: 4px; height: 17px; background: #1b2430; border-radius: 2px; }
-.gauge-ends { display: flex; justify-content: space-between; font-size: 8px; color: #6b7785; }
-.big { font-size: 40px; font-weight: 800; color: #1d3557; line-height: 1.05; letter-spacing: -.01em; }
-.kicker { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #3f74e6; font-weight: 800; }
-.qa { border-bottom: 1px solid #e3e7ee; padding: 3px 0 3px 0; page-break-inside: avoid; }
+.gauge { position: relative; height: 11px; border-radius: 6px; background: linear-gradient(90deg, #ef5350 0%, #f4b04f 50%, #26a69a 100%); margin: 6px 0 3px 0; }
+.gauge .ptr { position: absolute; top: -4px; width: 5px; height: 19px; background: #1b2430; border-radius: 3px; }
+.gauge-ends { display: flex; justify-content: space-between; font-size: 9.7px; color: #6b7785; }
+.big { font-size: 42.8px; font-weight: 800; color: #1d3557; line-height: 1.05; letter-spacing: -.01em; }
+.kicker { font-size: 10.7px; letter-spacing: .18em; text-transform: uppercase; color: #3f74e6; font-weight: 800; }
+.qa { border-bottom: 1px solid #e3e7ee; padding: 4px 0 4px 0; break-inside: avoid; }
 .qa b { color: #1d3557; }
-.gl { columns: 2; column-gap: 14px; font-size: 9.4px; }
-.gl div { break-inside: avoid; margin-bottom: 3px; }
+.gl { columns: 2; column-gap: 16px; font-size: 11.0px; }
+.gl div { break-inside: avoid; margin-bottom: 4px; }
 .gl b { color: #1d3557; }
-.say { background: #1d3557; color: #fff; border-radius: 9px; padding: 8px 11px; font-size: 11px; }
+.say { background: #1d3557; color: #fff; border-radius: 10px; padding: 9px 13px; font-size: 12.5px; margin-bottom: 10px; }
 .say i { color: #cfe0ff; }
-.small { font-size: 9px; color: #6b7785; }
-ul { margin: 2px 0 4px 15px; padding: 0; } li { margin-bottom: 2px; }
+.small { font-size: 10.2px; color: #6b7785; }
+ul, ol { margin: 3px 0 5px 18px; padding: 0; } li { margin-bottom: 3px; }
+svg text { font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif; }
 """
 
 
@@ -134,7 +147,7 @@ def chart_anatomy_svg():
 
 
 def fib_svg():
-    levels = [(0, "0% (the top)"), (23.6, "23.6%"), (38.2, "38.2%"), (50, "50%"), (61.8, "61.8%"), (78.6, "78.6%"), (100, "100% (the bottom)")]
+    levels = [(0, "0% top"), (23.6, "23.6%"), (38.2, "38.2%"), (50, "50%"), (61.8, "61.8%"), (78.6, "78.6%"), (100, "100% bottom")]
     top, bot = 20, 160
     lines = ""
     for pct, name in levels:
@@ -143,7 +156,7 @@ def fib_svg():
         lines += (f'<line x1="70" y1="{y:.1f}" x2="250" y2="{y:.1f}" stroke="{AMBER if heavy else "#b8c0cc"}" stroke-width="{1.6 if heavy else 1}" stroke-dasharray="{"" if heavy else "3 3"}"/>'
                   f'<text x="256" y="{y + 3:.1f}" font-size="8.5" fill="{"#9a6200" if heavy else "#6b7785"}">{name}</text>')
     path = f'<polyline points="20,175 40,150 55,160 75,100 90,115 110,20 130,45 150,70 165,60 185,92 205,84" fill="none" stroke="{NAVY}" stroke-width="2.2"/>'
-    return (f'<svg viewBox="0 0 340 185" width="100%" role="img" aria-label="Fibonacci levels after a rise">{lines}{path}'
+    return (f'<svg viewBox="0 0 360 185" width="100%" role="img" aria-label="Fibonacci levels after a rise">{lines}{path}'
             f'<text x="8" y="12" font-size="8.5" fill="#6b7785">A rise, then a pullback that pauses near a level</text></svg>')
 
 
@@ -159,11 +172,11 @@ def screen_map_svg():
          box(8, 8, 684, 38, "#fff"),
          '<text x="40" y="31" font-size="11" font-weight="700" fill="#1d3557">Site name</text>',
          '<text x="214" y="31" font-size="10.5" fill="#1d3557">Portfolio value  Rs 1,00,000</text>',
-         '<text x="418" y="31" font-size="9.5" fill="#6b7785">Dark mode      Dashboard view</text>',
+         '<text x="410" y="31" font-size="9.5" fill="#6b7785">Dark  ·  Dashboard view</text>',
          box(588, 15, 44, 22, "#fff"), '<text x="610" y="30" font-size="9.5" text-anchor="middle" fill="#1d3557">Tour</text>',
          '<circle cx="678" cy="26" r="11" fill="#fff" stroke="#1d3557"/><text x="678" y="30" font-size="11" font-style="italic" font-weight="700" text-anchor="middle" fill="#1d3557">i</text>',
-         box(8, 56, 150, 74), '<text x="18" y="72" font-size="8" font-weight="700" fill="#6b7785">BOUGHT: WHAT YOU HOLD</text>',
-         box(8, 136, 150, 84), '<text x="18" y="152" font-size="8" font-weight="700" fill="#6b7785">WHERE YOUR MONEY IS</text>',
+         box(8, 56, 150, 74), '<text x="18" y="72" font-size="8" font-weight="700" fill="#6b7785">WHAT YOU HOLD</text>',
+         box(8, 136, 150, 84), '<text x="18" y="152" font-size="8" font-weight="700" fill="#6b7785">YOUR MONEY</text>',
          '<circle cx="83" cy="192" r="20" fill="none" stroke="#b8c0cc" stroke-width="9"/>',
          box(8, 226, 150, 74), '<text x="18" y="242" font-size="8" font-weight="700" fill="#6b7785">LEADERBOARD</text>',
          box(8, 306, 150, 76), '<text x="18" y="322" font-size="8" font-weight="700" fill="#6b7785">COMBINED READING</text>',
@@ -195,3 +208,18 @@ def screen_map_svg():
           num(676, 70, 14), num(22, 404, 15), num(636, 420, 16)]
     s.append("</svg>")
     return "".join(s)
+
+
+def _wrap(fn, k):
+    def inner(*args, **kwargs):
+        return _bigger(fn(*args, **kwargs), k)
+    return inner
+
+
+# the drawings are shown smaller than their own size, so their labels are scaled up to stay readable
+candle_svg = _wrap(candle_svg, 1.45)
+chart_anatomy_svg = _wrap(chart_anatomy_svg, 1.5)
+fib_svg = _wrap(fib_svg, 1.3)
+barometer_svg = _wrap(barometer_svg, 1.45)
+zigzag_svg = _wrap(zigzag_svg, 1.0)
+screen_map_svg = _wrap(screen_map_svg, 1.22)
