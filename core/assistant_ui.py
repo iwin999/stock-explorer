@@ -74,6 +74,7 @@ def _reply(raw_question, history, ctx):
 
 # ---------------- the small chat bubble (bottom corner of the dashboard) ----------------
 BUBBLE_CSS = """<style>
+body:has([data-testid="stDialog"]) .st-key-ask_bubble { display: none !important; }     /* out of the way while a pop-up is open */
 .st-key-ask_bubble { position: fixed !important; right: 0.6rem; bottom: 3.7rem; z-index: 990; width: auto !important; }     /* at the right edge, above Streamlit's Manage app bar; stays put while the page scrolls */
 .st-key-ask_bubble [data-testid="stPopoverButton"] { width: 3.6rem; height: 3.6rem; min-height: 3.6rem; padding: 0 !important; border-radius: 50%;
     background: radial-gradient(circle at 35% 28%, #6f9bff 0%, #3f74e6 55%, #2f5fcf 100%) !important; border: none !important;

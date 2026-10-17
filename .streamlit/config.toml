@@ -12,3 +12,9 @@ toolbarMode = "viewer"   # hides developer menu items from visitors
 
 [browser]
 gatherUsageStats = false
+
+[global]
+# Streamlit 1.65 has a known race (streamlit/streamlit#17265): when a part of the page refreshes itself on a timer and the visitor
+# clicks at the same moment, the browser's message cache can fall out of step and show "Failed to process a Websocket message".
+# Turning that cache off removes the problem at the cost of a little extra data per click.
+minCachedMessageSize = 1e12

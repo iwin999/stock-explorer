@@ -474,6 +474,17 @@ def _trade_picker(pf, key, universe, default, offline, noun, open_universe=False
     _cash_ticket(pf, symbol, ins.name_of(symbol), None, offline, key, mode)
 
 
+def trade_done():
+    """After an order. Inside the dashboard's pop-up, redraw only the pop-up, so it stays open (showing the new balance and a
+    confirmation) and the visitor can go straight on to the next order; everywhere else, redraw the page as before."""
+    if st.session_state.get("_stay_open"):
+        try:
+            st.rerun(scope="fragment")
+        except st.errors.StreamlitAPIException:      # not in a pop-up redraw right now: fall back to redrawing the page
+            pass
+    st.rerun()
+
+
 def _set_qty(key, value):
     st.session_state[f"qty_{key}"] = max(1, int(value))
 
@@ -540,7 +551,7 @@ def _cash_ticket(pf, symbol, name, fallback_price, offline, key, mode):
             st.session_state.flash = ("ok", f"{verb} {qty} of {name} at {format_inr(exec_price)}.{extra}")
         except TradingError as e:
             st.session_state.flash = ("error", str(e))
-        st.rerun()
+        trade_done()
 
 
 # ---------------- futures ----------------
@@ -586,7 +597,7 @@ def _futures_ticket(pf, offline):
                                       f"({lots} lot(s)) at {format_inr(price_now)}.")
         except TradingError as e:
             st.session_state.flash = ("error", str(e))
-        st.rerun()
+        trade_done()
 
     st.subheader("Your open futures")
     st.fragment(run_every=None if offline else _refresh_every())(_open_derivatives)("FUT")
@@ -653,7 +664,7 @@ def _options_ticket(pf, offline):
                                       f"at {format_inr(prem_now)} per unit.")
         except TradingError as e:
             st.session_state.flash = ("error", str(e))
-        st.rerun()
+        trade_done()
     st.caption("Only buying options is available. Selling (writing) options carries much larger risk and is not included.")
 
     st.subheader("Your open options")

@@ -323,24 +323,29 @@ def _indicators(symbol, hist, offline):
     st.markdown("".join(vis.terminal_card(v) for v in chosen), unsafe_allow_html=True)
 
 
-@st.dialog("Paper trade", width="large")
+@st.dialog("Paper trade", width="large", on_dismiss="rerun")          # closing it redraws the page, so the new holdings show
 @guard()
 def _order_dialog(mode, symbol, name, price, offline):
     """The order pop-up: stocks first, then ETFs and bonds, futures and options (the same tickets as the real site's Paper trading tab).
     Pop-ups cannot open other pop-ups, so the 'Know how' buttons inside it unfold in place instead."""
     st.session_state["_inline_know_how"] = True
+    st.session_state["_stay_open"] = True                    # an order redraws only this pop-up, so it stays open for the next one
     try:
         _order_tabs(mode, symbol, name, price, offline)
     finally:
         st.session_state.pop("_inline_know_how", None)
+        st.session_state.pop("_stay_open", None)
 
 
 def _order_tabs(mode, symbol, name, price, offline):
     pf = tu._get_portfolio()
+    flash = st.session_state.pop("flash", None)                  # the result of the last order, shown here because the pop-up stays open
+    if flash:
+        (st.success if flash[0] == "ok" else calm)(flash[1])
     stocks_tab, funds_tab, fut_tab, opt_tab = st.tabs(["Stocks", "ETFs and bonds", "Futures", "Options"])
     with stocks_tab:
-        st.markdown(f"**{mode} {name}**")
-        tu._cash_ticket(pf, symbol, name, price, offline, f"term_{mode.lower()}", mode)
+        popular = [x for _, s, _ in companies.COMPANIES for x in companies.listings(s)]
+        tu._trade_picker(pf, "dlg", popular, symbol, offline, "company", open_universe=True)
     with funds_tab:
         funds = [x for x in ins.CASH_INSTRUMENTS if ins.asset_class(x) != ins.STOCKS]
         st.caption("Funds that hold many companies or bonds in one. Prices are live exchange prices.")
@@ -428,9 +433,11 @@ def run():
                              f'{"you own " + str(owned) + " share" + ("s" if owned != 1 else "") if owned else "you do not own it yet"}</div>',
                              unsafe_allow_html=True)
             if b1.button("Buy", type="primary", key="term_buy_btn", width="stretch"):
+                st.session_state["mode_dlg"] = "Buy"
                 _order_dialog("Buy", symbol, name, price, offline)
             if b2.button("Sell", key="term_sell_btn", width="stretch", disabled=not (pf.holdings or pf.derivatives),
                          help="Sell what you hold: shares here, or switch to the ETFs, Futures or Options tab. Greyed out until you hold something."):
+                st.session_state["mode_dlg"] = "Sell"
                 _order_dialog("Sell", symbol, name, price, offline)
             if b3.button("Exit all", key="term_exit_btn", width="stretch", disabled=not (pf.holdings or pf.derivatives),
                          help="Sell everything you hold in one go. Your starting capital is not reset."):

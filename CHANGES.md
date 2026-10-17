@@ -432,5 +432,8 @@ The assistant from the real site is now on the second site's dashboard as a smal
 ## New in Step 78 (the money ring stays tidy)
 The "Where your money is" box now draws the ring with its own small key underneath (colour, name, percentage) instead of the chart's built-in legend, which squeezed the ring and cut off labels when someone held several kinds of things. With one or two kinds both rows simply show; with more than two, the key shows two rows and scrolls for the rest, so the box stays the same size however much is bought.
 
+## New in Step 79 (the order pop-up stays open; a connection-error workaround)
+The dashboard's Paper trade pop-up no longer closes after every order: it stays open on the same tab, shows "Bought ..." at the top with the new cash and holding, and the page behind refreshes when the pop-up is closed. The Stocks tab now has a company picker (with Buy and Sell, like the real site's Paper trading tab), so a second company can be bought without closing it. The chat bubble hides while a pop-up is open. Separately, `.streamlit/config.toml` now sets `minCachedMessageSize` very high: Streamlit 1.65 has a known race (streamlit/streamlit#17265) where a timer-refreshed part of the page and a click at the same moment can show "Failed to process a Websocket message" in the browser; turning off that message cache avoids it at the cost of a little extra data per click.
+
 ## Status
 All 8 features are built.

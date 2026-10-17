@@ -337,3 +337,17 @@ def test_where_your_money_is_scrolls_only_when_there_are_more_than_two_kinds():
             app.run()
             assert not app.exception and not _errors(app)
             assert ("tm-legend scroll" in _legend(app)) is scrolls, holdings
+
+
+def test_the_buy_pop_up_has_a_company_picker_and_the_four_tabs():
+    store, app = _app("Buyer", phone=False)
+    a, b = _patches(store)
+    with a, b:
+        app.run()
+        assert not app.exception and not _errors(app)
+        app.button(key="term_buy_btn").click().run()
+        assert not app.exception and not _errors(app)
+        assert len(app.tabs) >= 4
+        picker = [s for s in app.selectbox if s.key and s.key.startswith("pick_dlg_")][0]
+        assert "TCS.NS" in picker.options or any("TCS" in o for o in picker.options)      # any listed company can be bought without closing the pop-up
+        assert app.radio(key="mode_dlg").value == "Buy"
