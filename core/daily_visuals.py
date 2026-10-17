@@ -383,25 +383,57 @@ def fusion_guide(row, f, scroll=False):
             f'{status}{trend}{tests}<div class="fg-h">The four groups</div><div class="fg-cards">{cards}</div></div>')
 
 
-def strategy_rows(result, stats=None, ml=None):
-    """The rows of the strategies table: [{name, word, cls, reading, tested}] for the five strategies, then the ML model."""
+MIN_OWN_CALLS = 30          # fewer past calls than this on one company is too few to quote a percentage
+
+
+def _pct(x):
+    return f"{x * 100:.0f}%"
+
+
+def strategy_rows(result, stats=None, ml=None, own=None, company=""):
+    """The rows of the strategies table: [{name, word, cls, reading, tested, tip, scope}] for the five strategies, then the ML model.
+
+    `own` is this company's own back-test (cmt.company_stats); when it is there, each row's `tested` is that company's record and
+    `scope` is "own". Without it the row falls back to the average over all companies and `scope` is "all"."""
     cls = {"Up": "up", "Down": "down", "Sideways": "flat"}
     out = []
     for en in result["votes"]:
         avail = en.get("available", True)
         name = VOTE_NAME[en["vote"]]
         rec = (stats or {}).get("strategies", {}).get(en["name"])
-        tested = (f'{rec["next day"]["last 30% of dates"]["accuracy"] * 100:.0f}% next day &middot; '
-                  f'{rec["next 20 days"]["last 30% of dates"]["accuracy"] * 100:.0f}% over 20 days') if rec else ""
+        everyone = (f'{rec["next day"]["last 30% of dates"]["accuracy"] * 100:.0f}% next day &middot; '
+                    f'{rec["next 20 days"]["last 30% of dates"]["accuracy"] * 100:.0f}% over 20 days') if rec else ""
+        mine = ((own or {}).get("strategies") or {}).get(en["name"])
+        scope, tested, tip = "all", everyone, "No saved history for this company, so this is the average over all the companies tested."
+        if mine:
+            nd, n20 = mine["next day"], mine["next 20 days"]
+            scope = "own"
+            if min(nd["calls"], n20["calls"]) >= MIN_OWN_CALLS:
+                tested = f'{_pct(nd["accuracy"])} next day &middot; {_pct(n20["accuracy"])} over 20 days'
+            else:
+                tested = "too few past calls to judge"
+            tip = (f'In the price history of {company or "this company"}, this strategy said Up or Down on {nd["calls"]:,} days '
+                   f'(next day) and {n20["calls"]:,} days (20 days).' + (f" All companies together: {everyone.replace('&middot;', '·')}." if everyone else ""))
         out.append({"name": en["name"], "word": "n/a" if not avail else f"{GLYPH[name]} " + ("Neutral" if name == "Sideways" else name),
-                    "cls": cls[name] if avail else "flat", "reading": en["reading"], "tested": tested})
+                    "cls": cls[name] if avail else "flat", "reading": en["reading"], "tested": tested, "tip": tip, "scope": scope})
     if ml:
         held = ml["tested"].get("last 30% of dates (held back)", {})
         lean = ml["lean"]
         word = {"Up": f"{GLYPH['Up']} Up", "Down": f"{GLYPH['Down']} Down", "None": "No clear view"}[lean]
-        tested = (f'{held["accuracy"] * 100:.0f}% overall &middot; {held["confident_accuracy"] * 100:.0f}% when confident' if held.get("confident_accuracy") else "")
+        everyone = (f'{held["accuracy"] * 100:.0f}% overall &middot; {held["confident_accuracy"] * 100:.0f}% when confident' if held.get("confident_accuracy") else "")
+        mine = (own or {}).get("ML model")
+        scope, tested, tip = "all", everyone, "No saved history for this company, so this is the average over all the companies tested."
+        if mine:
+            scope = "own"
+            tested = f'{_pct(mine["accuracy"])} overall'
+            if mine.get("confident_accuracy") is not None and mine["confident_days"] >= 50:
+                tested += f' &middot; {_pct(mine["confident_accuracy"])} when confident'
+            else:
+                tested += " &middot; too few confident days to judge"
+            tip = (f'Checked for {company or "this company"} on days the model was not trained on: {mine["days"]:,} days, '
+                   f'of which it was confident on {mine["confident_days"]:,}.' + (f" All companies together: {everyone.replace('&middot;', '·')}." if everyone else ""))
         out.append({"name": "ML model", "word": word, "cls": {"Up": "up", "Down": "down", "None": "flat"}[lean],
-                    "reading": f'{ml["p_up"] * 100:.0f}% modelled chance of a higher close', "tested": tested})
+                    "reading": f'{ml["p_up"] * 100:.0f}% modelled chance of a higher close', "tested": tested, "tip": tip, "scope": scope})
     return out
 
 

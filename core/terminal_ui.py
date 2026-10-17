@@ -5,6 +5,7 @@
     centre :  stock search, chart with analysis tools, Buy / Sell / Exit all, prediction comparison for today
     right  :  every indicator, with a hover description, shown relative to its value
 """
+import html
 import streamlit as st
 
 from core import about, assistant_ui, company_search, companies
@@ -267,7 +268,7 @@ def _open_full_view(name, result, ml, rating):
 
 
 @guard()
-def _strategies(symbol, hist, offline):
+def _strategies(symbol, hist, offline, name=""):
     """The strategies card: the five CMT strategies and the ML model as rows, each with a Full view pop-up. They only use yesterday's data
     and earlier, so this card does not change during the day and is not refreshed on a timer."""
     result, info, ml = _cmt_result(symbol, hist, offline)
@@ -279,20 +280,23 @@ def _strategies(symbol, hist, offline):
         rating = fusion_ui.company_row(symbol)            # the company's Winner's Circle group, if its company results are available
     except Exception:
         rating = None
-    rows = vis.strategy_rows(result, cmt.load_stats(), ml)
+    own = cmt.company_stats(symbol)
+    rows = vis.strategy_rows(result, cmt.load_stats(), ml, own, name)
     with st.container(key="tm_strat"):
         st.markdown('<div class="pp-sec" style="margin-top:0">The strategies behind the reading'
                     '<small>click Full view to see what a strategy is doing</small></div>', unsafe_allow_html=True)
         widths = [1.5, 0.9, 2.0, 1.9, 0.8]
         head = st.columns(widths, vertical_alignment="center")
-        for col, label in zip(head, ("Strategy", "Vote", "What it sees", "Back-test: how often it matched the next move", "Full view")):
+        back = ("Back-test on this company: how often it matched the next move" if all(r["scope"] == "own" for r in rows)
+                else "Back-test (all companies): how often it matched the next move")
+        for col, label in zip(head, ("Strategy", "Vote", "What it sees", back, "Full view")):
             col.markdown(f'<span class="ss-h">{label}</span>', unsafe_allow_html=True)
         for i, row in enumerate(rows):
             c1, c2, c3, c4, c5 = st.columns(widths, vertical_alignment="center")
             c1.markdown(f'<span class="pp-sname">{row["name"]}</span>', unsafe_allow_html=True)
             c2.markdown(f'<span class="pp-vote {row["cls"]}">{row["word"]}</span>', unsafe_allow_html=True)
             c3.markdown(f'<span class="ss-c">{row["reading"]}</span>', unsafe_allow_html=True)
-            c4.markdown(f'<span class="pp-test">{row["tested"]}</span>', unsafe_allow_html=True)
+            c4.markdown(f'<span class="pp-test" title="{html.escape(row["tip"], quote=True)}">{row["tested"]}</span>', unsafe_allow_html=True)
             if c5.button("Full view", key=f"sv_{i}", width="stretch"):
                 _open_full_view(row["name"], result, ml, rating)
         st.markdown(vis.learn_strip() + f'<div class="pp-foot"><b>Disclaimer.</b> {DISCLAIMER}</div>', unsafe_allow_html=True)
@@ -453,7 +457,7 @@ def run():
             st.fragment(run_every=every)(_indicators)(symbol, hist, offline)
 
     # the strategies table has its own row, as wide as the whole page (left edge of the left column to right edge of the right panel)
-    _strategies(symbol, hist, offline)
+    _strategies(symbol, hist, offline, name)
 
     assistant_ui.bubble({"company": name, "symbol": symbol, "last_close": float(hist["Close"].iloc[-1]), "signals": [],
                          "portfolio": {"cash": pf.balance, "holdings": {s_: h["quantity"] for s_, h in pf.holdings.items()},

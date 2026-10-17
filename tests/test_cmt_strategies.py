@@ -105,3 +105,28 @@ def test_the_barometer_reads_from_strongly_down_to_strongly_up():
         html = vis.barometer(score, 5, 2, 2, 1)
         assert word in html and "<svg" in html and "of 5 strategies read down" in html
     assert vis.barometer(-5, 5, 0, 5, 0) != vis.barometer(5, 5, 5, 0, 0)               # the needle moves
+
+
+def test_each_company_has_its_own_back_test_and_the_rows_use_it():
+    reliance, tcs = cmt.company_stats("RELIANCE.NS"), cmt.company_stats("TCS.NS")
+    assert reliance and tcs and reliance != tcs                                              # not the same for every company
+    assert cmt.company_stats("RELIANCE.BO") == reliance                                      # a BSE listing uses its NSE twin's history
+    assert cmt.company_stats("NOSUCHCOMPANY.NS") is None
+    hist, bench = _prices(drift=0.002)
+    plan = dc.plan(hist, datetime(2026, 10, 14, 13, 0), live_price=float(hist["Close"].iloc[-1]) * 1.02, market_open=True)
+    result = cmt.evaluate(plan["basis"], bench, plan)
+    mine = vis.strategy_rows(result, cmt.load_stats(), None, reliance, "Reliance Industries")
+    theirs = vis.strategy_rows(result, cmt.load_stats(), None, tcs, "TCS")
+    assert all(r["scope"] == "own" for r in mine) and [r["tested"] for r in mine] != [r["tested"] for r in theirs]
+    assert "Reliance Industries" in mine[0]["tip"]
+    unknown = vis.strategy_rows(result, cmt.load_stats(), None, None, "")
+    assert all(r["scope"] == "all" and r["tested"] for r in unknown)                        # no saved history: the all-company average, labelled
+
+
+def test_a_company_with_too_few_calls_is_not_given_a_percentage():
+    hist, bench = _prices(drift=0.002)
+    plan = dc.plan(hist, datetime(2026, 10, 14, 13, 0), live_price=float(hist["Close"].iloc[-1]) * 1.02, market_open=True)
+    result = cmt.evaluate(plan["basis"], bench, plan)
+    few = {"strategies": {n: {"next day": {"accuracy": 0.9, "calls": 5}, "next 20 days": {"accuracy": 0.9, "calls": 5}} for n in cmt.NAMES}}
+    rows = vis.strategy_rows(result, cmt.load_stats(), None, few, "Tiny Co")
+    assert all("too few" in r["tested"] and "90" not in r["tested"] for r in rows)

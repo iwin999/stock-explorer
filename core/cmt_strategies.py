@@ -27,6 +27,7 @@ FIB_WINDOW = 126               # the swing for the Fibonacci levels: the last si
 FIB_LEVELS = (0.382, 0.5, 0.618)
 FIB_BAND = 0.04                # within 4% of the swing's size from a level counts as "on" the level
 STATS_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "cmt_strategy_stats.json")
+COMPANY_STATS_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "cmt_company_stats.json")
 
 
 # ---------------- 2. Dow Theory ----------------
@@ -259,6 +260,26 @@ def load_stats():
             return json.load(f)
     except (OSError, ValueError):
         return {}
+
+
+_COMPANY_STATS = {}
+
+
+def load_company_stats():
+    """{symbol: {"strategies": ..., "ML model": ...}} - each company's own back-test (made by scripts/evaluate_company_backtests.py), or {}."""
+    if not _COMPANY_STATS:
+        try:
+            with open(COMPANY_STATS_PATH) as f:
+                _COMPANY_STATS.update(json.load(f).get("companies", {}))
+        except (OSError, ValueError):
+            pass
+    return _COMPANY_STATS
+
+
+def company_stats(symbol):
+    """This company's own back-test numbers (a BSE listing uses its NSE twin's), or None if there is no saved history for it."""
+    from core import companies
+    return load_company_stats().get(companies.to_nse(symbol))
 
 
 # ---------------- the numbers behind each strategy, for the "Full view" on the screen ----------------
