@@ -86,7 +86,10 @@ BUBBLE_CSS = """<style>
 .st-key-ask_bubble [data-testid="stPopoverButton"] [aria-hidden="true"], .st-key-ask_bubble [data-testid="stPopoverButton"] [data-testid="stIconMaterial"] { display: none !important; }
 .st-key-ask_bubble [data-testid="stPopoverButton"] > div > div, .st-key-ask_bubble [data-testid="stPopoverButton"] span, .st-key-ask_bubble [data-testid="stPopoverButton"] [data-testid="stMarkdownContainer"] {
     margin: 0 !important; padding: 0 !important; display: flex; align-items: center; justify-content: center; }
-.st-key-ask_bubble [data-testid="stPopoverButton"] p { margin: 0 !important; padding: 0 !important; line-height: 1 !important; font-size: 1.35rem !important; font-weight: 800 !important; letter-spacing: 0.02em; color: #ffffff !important; text-shadow: 0 1px 6px rgba(20,40,110,0.45); }
+.st-key-ask_bubble [data-testid="stPopoverButton"] p { display: none !important; }     /* the word is only for screen readers; the picture below is what you see */
+.st-key-ask_bubble [data-testid="stPopoverButton"] { position: relative; }
+.st-key-ask_bubble [data-testid="stPopoverButton"]::after { content: ""; position: absolute; inset: 0; margin: auto; width: 2rem; height: 2rem;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 10C17.6 10 8 19 8 30c0 6 2.9 11.2 7.6 14.7-.4 3.3-1.9 6.2-4.1 8.5 5.6-.3 10.2-2.2 13.4-4.6 2.3.6 4.7.9 7.1.9 14.4 0 24-9 24-20S46.4 10 32 10z' fill='white'/%3E%3Ccircle cx='21.5' cy='30' r='3.6' fill='%233f74e6'/%3E%3Ccircle cx='32' cy='30' r='3.6' fill='%233f74e6'/%3E%3Ccircle cx='42.5' cy='30' r='3.6' fill='%233f74e6'/%3E%3C/svg%3E") center / contain no-repeat; filter: drop-shadow(0 1px 3px rgba(20,40,110,0.35)); }
 .st-key-ask_bubble [data-testid="stPopoverButton"] * { color: #ffffff !important; }
 [data-testid="stPopoverBody"]:has(.ask-head) { width: min(380px, 92vw) !important; max-height: 72vh; overflow-y: auto; }
 [data-testid="stPopoverBody"]:has(.ask-head) [data-testid="InputInstructions"] span:first-child { display: none; }     /* just the 0/300 count, below the box */
