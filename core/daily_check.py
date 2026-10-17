@@ -21,26 +21,6 @@ CLOSE_TIME = dtime(15, 30)
 
 
 # ---------------- indicators, worked out once for the whole history ----------------
-def _supertrend_direction(high, low, close, period=10, mult=3.0):
-    """+1 while the Supertrend line is below the price (uptrend), -1 while it is above (downtrend)."""
-    tr = pd.concat([high - low, (high - close.shift()).abs(), (low - close.shift()).abs()], axis=1).max(axis=1)
-    atr = tr.ewm(alpha=1 / period, adjust=False).mean()
-    mid = (high + low) / 2
-    upper, lower = (mid + mult * atr).values, (mid - mult * atr).values
-    c = close.values
-    final_up, final_lo, direction = upper.copy(), lower.copy(), np.ones(len(c))
-    for i in range(1, len(c)):
-        final_up[i] = upper[i] if (upper[i] < final_up[i - 1] or c[i - 1] > final_up[i - 1]) else final_up[i - 1]
-        final_lo[i] = lower[i] if (lower[i] > final_lo[i - 1] or c[i - 1] < final_lo[i - 1]) else final_lo[i - 1]
-        if direction[i - 1] == 1 and c[i] < final_lo[i - 1]:
-            direction[i] = -1
-        elif direction[i - 1] == -1 and c[i] > final_up[i - 1]:
-            direction[i] = 1
-        else:
-            direction[i] = direction[i - 1]
-    return pd.Series(direction, index=close.index)
-
-
 def indicator_frame(hist):
     """One row per day: the indicator values known at the END of that day (so a row can be used to predict the next day)."""
     close = hist["Close"].astype(float)
@@ -63,7 +43,6 @@ def indicator_frame(hist):
     frame["mdi"] = 100 * minus.ewm(alpha=1 / 14, adjust=False).mean() / atr
     dx = 100 * (frame["pdi"] - frame["mdi"]).abs() / (frame["pdi"] + frame["mdi"]).replace(0, np.nan)
     frame["adx"] = dx.ewm(alpha=1 / 14, adjust=False).mean()
-    frame["supertrend"] = _supertrend_direction(high, low, close)
     t9, k26 = (high.rolling(9).max() + low.rolling(9).min()) / 2, (high.rolling(26).max() + low.rolling(26).min()) / 2
     span_a = ((t9 + k26) / 2).shift(26)
     span_b = ((high.rolling(52).max() + low.rolling(52).min()) / 2).shift(26)
@@ -171,7 +150,6 @@ def key_signal_gauges(row):
     if pd.notna(row["adx"]) and (row["pdi"] + row["mdi"]):
         lean = row["pdi"] / (row["pdi"] + row["mdi"])
         out["Trend strength (ADX)"] = _grade(lean, "Buyers lead" if lean > 0.5 else "Sellers lead", "Sellers", "Buyers")
-    out["Supertrend"] = _grade(0.85 if row["supertrend"] > 0 else 0.15, "Uptrend" if row["supertrend"] > 0 else "Downtrend", "Downtrend", "Uptrend")
     if pd.notna(row["obv_flow"]):
         f = row["obv_flow"]
         out["On-Balance Volume"] = _grade(0.5 + f / 2, "Buyers backing it" if f > OBV_LEAN else "Sellers backing it" if f < -OBV_LEAN else "Balanced",
@@ -258,8 +236,6 @@ def votes(row, scales=False):
         out.append(_entry("Trend strength (ADX)", False, (1 if lean > 0.5 else -1) if row["adx"] > 20 else 0,
                           f"Strength {row['adx']:.0f}", "Above 20 means a real trend, either way",
                           _gauge(lean, "Buyers lead" if lean > 0.5 else "Sellers lead", "Sellers", "Buyers")))
-    out.append(_entry("Supertrend", False, int(row["supertrend"]), "Up" if row["supertrend"] > 0 else "Down", "A trailing line that flips on a reversal",
-                      _gauge(0.85 if row["supertrend"] > 0 else 0.15, "Price above the line" if row["supertrend"] > 0 else "Price below the line", "Down", "Up")))
     if pd.notna(row["cloud_top"]):
         where = 1 if c > row["cloud_top"] else -1 if c < row["cloud_bot"] else 0
         out.append(_entry("Ichimoku cloud", False, where, "Above the cloud" if where > 0 else "Below the cloud" if where < 0 else "Inside the cloud",

@@ -183,7 +183,6 @@ EXPLAIN = {
     "RSI (speed)": "A score from 0 to 100 of how fast the price has been rising or falling. Above 70 it has run up quickly; below 30 it has fallen quickly.",
     "MACD (momentum)": "Compares a quick and a slow average of the price. Above its signal line the momentum is rising; below it, fading.",
     "Trend strength (ADX)": "How strong a trend is, whichever way it points. Above 20 is a real trend. The pointer shows whether buyers or sellers are in the lead.",
-    "Supertrend": "A line that trails the price and flips when the trend reverses. Price above the line is an uptrend, below it a downtrend.",
     "On-Balance Volume": "Adds the day's trading volume when the price closes up and subtracts it when the price closes down. Over the last 20 days, more volume on up days means buyers are in charge; more on down days means sellers are. The pointer shows that net share of volume.",
     "Ichimoku cloud": "A shaded zone built from past highs and lows that acts as support and resistance. Price above the cloud is bullish, below it bearish.",
     "Z-score": "How many standard deviations the price is from its own 20-day average. Above +2 the price is unusually high and often drifts back; below -2 it is unusually low and often bounces. Between is normal.",
@@ -210,7 +209,7 @@ HINTS = {
     "Wyckoff effort vs result": "From the Wyckoff method. Effort is trading volume; result is how far the price moved. Big volume with a big move follows the move. Big volume with little movement means the other side is absorbing it: at lows that can be a bottom, at highs a top.",
     "Fibonacci confluence": "Prices often pause at 38.2%, 50% and 61.8% of the previous swing. A pullback in an uptrend that stops at one of those levels is a common support; a bounce in a downtrend that stops there is a common resistance.",
     "RSI": EXPLAIN["RSI (speed)"], "MACD": EXPLAIN["MACD (momentum)"], "ADX": EXPLAIN["Trend strength (ADX)"],
-    "Z-score": EXPLAIN["Z-score"], "Supertrend": EXPLAIN["Supertrend"], "On-Balance Volume": EXPLAIN["On-Balance Volume"], "OBV": EXPLAIN["On-Balance Volume"],
+    "Z-score": EXPLAIN["Z-score"], "On-Balance Volume": EXPLAIN["On-Balance Volume"], "OBV": EXPLAIN["On-Balance Volume"],
     "Bollinger band": EXPLAIN["Bollinger band"],
     "ML model": "A small machine-learning model (a logistic regression) that looks at the five CMT readings and a dozen indicator readings and gives a modelled chance that the next day closes higher. It was trained on 137 NSE companies and checked on dates it had never seen. It describes what the model reads, not what will happen.",
 }

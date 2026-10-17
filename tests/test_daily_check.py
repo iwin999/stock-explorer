@@ -125,7 +125,7 @@ def test_only_the_six_validated_indicators_vote():
     r = dc.evaluate(p["basis"], p)
     voters = {v["name"] for v in r["votes"] if v["voting"]}
     assert voters == {"Trend", "Bollinger band", "Stochastic RSI", "Money flow (MFI)", "Where it closed", "Yesterday's move"}
-    assert r["n"] == 6 and {"RSI (speed)", "MACD (momentum)", "Supertrend", "Ichimoku cloud"} <= {v["name"] for v in r["votes"] if not v["voting"]}
+    assert r["n"] == 6 and {"RSI (speed)", "MACD (momentum)", "On-Balance Volume", "Ichimoku cloud"} <= {v["name"] for v in r["votes"] if not v["voting"]}
     assert all(0.0 <= v["gauge"]["pos"] <= 1.0 for v in r["votes"])
 
 

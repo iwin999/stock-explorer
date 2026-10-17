@@ -450,5 +450,8 @@ Supertrend is not in the CMT curriculum, so the dashboard's indicator panel now 
 ## New in Step 84 (a presenter's guide)
 `docs/Presenter-Guide.pdf` is a 15-page guide for the juniors presenting the dashboard. It starts from what a share is and builds up in order (basics, what can be traded, the screen, the six indicators, the five strategies and the ML model, the back-test), and explains every topic twice: in simple words with an everyday picture, and in finance words, with an "on the screen" note saying where it appears. It ends with a 3-minute demo script, twelve likely questions and a glossary. It is built by `scripts/make_presenter_guide.py` (text in `scripts/guide_pages_a.py` and `guide_pages_b.py`, design in `guide_parts.py`; needs Google Chrome): re-run it after changing the site's name or anything the guide describes, and use `--check` to confirm every page still fits.
 
+## New in Step 85 (Supertrend removed everywhere)
+Supertrend is gone from the whole project, including the real site's Daily check, where On-Balance Volume now takes its place in the list of indicators shown for context (its gauge, reading and hover text). The Supertrend calculation itself was deleted, and the captions that listed it now list On-Balance Volume.
+
 ## Status
 All 8 features are built.

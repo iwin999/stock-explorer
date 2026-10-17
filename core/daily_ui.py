@@ -74,7 +74,7 @@ def _check(symbol, name, hist, offline):
     st.markdown(vis.cards(voters), unsafe_allow_html=True)
     with st.expander("More indicators, shown for context (not counted in the call)"):
         st.markdown(vis.cards(context), unsafe_allow_html=True)
-        st.caption("RSI, MACD, ADX, Supertrend, Ichimoku and Volume are popular, but in our tests they did not make the call "
+        st.caption("RSI, MACD, ADX, On-Balance Volume, Ichimoku and Volume are popular, but in our tests they did not make the call "
                    "more accurate, so they are shown but do not vote.")
 
 
@@ -116,6 +116,6 @@ def _explain():
         "(138 companies, 2019 to 2026), choosing on the first 70% of the dates and checking on the last 30%. Most scored "
         "49% to 51% at calling the next day, which is a coin toss. The six that voting uses (trend, Bollinger band, Stochastic "
         "RSI, money flow, where the day closed, and yesterday's move) held up best, at about 51% to 52% on the days they made a clear call.\n"
-        "- **What that means:** a small edge, not a crystal ball. RSI, MACD, ADX, Supertrend, Ichimoku and Volume, popular as "
+        "- **What that means:** a small edge, not a crystal ball. RSI, MACD, ADX, On-Balance Volume, Ichimoku and Volume, popular as "
         "they are, did not improve it, so they are shown for context only.\n"
         "- **Not advice.** Past patterns do not guarantee anything.", label="How this works and how the indicators were chosen")
