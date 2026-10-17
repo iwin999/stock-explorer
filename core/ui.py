@@ -212,6 +212,16 @@ DARK_CSS = """
 .companybar-name { color: #ffffff; } .companybar-label, .companybar-code { color: #868993; }
 .disclaimer { border-top-color: #2a2e39; }
 .monogram { background: #34507f; color: #e6ebf5; }
+[data-testid="stPopoverBody"], [data-testid="stPopoverBody"] > div { background: #1e222d !important; color: #d1d4dc; border-color: #363a45 !important; }
+[data-testid="stPopoverBody"] *:not(svg):not(path):not(button):not(button *) { color: #d1d4dc; }
+[data-testid="stPopoverBody"] input, [data-testid="stPopoverBody"] [data-baseweb="input"], [data-testid="stPopoverBody"] [data-baseweb="base-input"] { background: #131722 !important; color: #d1d4dc !important; border-color: #363a45 !important; }
+[data-testid="stPopoverBody"] [data-baseweb="input"], [data-testid="stPopoverBody"] [data-baseweb="base-input"] { border-color: #363a45 !important; box-shadow: none !important; outline: none !important; }
+[data-testid="stPopoverBody"] [data-baseweb="input"]:focus-within, [data-testid="stPopoverBody"] [data-baseweb="base-input"]:focus-within { border-color: #7c9bd1 !important; }
+[data-testid="stPopoverBody"] input::placeholder { color: #868993 !important; }
+[data-testid="stPopoverBody"] [data-testid="stBaseButton-secondary"] { background: #131722; border-color: #363a45; }
+[data-testid="stPopoverBody"] [data-testid="stBaseButton-secondary"] * { color: #d1d4dc !important; }
+[data-testid="stPopoverBody"] [data-testid="stBaseButton-primary"], [data-testid="stPopoverBody"] [data-testid="stFormSubmitButton"] button { background: #34507f; border-color: #34507f; }
+[data-testid="stPopoverBody"] [data-testid="stBaseButton-primary"] *, [data-testid="stPopoverBody"] [data-testid="stFormSubmitButton"] button * { color: #ffffff !important; }
 .stApp [data-testid="stPopover"] button, [data-testid="stDialog"] [data-testid="stPopover"] button { background: #1e222d; border-color: #4a5160; color: #d1d4dc; }
 .stApp [data-testid="stPopover"] button:hover { background: #2a2e39; border-color: #7c9bd1; }
 .stApp [data-testid="stPopover"] button p, .stApp [data-testid="stPopover"] button svg, [data-testid="stDialog"] [data-testid="stPopover"] button p, [data-testid="stDialog"] [data-testid="stPopover"] button svg { color: #d1d4dc !important; fill: #d1d4dc; }

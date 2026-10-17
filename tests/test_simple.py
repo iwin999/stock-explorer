@@ -302,3 +302,17 @@ def test_a_database_problem_on_sign_in_is_a_calm_grey_note_not_a_red_box():
         assert not app.exception
         assert not list(app.error), "no red error box"
         assert any("calm-note" in m.value and "not answering" in m.value for m in app.markdown)
+
+
+def test_the_dashboard_has_a_chat_bubble_that_answers_a_question():
+    store, app = _app("Chatty", phone=False)
+    a, b = _patches(store)
+    with a, b:
+        app.run()
+        assert not app.exception and not _errors(app)
+        assert [p for p in app.get("popover")], "the round chat bubble should be on the dashboard"
+        [t for t in app.text_input if t.label == "Your question"][0].set_value("What does the RSI number mean?")
+        [b for b in app.button if b.label == "Ask"][0].click().run()
+        assert not app.exception and not _errors(app)
+        chat = app.session_state["chat"]
+        assert chat[-2]["role"] == "user" and chat[-1]["role"] == "assistant" and "RSI" in chat[-1]["content"]

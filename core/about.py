@@ -143,7 +143,7 @@ Fibonacci confluence) and the ML model, each with a **Full view** that opens a c
 6. **Left side:** what you hold, what you sold, where your money is, the leaderboard, and a barometer that combines the five strategies.
 7. **Right side:** six indicators: RSI, MACD, ADX, Z-score, Supertrend and Bollinger band.
 
-Hover over the small **i** marks next to each indicator for a short explanation. The **Tour** button in the top bar walks through every part of the screen."""
+Hover over the small **i** marks next to each indicator for a short explanation. The round **chat button** in the bottom-right corner opens "Ask me anything", a helper that explains terms and how the app works. The **Tour** button in the top bar walks through every part of the screen."""
 
 LIMITATIONS_SIMPLE = """\
 - **Not advice, and close to a coin toss for one day.** The model reading describes what some methods show, for learning; it is not a recommendation to buy or sell. In our tests the five CMT strategies and the \

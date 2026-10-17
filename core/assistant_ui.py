@@ -70,3 +70,62 @@ def _reply(raw_question, history, ctx):
     history.append({"role": "user", "content": question})
     history.append({"role": "assistant", "content": result["text"], "related": result["related"],
                     "source": result.get("source"), "level": result.get("level")})
+
+
+# ---------------- the small chat bubble (bottom corner of the dashboard) ----------------
+BUBBLE_CSS = """<style>
+.st-key-ask_bubble { position: fixed; right: 1.4rem; bottom: 1.4rem; z-index: 990; width: auto !important; }
+.st-key-ask_bubble [data-testid="stPopoverButton"] { width: 3.5rem; height: 3.5rem; min-height: 3.5rem; padding: 0; border-radius: 50%;
+    background: var(--tm-accent, #2f5597) !important; border: none !important; box-shadow: 0 4px 14px rgba(0,0,0,0.28); justify-content: center; }
+.st-key-ask_bubble [data-testid="stPopoverButton"]:hover { filter: brightness(1.12); }
+.st-key-ask_bubble [data-testid="stPopoverButton"] [aria-hidden="true"], .st-key-ask_bubble [data-testid="stMarkdownContainer"] { display: none !important; }
+.st-key-ask_bubble [data-testid="stPopoverButton"] [data-testid="stIconMaterial"] { color: #ffffff !important; font-size: 1.8rem; margin: 0; }
+.st-key-ask_bubble [data-testid="stPopoverButton"] * { color: #ffffff !important; }
+[data-testid="stPopoverBody"]:has(.ask-head) { width: min(380px, 92vw) !important; max-height: 72vh; overflow-y: auto; }
+.ask-head { font-weight: 800; font-size: 1.1rem; margin-bottom: .1rem; }
+.ask-sub { font-size: .82rem; opacity: .7; margin-bottom: .5rem; }
+</style>"""
+
+
+def bubble(ctx):
+    """A round chat button fixed to the bottom-right corner. Click it and an 'Ask me anything' panel opens above it."""
+    st.markdown(BUBBLE_CSS, unsafe_allow_html=True)
+    with st.container(key="ask_bubble"):
+        with st.popover(" ", icon=":material/chat:", help="Ask me anything"):
+            _bubble_chat(ctx)
+
+
+def _ask_later(text):
+    st.session_state["bub_q"] = text
+
+
+def _clear_chat():
+    st.session_state["chat"] = []
+
+
+@st.fragment
+def _bubble_chat(ctx):
+    """The chat itself. It is a fragment, so asking a question redraws only this panel and not the whole page."""
+    st.session_state.setdefault("chat_level", "age_15")
+    history = st.session_state.setdefault("chat", [])
+    st.markdown('<div class="ask-head">Ask me anything</div><div class="ask-sub">About a term, a chart or how this app works. '
+                'I teach; I do not give investment advice.</div>', unsafe_allow_html=True)
+    with st.form("bubble_form", clear_on_submit=True, border=False):          # the box stays at the top, so it is always in view
+        typed = st.text_input("Your question", max_chars=ai.MAX_QUESTION_CHARS, label_visibility="collapsed",
+                              placeholder="Type a question and press Enter")
+        asked = st.form_submit_button("Ask", type="primary", width="stretch")
+    question = st.session_state.pop("bub_q", None) or (typed if asked and typed.strip() else None)     # answer first, then draw the chat
+    if question:
+        _reply(question, history, ctx)
+    if not history:
+        for text in ai.STARTERS[:3]:
+            st.button(text, key=f"bub_starter_{text}", width="stretch", on_click=_ask_later, args=(text,))
+    for message in history[-2:]:                                       # only the latest question and answer, right under the box
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+    last = history[-1] if history else None
+    if last and last["role"] == "assistant":
+        for j, title in enumerate(last.get("related", [])[:3]):
+            st.button(title, key=f"bub_rel_{len(history)}_{j}", width="stretch", on_click=_ask_later, args=(title,))
+    if history:
+        st.button("Clear chat", key="bub_clear", on_click=_clear_chat)

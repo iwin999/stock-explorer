@@ -7,7 +7,7 @@
 """
 import streamlit as st
 
-from core import about, company_search, companies
+from core import about, assistant_ui, company_search, companies
 from core import cmt_strategies as cmt
 from core import instruments as ins
 from core import daily_check as dc
@@ -436,4 +436,7 @@ def run():
     # the strategies table has its own row, as wide as the whole page (left edge of the left column to right edge of the right panel)
     _strategies(symbol, hist, offline)
 
+    assistant_ui.bubble({"company": name, "symbol": symbol, "last_close": float(hist["Close"].iloc[-1]), "signals": [],
+                         "portfolio": {"cash": pf.balance, "holdings": {s_: h["quantity"] for s_, h in pf.holdings.items()},
+                                       "derivatives": len(pf.derivatives)}, "fusion": None})
     tour.render(lambda page: None, _finish_tour, dark=bool(st.session_state.get("dark_site")))

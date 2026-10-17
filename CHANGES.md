@@ -426,5 +426,8 @@ The second site was slow for three reasons, now fixed. (1) The leaderboard looke
 ## New in Step 76 (even spacing in the left boxes)
 The "Combined strategy reading" box had its last line pressed against the bottom border, and the same squeeze affected the leaderboard box. Two causes: the left column was shrinking the boxes to fit, and Streamlit trims 1rem off the end of every text block, which cut the bottom padding of the dial. The boxes now keep their full height, the gap is put back, and the heading sits the same distance from the top as the last line does from the bottom (about 16 px on the top, left and bottom).
 
+## New in Step 77 (a chat bubble on the dashboard)
+The assistant from the real site is now on the second site's dashboard as a small round chat button fixed in the bottom-right corner (not a tab). Clicking it opens an "Ask me anything" panel above it: a question box at the top, three starter questions on a fresh chat, the latest question and answer under the box, and follow-up buttons. It uses the same notes and the same answers as the real site's "Ask the bot" tab, never gives investment advice, and redraws only the panel when you ask something. It follows Dark mode (popover panels, including the About box's "?" notes, are now dark too).
+
 ## Status
 All 8 features are built.
