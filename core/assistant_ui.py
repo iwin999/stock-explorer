@@ -75,13 +75,24 @@ def _reply(raw_question, history, ctx):
 # ---------------- the small chat bubble (bottom corner of the dashboard) ----------------
 BUBBLE_CSS = """<style>
 .st-key-ask_bubble { position: fixed !important; right: 0.6rem; bottom: 3.7rem; z-index: 990; width: auto !important; }     /* at the right edge, above Streamlit's Manage app bar; stays put while the page scrolls */
-.st-key-ask_bubble [data-testid="stPopoverButton"] { width: 3.5rem; height: 3.5rem; min-height: 3.5rem; padding: 0; border-radius: 50%;
-    background: var(--tm-accent, #2f5597) !important; border: none !important; box-shadow: 0 4px 14px rgba(0,0,0,0.28); justify-content: center; }
-.st-key-ask_bubble [data-testid="stPopoverButton"]:hover { filter: brightness(1.12); }
-.st-key-ask_bubble [data-testid="stPopoverButton"] [aria-hidden="true"], .st-key-ask_bubble [data-testid="stMarkdownContainer"] { display: none !important; }
-.st-key-ask_bubble [data-testid="stPopoverButton"] [data-testid="stIconMaterial"] { color: #ffffff !important; font-size: 1.8rem; margin: 0; }
+.st-key-ask_bubble [data-testid="stPopoverButton"] { width: 3.6rem; height: 3.6rem; min-height: 3.6rem; padding: 0 !important; border-radius: 50%;
+    background: radial-gradient(circle at 35% 28%, #6f9bff 0%, #3f74e6 55%, #2f5fcf 100%) !important; border: none !important;
+    box-shadow: 0 0 0 4px rgba(79,126,238,0.22), 0 0 22px 4px rgba(79,126,238,0.55); animation: askglow 3.2s ease-in-out infinite;
+    display: flex; align-items: center; justify-content: center; }
+.st-key-ask_bubble [data-testid="stPopoverButton"]:hover { filter: brightness(1.08); }
+@keyframes askglow { 0%,100% { box-shadow: 0 0 0 4px rgba(79,126,238,0.20), 0 0 18px 3px rgba(79,126,238,0.45); }
+                     50% { box-shadow: 0 0 0 6px rgba(79,126,238,0.28), 0 0 28px 7px rgba(79,126,238,0.65); } }
+.st-key-ask_bubble [data-testid="stPopoverButton"] > div { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; gap: 0 !important; padding: 0 !important; margin: 0 !important; }
+.st-key-ask_bubble [data-testid="stPopoverButton"] [aria-hidden="true"], .st-key-ask_bubble [data-testid="stPopoverButton"] [data-testid="stIconMaterial"] { display: none !important; }
+.st-key-ask_bubble [data-testid="stPopoverButton"] > div > div, .st-key-ask_bubble [data-testid="stPopoverButton"] span, .st-key-ask_bubble [data-testid="stPopoverButton"] [data-testid="stMarkdownContainer"] {
+    margin: 0 !important; padding: 0 !important; display: flex; align-items: center; justify-content: center; }
+.st-key-ask_bubble [data-testid="stPopoverButton"] p { margin: 0 !important; padding: 0 !important; line-height: 1 !important; font-size: 1.35rem !important; font-weight: 800 !important; letter-spacing: 0.02em; color: #ffffff !important; text-shadow: 0 1px 6px rgba(20,40,110,0.45); }
 .st-key-ask_bubble [data-testid="stPopoverButton"] * { color: #ffffff !important; }
 [data-testid="stPopoverBody"]:has(.ask-head) { width: min(380px, 92vw) !important; max-height: 72vh; overflow-y: auto; }
+[data-testid="stPopoverBody"]:has(.ask-head) [data-testid="InputInstructions"] span:first-child { display: none; }     /* just the 0/300 count, below the box */
+[data-testid="stPopoverBody"]:has(.ask-head) [data-testid="InputInstructions"] span::before { content: none !important; }
+[data-testid="stPopoverBody"]:has(.ask-head) div:has(> [data-testid="InputInstructions"]) { position: static !important; }
+[data-testid="stPopoverBody"]:has(.ask-head) [data-testid="InputInstructions"] { display: flex; justify-content: flex-end; padding: 0.3rem 0.15rem 0 0; position: static !important; }
 .ask-head { font-weight: 800; font-size: 1.1rem; margin-bottom: .1rem; }
 .ask-sub { font-size: .82rem; opacity: .7; margin-bottom: .5rem; }
 </style>"""
@@ -91,7 +102,7 @@ def bubble(ctx):
     """A round chat button fixed to the bottom-right corner. Click it and an 'Ask me anything' panel opens above it."""
     st.markdown(BUBBLE_CSS, unsafe_allow_html=True)
     with st.container(key="ask_bubble"):
-        with st.popover(" ", icon=":material/chat:", help="Ask me anything"):
+        with st.popover("AI", help="Ask me anything"):
             _bubble_chat(ctx)
 
 
