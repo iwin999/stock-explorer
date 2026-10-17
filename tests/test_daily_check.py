@@ -155,3 +155,23 @@ def test_the_second_sites_gauges_use_the_real_sites_key_signal_scales_and_the_re
     assert (plain["prediction"], plain["score"]) == (styled["prediction"], styled["score"])    # the call itself does not change
     rsi = [v for v in styled["votes"] if v["name"] == "RSI (speed)"][0]["gauge"]
     assert rsi["ends"] == ("Overbought (70)", "Oversold (30)")             # reversal indicators are turned round: red end = stretched high
+
+
+def _obv_series(up_volume, down_volume, n=300):
+    idx = pd.bdate_range("2025-01-01", periods=n)
+    close = 100 + np.cumsum(np.where(np.arange(n) % 2 == 0, 1.0, -0.8))             # up, down, up, down... a gentle climb
+    volume = np.where(np.arange(n) % 2 == 0, up_volume, down_volume).astype(float)
+    return pd.DataFrame({"Open": close, "High": close + 1, "Low": close - 1, "Close": close, "Volume": volume}, index=idx)
+
+
+def test_on_balance_volume_flow_reads_buyers_or_sellers():
+    buyers = dc.indicator_frame(_obv_series(200, 100)).iloc[-1]["obv_flow"]
+    sellers = dc.indicator_frame(_obv_series(100, 200)).iloc[-1]["obv_flow"]
+    assert buyers > dc.OBV_LEAN and sellers < -dc.OBV_LEAN and abs(buyers + sellers) < 0.05      # same size, opposite sign
+    balanced = dc.indicator_frame(_obv_series(100, 100)).iloc[-1]["obv_flow"]
+    assert abs(balanced) < dc.OBV_LEAN
+    row = dc.indicator_frame(_obv_series(200, 100)).iloc[-1]
+    gauge = dc.key_signal_gauges(row)["On-Balance Volume"]
+    assert gauge["label"] == "Buyers backing it" and gauge["pos"] > 0.5 and gauge["ends"] == ("Selling", "Buying")
+    no_volume = _obv_series(200, 100).drop(columns=["Volume"])
+    assert pd.isna(dc.indicator_frame(no_volume).iloc[-1]["obv_flow"])                           # no volume data: no reading, no crash

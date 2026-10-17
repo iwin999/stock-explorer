@@ -184,6 +184,7 @@ EXPLAIN = {
     "MACD (momentum)": "Compares a quick and a slow average of the price. Above its signal line the momentum is rising; below it, fading.",
     "Trend strength (ADX)": "How strong a trend is, whichever way it points. Above 20 is a real trend. The pointer shows whether buyers or sellers are in the lead.",
     "Supertrend": "A line that trails the price and flips when the trend reverses. Price above the line is an uptrend, below it a downtrend.",
+    "On-Balance Volume": "Adds the day's trading volume when the price closes up and subtracts it when the price closes down. Over the last 20 days, more volume on up days means buyers are in charge; more on down days means sellers are. The pointer shows that net share of volume.",
     "Ichimoku cloud": "A shaded zone built from past highs and lows that acts as support and resistance. Price above the cloud is bullish, below it bearish.",
     "Z-score": "How many standard deviations the price is from its own 20-day average. Above +2 the price is unusually high and often drifts back; below -2 it is unusually low and often bounces. Between is normal.",
     "Volume": "Today's trading activity compared with the usual level. Busy trading makes a move more believable.",
@@ -209,7 +210,8 @@ HINTS = {
     "Wyckoff effort vs result": "From the Wyckoff method. Effort is trading volume; result is how far the price moved. Big volume with a big move follows the move. Big volume with little movement means the other side is absorbing it: at lows that can be a bottom, at highs a top.",
     "Fibonacci confluence": "Prices often pause at 38.2%, 50% and 61.8% of the previous swing. A pullback in an uptrend that stops at one of those levels is a common support; a bounce in a downtrend that stops there is a common resistance.",
     "RSI": EXPLAIN["RSI (speed)"], "MACD": EXPLAIN["MACD (momentum)"], "ADX": EXPLAIN["Trend strength (ADX)"],
-    "Z-score": EXPLAIN["Z-score"], "Supertrend": EXPLAIN["Supertrend"], "Bollinger band": EXPLAIN["Bollinger band"],
+    "Z-score": EXPLAIN["Z-score"], "Supertrend": EXPLAIN["Supertrend"], "On-Balance Volume": EXPLAIN["On-Balance Volume"], "OBV": EXPLAIN["On-Balance Volume"],
+    "Bollinger band": EXPLAIN["Bollinger band"],
     "ML model": "A small machine-learning model (a logistic regression) that looks at the five CMT readings and a dozen indicator readings and gives a modelled chance that the next day closes higher. It was trained on 137 NSE companies and checked on dates it had never seen. It describes what the model reads, not what will happen.",
 }
 
@@ -469,7 +471,7 @@ def ml_view(ml):
             '<div class="fg-h">How it works</div><ul>'
             '<li><b>The type of model:</b> a logistic regression, a simple and explainable model (not deep learning). It adds up weighted inputs and turns the total into a chance between 0% and 100%.</li>'
             '<li><b>Its 18 inputs</b>, all from yesterday and earlier: the five strategy readings (Fusion stage, Dow Theory, relative strength, Wyckoff, Fibonacci), '
-            'RSI, Stochastic RSI, the position in the Bollinger band, the Z-score, MACD, ADX direction and strength, Supertrend, yesterday\'s move, the last 5 days, '
+            'RSI, Stochastic RSI, the position in the Bollinger band, the Z-score, MACD, ADX direction and strength, On-Balance Volume, yesterday\'s move, the last 5 days, '
             'where yesterday closed in its range, volume against usual, volatility and the distance from the 200-day average.</li>'
             '<li><b>The question it answers:</b> will the next day close higher than today?</li></ul>'
             '<div class="fg-h">How it was built and tested</div><ul>'

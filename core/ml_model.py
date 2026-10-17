@@ -21,11 +21,11 @@ from core import daily_check as dc
 MODEL_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "ml_model.json")
 
 FEATURES = ["fusion", "dow", "rs", "wyckoff", "fib",                       # the five CMT strategy votes
-            "rsi", "stochrsi", "pct_b", "zscore", "macd", "adx_lean", "supertrend",
+            "rsi", "stochrsi", "pct_b", "zscore", "macd", "adx_lean", "obv_flow",
             "ret1", "mom5", "clv", "vol_ratio", "volatility", "above200"]
 LABELS = {"fusion": "Fusion stage", "dow": "Dow Theory", "rs": "Relative strength", "wyckoff": "Wyckoff effort vs result",
           "fib": "Fibonacci confluence", "rsi": "RSI", "stochrsi": "Stochastic RSI", "pct_b": "Bollinger position",
-          "zscore": "Z-score", "macd": "MACD", "adx_lean": "ADX direction", "supertrend": "Supertrend", "ret1": "Yesterday's move",
+          "zscore": "Z-score", "macd": "MACD", "adx_lean": "ADX direction", "obv_flow": "On-Balance Volume", "ret1": "Yesterday's move",
           "mom5": "Last 5 days", "clv": "Where yesterday closed", "vol_ratio": "Volume vs usual", "volatility": "Volatility",
           "above200": "Distance from 200-day average"}
 
@@ -46,7 +46,7 @@ def features_frame(hist, bench_close):
     out["macd"] = (ind["macd_hist"] / close * 100).clip(-5, 5)
     lean = ind["pdi"] / (ind["pdi"] + ind["mdi"]).replace(0, np.nan) - 0.5
     out["adx_lean"] = lean * (ind["adx"] / 100)
-    out["supertrend"] = ind["supertrend"]
+    out["obv_flow"] = ind["obv_flow"].fillna(0.0)
     out["ret1"] = ind["ret1"].clip(-0.1, 0.1)
     out["mom5"] = ind["mom5"].clip(-0.3, 0.3)
     out["clv"] = ind["clv"].fillna(0.0)

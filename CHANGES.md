@@ -444,5 +444,8 @@ The name shown everywhere now comes from `core/branding.py`: the page titles and
 ## New in Step 82 (the tour covers the chat bubble)
 The dashboard tour has a tenth and last step that lights up the round chat button and explains it ("Ask me anything").
 
+## New in Step 83 (On-Balance Volume replaces Supertrend; zeros show as zero)
+Supertrend is not in the CMT curriculum, so the dashboard's indicator panel now shows **On-Balance Volume** (Joseph Granville) in its place: the last 20 days' net volume flow, from all of it on down days to all of it on up days, drawn as a Selling-to-Buying gauge with "Buyers backing it", "Sellers backing it" or "Balanced". The ML model's matching input was swapped too, so it was retrained (`scripts/train_ml_model.py`) and each company's back-test was refreshed; the held-back accuracy is still about a coin toss, as before. The real site's Daily check keeps its Supertrend line unchanged. The chat helper gained notes for ADX, Z-score, On-Balance Volume, Dow Theory, Wyckoff and the ML model. Separately, any change that rounds to zero (the leaderboard, the portfolio value, the holdings and the price change) now shows as a plain grey "0.00%" instead of a green "+0.00%" or a red "-0.00%".
+
 ## Status
 All 8 features are built.

@@ -369,3 +369,16 @@ def test_the_site_name_can_be_changed_in_one_place():
             about_text = " ".join(m.value for m in app.markdown)
             assert "Zenith" in about_text and "Stock Explorer" not in about_text          # and so does the About box
     assert branding.name() == "Stock Explorer"                                           # with no setting, the original name is used
+
+
+def test_a_change_that_rounds_to_zero_is_grey_and_unsigned_everywhere():
+    from core import terminal_ui as tm
+    assert [tm._tone(x) for x in (0.0, 0.0004, -0.0004, 0.02, -0.02)] == ["flat", "flat", "flat", "up", "down"]
+    assert [tm._pct(x) for x in (0.0, 0.0004, -0.0049, 1.234, -1.234)] == ["0.00%", "0.00%", "0.00%", "+1.23%", "-1.23%"]
+    assert tm._rupees(-0.3) == tm._rupees(0.0)                                      # never "-Rs 0"
+    store, app = _app("Zeroes", phone=False)
+    a, b = _patches(store)
+    with a, b:
+        app.run()
+        board = " ".join(m.value for m in app.markdown if "tm-row" in m.value)
+        assert "+0.00%" not in board and "-0.00%" not in board

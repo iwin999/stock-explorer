@@ -29,7 +29,7 @@ from core.ui import DISCLAIMER, show_disclaimer
 REFRESH = {"Off": None, "15 seconds": 15, "30 seconds": 30, "1 minute": 60}     # live prices are shared for 15 seconds at a time
 PANEL_HEIGHT = 755
 SHORT_CLASS = {"ETFs (equity, gold, silver)": "ETFs"}
-PANEL_INDICATORS = ["RSI (speed)", "MACD (momentum)", "Trend strength (ADX)", "Z-score", "Supertrend", "Bollinger band"]
+PANEL_INDICATORS = ["RSI (speed)", "MACD (momentum)", "Trend strength (ADX)", "Z-score", "On-Balance Volume", "Bollinger band"]
 
 CSS = """<style>
 .stApp [data-testid="stMainBlockContainer"], .stApp .block-container { padding-top: 3.2rem !important; max-width: 100% !important; }
@@ -130,15 +130,32 @@ def switched():
 
 
 # ---------------- pieces ----------------
+def _tone(value, digits=2):
+    """'up', 'down' or 'flat' for a number AS IT WILL BE SHOWN: anything that rounds to zero is flat, so a tiny real change never
+    shows as a green '+0.00%' or a red '-0.00%'."""
+    shown = round(float(value), digits)
+    return "flat" if shown == 0 else "up" if shown > 0 else "down"
+
+
+def _pct(value, digits=2):
+    """A percentage with its sign, or plain '0.00%' when it rounds to zero."""
+    shown = round(float(value), digits)
+    return f"{0:.{digits}f}%" if shown == 0 else f"{shown:+.{digits}f}%"
+
+
+def _rupees(value):
+    """Whole rupees, with '0' (never '-0') when the amount rounds to nothing."""
+    return format_inr(int(round(float(value))), 0)
+
+
 @guard()
 def _portfolio_value():
     pf = tu._get_portfolio()
     snap = tu.snapshot_now(pf)
     gain = snap["total"] - pf.deposited
-    kind = "up" if gain >= 0 else "down"
     pct = gain / pf.deposited * 100 if pf.deposited else 0.0
     st.markdown(f'<div class="tm-value"><div class="l">Portfolio value</div><div class="v">{format_inr(snap["total"], 0)} '
-                f'<span class="{kind}">{pct:+.2f}%</span></div></div>', unsafe_allow_html=True)
+                f'<span class="{_tone(pct)}">{_pct(pct)}</span></div></div>', unsafe_allow_html=True)
 
 
 @guard()
@@ -150,19 +167,19 @@ def _lists():
     if table.empty:
         st.caption("Nothing yet. Use Buy under the chart.")
     for _, r in table.iterrows():
-        kind = "up" if r["P&L"] >= 0 else "down"
+        kind = _tone(r["P&L"], 0)
         st.markdown(f'<div class="tm-row"><div><b>{r["Instrument"]}</b><div class="s">{r["Details"].replace("units", "shares")}</div></div>'
-                    f'<div style="text-align:right" class="{kind}">{format_inr(r["P&L"], 0)}<div class="s">{r["P&L %"]:+.1f}%</div></div></div>',
+                    f'<div style="text-align:right" class="{kind}">{_rupees(r["P&L"])}<div class="s">{_pct(r["P&L %"], 1)}</div></div></div>',
                     unsafe_allow_html=True)
     sells = [o for o in pf.order_history if o["type"] == "SELL"][-6:]
     st.markdown('<div class="tm-h">Sold: recent sales</div>', unsafe_allow_html=True)
     if not sells:
         st.caption("No sales yet.")
     for o in reversed(sells):
-        kind = "up" if o["pnl"] >= 0 else "down"
+        kind = _tone(o["pnl"], 0)
         st.markdown(f'<div class="tm-row"><div><b>{companies.NAME_BY_SYMBOL.get(o["symbol"], o["symbol"])}</b>'
                     f'<div class="s">{o["quantity"]} sold at {format_inr(o["price"])}</div></div>'
-                    f'<div style="text-align:right" class="{kind}">{format_inr(o["pnl"], 0)}</div></div>', unsafe_allow_html=True)
+                    f'<div style="text-align:right" class="{kind}">{_rupees(o["pnl"])}</div></div>', unsafe_allow_html=True)
 
 
 @st.cache_data(ttl=30, show_spinner=False)
@@ -185,10 +202,10 @@ def _leaderboard():
     if mine and mine not in shown:
         shown = shown[:3] + [mine]
     for r in shown:
-        kind = "up" if r["Return"] >= 0 else "down"
+        kind = _tone(r["Return"])
         you = r["Name"] == me
         st.markdown(f'<div class="tm-row"><div>{"<b>" if you else ""}#{r["Rank"]} {r["Name"]}{" (you)" if you else ""}{"</b>" if you else ""}</div>'
-                    f'<div class="{kind}">{r["Return"]:+.2f}%</div></div>', unsafe_allow_html=True)
+                    f'<div class="{kind}">{_pct(r["Return"])}</div></div>', unsafe_allow_html=True)
     if mine:
         st.caption(f"You are #{mine['Rank']} of {len(rows)} by return.")
 
@@ -217,10 +234,10 @@ def _headline(symbol, name, hist, offline):
     price = quote["price"] if quote else last
     prev_close = (quote or {}).get("previous_close") or prev
     change = price - prev_close
-    kind = "up" if change >= 0 else "down"
+    kind = _tone(change)
     st.markdown(f'<div style="display:flex;align-items:baseline;gap:.8rem;flex-wrap:wrap"><span style="font-size:1.3rem;font-weight:800">{name}</span>'
                 f'<span style="font-size:1.7rem;font-weight:800">{format_inr(price)}</span>'
-                f'<span class="{kind}">{change:+,.2f} ({change / prev_close * 100:+.2f}%)</span>'
+                f'<span class="{kind}">{"0.00" if kind == "flat" else f"{change:+,.2f}"} ({_pct(change / prev_close * 100)})</span>'
                 f'<span style="opacity:.65;font-size:.85rem">{status_message()}{"" if is_market_open() else ", last close"}</span></div>',
                 unsafe_allow_html=True)
 

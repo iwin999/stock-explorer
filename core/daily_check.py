@@ -16,6 +16,7 @@ from core import indicators as ind
 
 UP, DOWN, SIDEWAYS = "Up", "Down", "Sideways"
 VOTE_UP, VOTE_DOWN = 2, -2             # score needed to call Up / Down
+OBV_LEAN = 0.10                        # net share of 20 days of volume that must lean one way to say buyers or sellers are in charge
 CLOSE_TIME = dtime(15, 30)
 
 
@@ -77,9 +78,15 @@ def indicator_frame(hist):
         pos = flow.where(typical > typical.shift(), 0).rolling(14).sum()
         neg = flow.where(typical < typical.shift(), 0).rolling(14).sum()
         frame["mfi"] = 100 - 100 / (1 + pos / neg.replace(0, np.nan))
+        # On-Balance Volume (Joseph Granville): add the day's volume on an up-close, subtract it on a down-close. The reading kept
+        # is the last 20 days' change in that running total as a share of the volume traded in them, from -1 (all of it on down
+        # days) to +1 (all of it on up days).
+        obv = (np.sign(close.diff()).fillna(0.0) * vol.fillna(0.0)).cumsum()
+        frame["obv_flow"] = ((obv - obv.shift(20)) / vol.fillna(0.0).rolling(20).sum().replace(0, np.nan)).clip(-1, 1)
     else:
         frame["vol_ratio"] = np.nan
         frame["mfi"] = np.nan
+        frame["obv_flow"] = np.nan
     return frame
 
 
@@ -165,6 +172,10 @@ def key_signal_gauges(row):
         lean = row["pdi"] / (row["pdi"] + row["mdi"])
         out["Trend strength (ADX)"] = _grade(lean, "Buyers lead" if lean > 0.5 else "Sellers lead", "Sellers", "Buyers")
     out["Supertrend"] = _grade(0.85 if row["supertrend"] > 0 else 0.15, "Uptrend" if row["supertrend"] > 0 else "Downtrend", "Downtrend", "Uptrend")
+    if pd.notna(row["obv_flow"]):
+        f = row["obv_flow"]
+        out["On-Balance Volume"] = _grade(0.5 + f / 2, "Buyers backing it" if f > OBV_LEAN else "Sellers backing it" if f < -OBV_LEAN else "Balanced",
+                                          "Selling", "Buying")
     if pd.notna(row["cloud_top"]):
         w = 1 if c > row["cloud_top"] else -1 if c < row["cloud_bot"] else 0
         out["Ichimoku cloud"] = _grade(0.5 + w * 0.35, "Above the cloud" if w > 0 else "Below the cloud" if w < 0 else "Inside the cloud", "Below", "Above")
@@ -258,6 +269,11 @@ def votes(row, scales=False):
         vote = 1 if vr >= ind.VOLUME_STRONG and m > 0.01 else -1 if vr >= ind.VOLUME_STRONG and m < -0.01 else 0
         out.append(_entry("Volume", False, vote, f"{vr:.1f}x usual", "Busy trading makes a move more believable",
                           _gauge(0.5 + (vr - 1) / 2, "Busy" if vr >= 1.15 else "Thin" if vr <= 0.85 else "Normal", "Thin", "Busy")))
+    if pd.notna(row["obv_flow"]):
+        f = row["obv_flow"]
+        out.append(_entry("On-Balance Volume", False, 1 if f > OBV_LEAN else -1 if f < -OBV_LEAN else 0, f"{f * 100:+.0f}% net buying",
+                          "Is more volume trading on up days or on down days?",
+                          _gauge(0.5 + f / 2, "Buyers backing it" if f > OBV_LEAN else "Sellers backing it" if f < -OBV_LEAN else "Balanced", "Selling", "Buying")))
     return _with_real_gauges(out, real, row) if scales else out
 
 

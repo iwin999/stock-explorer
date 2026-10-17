@@ -142,7 +142,7 @@ HOW_TO_USE_SIMPLE = """\
 5. **The strategies:** a table of the five strategies (Fusion stage, Dow Theory, relative strength, Wyckoff effort vs result and \
 Fibonacci confluence) and the ML model, each with a **Full view** that opens a chart and a plain explanation of what it is doing.
 6. **Left side:** what you hold, what you sold, where your money is, the leaderboard, and a barometer that combines the five strategies.
-7. **Right side:** six indicators: RSI, MACD, ADX, Z-score, Supertrend and Bollinger band.
+7. **Right side:** six indicators: RSI, MACD, ADX, Z-score, On-Balance Volume and Bollinger band.
 
 Hover over the small **i** marks next to each indicator for a short explanation. The round **chat button** in the bottom-right corner opens "Ask me anything", a helper that explains terms and how the app works. The **Tour** button in the top bar walks through every part of the screen."""
 
@@ -165,7 +165,7 @@ library. This is unofficial and may be delayed or occasionally wrong.
 **Ideas and methods**
 - The five strategies: Fusion stage (the Winner's Circle trend test, **CMT Level III curriculum, Chapter 8**, in our own words), Dow Theory, \
 relative strength, Wyckoff effort vs result and Fibonacci retracements.
-- Indicators: RSI and ADX (J. Welles Wilder), MACD (Gerald Appel), Bollinger Bands (John Bollinger), Supertrend and the Z-score.
+- Indicators: RSI and ADX (J. Welles Wilder), MACD (Gerald Appel), Bollinger Bands (John Bollinger), On-Balance Volume (Joseph Granville) and the Z-score.
 - The machine-learning estimate is a logistic regression trained on saved NSE price history.
 
 **Software**
