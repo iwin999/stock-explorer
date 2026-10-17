@@ -417,5 +417,8 @@ A check in Dark mode and with Dashboard view off found four small things, now fi
 ## New in Step 73 (a tour in both layouts, calmer dark-mode colours)
 A **Tour** button now sits in the top bar of both the dashboard (Dashboard view on) and the phone layout (off). The dashboard has its own nine-step tour (top bar, search, chart, Buy/Sell, indicators, barometer, holdings, leaderboard, strategies) and offers it once to first-time visitors; the phone tour is unchanged. In Dark mode the bright blues (the selected Buy box, the Fibonacci/charts accents, the tour outline, the FS circle) are replaced by a muted steel blue; the Dashboard view switch shows clearly when off; the small "?" buttons and `code` chips in the About box are dark instead of white; and the About text no longer mentions the removed model-reading card.
 
+## New in Step 74 (calm messages, clearer database errors)
+Anything that goes wrong (the online database not answering, a missing portfolio, a file that could not be restored, price data not loading) now shows a quiet grey note in normal text instead of a red box, so it never looks like a panic. When the online database refuses a request, the note now ends with a short detail (for example the web status and Supabase's own wording, never the key) and the same detail goes to the app log, so a set-up mistake such as a wrong key or a missing table can be told apart from a passing network blip.
+
 ## Status
 All 8 features are built.

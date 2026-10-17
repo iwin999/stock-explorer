@@ -128,6 +128,32 @@ class FileStore:
 
 
 # ---------------- Supabase (online database) ----------------
+def _why(error=None, resp=None):
+    """A short, secret-free reason a database call failed (the web status and Supabase's own message), so a set-up mistake can be
+    told apart from a passing network blip. Also printed to the app log."""
+    try:
+        if resp is not None and getattr(resp, "status_code", None):
+            try:
+                body = resp.json()
+                said = str(body.get("message") or body.get("hint") or body.get("error") or "")[:120]
+            except Exception:
+                said = ""
+            reason = f"{resp.status_code}" + (f", {said}" if said else "")
+        else:
+            reason = type(error).__name__ if error else "unknown"
+            response = getattr(error, "response", None)
+            if response is not None:
+                return _why(None, response)
+    except Exception:
+        reason = "unknown"
+    print(f"[storage] database call failed: {reason}", flush=True)
+    return reason
+
+
+def _unreachable(error=None, resp=None):
+    return StorageError(f"The online database is not answering right now. Please try again in a moment. (Detail: {_why(error, resp)})")
+
+
 class SupabaseStore:
     """Talks to a Supabase table through its plain web (REST) interface.
 
@@ -151,7 +177,7 @@ class SupabaseStore:
             resp.raise_for_status()
             return resp
         except Exception as e:
-            raise StorageError("Could not reach the online database. Please try again in a moment.") from e
+            raise _unreachable(e) from e
 
     def create(self, key, name, data):
         """Insert a NEW account. A plain insert (not an upsert) is refused by the database if the key exists."""
@@ -160,13 +186,13 @@ class SupabaseStore:
         try:
             resp = self.http.post(self.base, headers=headers, timeout=15, data=json.dumps([row]))
         except Exception as e:
-            raise StorageError("Could not reach the online database. Please try again in a moment.") from e
+            raise _unreachable(e) from e
         if getattr(resp, "status_code", 200) == 409:
             raise NameTaken(f"The name “{name}” is already taken.")
         try:
             resp.raise_for_status()
         except Exception as e:
-            raise StorageError("Could not reach the online database. Please try again in a moment.") from e
+            raise _unreachable(e, resp) from e
 
     def update(self, key, data):
         """Change an EXISTING account only. Returns False if no such account exists (nothing is created)."""

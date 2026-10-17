@@ -19,7 +19,7 @@ from core.live import REFRESH_SECONDS, close_on, live_quote, spot_price, vol_est
 from core.market_data import get_latest_price
 from core.market_hours import is_market_open, now_ist
 from core.trading import MAX_CAPITAL, MIN_CAPITAL, Portfolio, TradingError, check_capital
-from core.errors import guard
+from core.errors import guard, calm
 from core.ui import know_how_button, notice, show_disclaimer
 
 CAPITAL_PRESETS = [50000, 100000, 500000, 1000000]
@@ -151,12 +151,12 @@ def capital_gate():
                 _sign_in(acc.create_account(store, name, amount))
                 st.rerun()
             except (acc.StorageError, TradingError) as e:
-                st.error(str(e))
+                calm(str(e))
     else:
         try:
             names = store.names()
         except acc.StorageError as e:
-            st.error(str(e))
+            calm(str(e))
             names = []
         if not names:
             st.info("There are no saved portfolios yet. Choose “New user” to create one.")
@@ -166,12 +166,12 @@ def capital_gate():
                 try:
                     pf = acc.load_account(store, pick)
                     if pf is None:
-                        st.error("That portfolio could not be found.")
+                        calm("That portfolio could not be found.")
                     else:
                         _sign_in(pf)
                         st.rerun()
                 except acc.StorageError as e:
-                    st.error(str(e))
+                    calm(str(e))
     st.caption(f"Portfolios are saved in: {store.label}.")
     show_disclaimer()
 
@@ -208,7 +208,7 @@ def show_flash():
     """The result of the last click (shown once, at the top of the page, whichever tab it came from)."""
     flash = st.session_state.pop("flash", None)
     if flash:
-        (st.success if flash[0] == "ok" else st.error)(flash[1])
+        (st.success if flash[0] == "ok" else calm)(flash[1])
 
 
 # ---------------- prices ----------------

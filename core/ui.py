@@ -84,6 +84,7 @@ h3 { font-size: 1.35rem !important; font-weight: 600 !important; }
 .chip-next { background: #fdf6e7; border-color: #e6c987; color: #7a5a14; }
 
 /* Friendly error cards */
+.calm-note { border: 1px solid #d5dbe5; background: #f3f5f8; color: #3b4452; border-radius: 8px; padding: 0.7rem 1rem; margin: 0.5rem 0; font-size: 1rem; }
 .error-card { border-radius: 8px; padding: 1.1rem 1.4rem; margin: 1rem 0; border: 1px solid #c9d2e0; background: #f3f5f8; }
 .error-card.warn { border-color: #e6c987; background: #fdf6e7; }
 .error-card .error-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.4rem; color: #1d3557; }
@@ -191,6 +192,7 @@ DARK_CSS = """
 .callout { background: #1e222d; border-left-color: #7c9bd1; color: #d1d4dc; }
 .notice { background: #2a2312; color: #f1dfae; border-left-color: #c8962e; }
 .error-card { background: #1e222d; border-color: #363a45; }
+.calm-note { background: #1e222d; border-color: #363a45; color: #b2b5be; }
 .error-card.warn { background: #2a2312; border-color: #8a6b22; }
 .error-card .error-title, .creator-name { color: #ffffff; }
 .chip { background: #1e222d; border-color: #363a45; color: #d1d4dc; }

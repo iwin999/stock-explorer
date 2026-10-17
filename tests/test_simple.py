@@ -278,3 +278,27 @@ def test_the_tour_button_is_there_in_both_layouts():
         assert [x for x in app.button if x.key == "tour_btn_top"], "the phone layout has a Tour button too"
         [x for x in app.button if x.key == "tour_btn_top"][0].click().run()
         assert app.session_state["tour_kind"] == "phone" and not app.exception
+
+
+def test_a_database_problem_on_sign_in_is_a_calm_grey_note_not_a_red_box():
+    from core import accounts as accounts_module
+
+    class Down:
+        label = "online database (Supabase)"
+        def create(self, *a, **k):
+            raise accounts_module.StorageError("The online database is not answering right now. Please try again in a moment.")
+        def all(self):
+            return []
+        def names(self):
+            return []
+        def get(self, key):
+            return None
+
+    app = AppTest.from_file(APP, default_timeout=240)
+    with mock.patch("core.trading_ui.get_store", lambda: Down()), mock.patch("core.portfolio_ui.get_store", lambda: Down()):
+        app.run()
+        app.text_input[0].set_value("Calmcheck").run()
+        [b for b in app.button if b.label == "Start"][0].click().run()
+        assert not app.exception
+        assert not list(app.error), "no red error box"
+        assert any("calm-note" in m.value and "not answering" in m.value for m in app.markdown)

@@ -18,7 +18,7 @@ from core import price_panel
 from core import tour
 from core import trading_ui as tu
 from core.charts import allocation_donut, show as show_chart
-from core.errors import guard
+from core.errors import guard, calm
 from core.formatting import format_inr
 from core.live import live_quote
 from core.market_data import get_company_name, get_history_with_source
@@ -386,7 +386,7 @@ def run():
         hist, source, last_date = _history(symbol)
         offline = source == "offline"
         if hist is None or len(hist) < 30:
-            st.error("Price data for this company could not be loaded right now. Please choose another company.")
+            calm("Price data for this company could not be loaded right now. Please choose another company.")
             show_disclaimer()
             return
         st.fragment(run_every=every)(_headline)(symbol, name, hist, offline)

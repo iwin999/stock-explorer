@@ -237,3 +237,20 @@ def test_exit_all_never_sells_at_cost_price_when_a_price_is_missing():
     assert result["count"] == 1 and len(result["skipped"]) == 1 and "LOSER" in result["skipped"][0] or "Loser" in result["skipped"][0]
     assert "LOSER.NS" in pf.holdings and "OK.NS" not in pf.holdings          # the unpriced one is still held, loss not hidden
     assert abs(result["realised"] - 100.0) < 1e-6
+
+
+def test_a_database_refusal_says_why_without_showing_the_key():
+    class Resp:
+        status_code = 401
+        def json(self):
+            return {"message": "Invalid API key"}
+        def raise_for_status(self):
+            raise RuntimeError("401")
+
+    class Refuses:
+        def post(self, *a, **k):
+            return Resp()
+
+    with pytest.raises(acc.StorageError) as e:
+        acc.SupabaseStore("https://x.supabase.co", "sb_secret_abc123", session=Refuses()).create("s2:a", "a", {})
+    assert "401" in str(e.value) and "Invalid API key" in str(e.value) and "sb_secret" not in str(e.value)

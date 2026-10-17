@@ -14,7 +14,7 @@ from core import about, assistant_ui, carpet_ui, daily_ui, universe, market_stri
 from core.charts import (show as show_chart, add_fibonacci, backtest_chart, fan_chart, outlook_gauge, outcome_histogram, price_chart,
                          zoom_to_window)
 from core.formatting import format_inr
-from core.errors import guard
+from core.errors import guard, calm
 from core.live import live_quote
 from core.market_data import get_company_name, get_history_with_source
 from core.market_hours import is_market_open, now_ist, status_message
@@ -124,7 +124,7 @@ with st.spinner(f"Loading {name}..."):
     hist, source, last_date = load_history(symbol)
 
 if hist is None or len(hist) < 30:
-    st.error("Price data for this company could not be loaded right now. "
+    calm("Price data for this company could not be loaded right now. "
              "Please check the internet connection or choose another company.")
     st.stop()
 

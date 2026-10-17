@@ -71,6 +71,11 @@ def classify(exc):
     return UNEXPECTED
 
 
+def calm(text):
+    """A quiet grey note for anything that went wrong: plain text, no red, no alarm (a hiccup is nothing to panic about)."""
+    st.markdown(f'<div class="calm-note">{html.escape(str(text))}</div>', unsafe_allow_html=True)
+
+
 def _card(title, body_html, tone="info"):
     st.markdown(f'<div class="error-card {tone}"><div class="error-title">{title}</div>{body_html}</div>',
                 unsafe_allow_html=True)

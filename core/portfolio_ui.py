@@ -16,7 +16,7 @@ from core.market_hours import now_ist
 from core.trading import Portfolio
 from core.trading_ui import (exit_all_control, _get_portfolio, _refresh_every, _save, _sign_out, admin_pin, get_store,
                              positions_table, snapshot_now, storage_diagnosis)
-from core.errors import guard
+from core.errors import guard, calm
 from core.ui import callout, know_how_button, notice, plain_english
 
 ETF_OPTIONS = [s for s in ins.CASH_INSTRUMENTS if ins.asset_class(s) == ins.ETFS]
@@ -105,7 +105,7 @@ def _builder(pf):
         alloc[cls] = col.slider(cls, 0, 100, defaults[cls], step=5, key=f"alloc_{cls}", format="%d%%")
     total_pct = sum(alloc.values())
     if total_pct > 100:
-        st.error(f"These add up to {total_pct}%, which is more than 100%. Please reduce some of them.")
+        calm(f"These add up to {total_pct}%, which is more than 100%. Please reduce some of them.")
         return
     st.caption(f"Invested: {total_pct}%   |   Kept as cash: {100 - total_pct}%")
 
@@ -211,7 +211,7 @@ def _leaderboard():
     try:
         rows = _ranked(_all_accounts(get_store()))
     except acc.StorageError as e:
-        st.error(str(e))
+        calm(str(e))
         return
     if not rows:
         st.info("No portfolios yet.")
@@ -237,7 +237,7 @@ def _lookup():
     try:
         names = store.names()
     except acc.StorageError as e:
-        st.error(str(e))
+        calm(str(e))
         return
     if not names:
         return
@@ -245,7 +245,7 @@ def _lookup():
     try:
         pf = acc.load_account(store, pick)
     except acc.StorageError as e:
-        st.error(str(e))
+        calm(str(e))
         return
     if pf is None:
         st.warning("That portfolio could not be found.")
@@ -291,7 +291,7 @@ def _organiser_tools():
         try:
             records = store.all()
         except acc.StorageError as e:
-            st.error(str(e))
+            calm(str(e))
             return
 
         st.markdown(f"**{len(records)} portfolio(s)** saved in {store.label}.")
@@ -329,4 +329,4 @@ def _organiser_tools():
                 _all_accounts.clear()
                 st.success(f"Restored {len(restored)} portfolio(s).")
             except (ValueError, KeyError, TypeError, acc.StorageError) as e:
-                st.error(f"That file could not be restored: {e}")
+                calm(f"That file could not be restored: {e}")
