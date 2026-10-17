@@ -316,3 +316,24 @@ def test_the_dashboard_has_a_chat_bubble_that_answers_a_question():
         assert not app.exception and not _errors(app)
         chat = app.session_state["chat"]
         assert chat[-2]["role"] == "user" and chat[-1]["role"] == "assistant" and "RSI" in chat[-1]["content"]
+
+
+def _legend(app):
+    return " ".join(m.value for m in app.markdown if "tm-legend" in m.value)
+
+
+def test_where_your_money_is_scrolls_only_when_there_are_more_than_two_kinds():
+    for holdings, scrolls in (({}, False), ({"RELIANCE.NS": {"quantity": 5, "avg_price": 1000.0}}, False),
+                              ({"RELIANCE.NS": {"quantity": 5, "avg_price": 1000.0}, "NIFTYBEES.NS": {"quantity": 5, "avg_price": 200.0}}, True)):
+        store = acc.FileStore(tempfile.mkdtemp())
+        pf = acc.create_account(store, "Ring", 100000)
+        pf.tour_seen = True
+        pf.holdings = holdings
+        acc.save_account(store, pf)
+        app = AppTest.from_file(APP, default_timeout=240)
+        app.query_params["user"] = "Ring"
+        a, b = _patches(store)
+        with a, b, mock.patch("core.live.spot_price", lambda s: 1000.0 if s == "RELIANCE.NS" else 200.0):
+            app.run()
+            assert not app.exception and not _errors(app)
+            assert ("tm-legend scroll" in _legend(app)) is scrolls, holdings

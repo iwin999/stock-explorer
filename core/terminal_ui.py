@@ -17,7 +17,7 @@ from core import ml_model
 from core import price_panel
 from core import tour
 from core import trading_ui as tu
-from core.charts import allocation_donut, show as show_chart
+from core.charts import ALLOC_COLOURS, allocation_donut, show as show_chart
 from core.errors import guard, calm
 from core.formatting import format_inr
 from core.live import in_parallel, live_quote
@@ -27,6 +27,7 @@ from core.ui import DISCLAIMER, show_disclaimer
 
 REFRESH = {"Off": None, "15 seconds": 15, "30 seconds": 30, "1 minute": 60}     # live prices are shared for 15 seconds at a time
 PANEL_HEIGHT = 755
+SHORT_CLASS = {"ETFs (equity, gold, silver)": "ETFs"}
 PANEL_INDICATORS = ["RSI (speed)", "MACD (momentum)", "Trend strength (ADX)", "Z-score", "Supertrend", "Bollinger band"]
 
 CSS = """<style>
@@ -51,6 +52,10 @@ CSS = """<style>
 .st-key-tm_strat .up { color:var(--pp-up,#158a7e); } .st-key-tm_strat .down { color:var(--pp-down,#d6453d); } .st-key-tm_strat .flat { color:var(--pp-flat,#6b7785); }
 .st-key-tm_strat button { min-height:2rem; padding:.1rem .6rem; font-weight:700; color:var(--tm-accent,#2f5597); }
 .tm-row { display:flex; justify-content:space-between; gap:.5rem; padding:.35rem 0; border-bottom:1px solid rgba(128,128,128,.25); font-size:.92rem; }
+.tm-legend { margin-top:.2rem; } .tm-legend.scroll { max-height:3.3rem; overflow-y:auto; padding-right:.3rem; scrollbar-width:thin; }
+.tm-legend.scroll::-webkit-scrollbar { width:6px; } .tm-legend.scroll::-webkit-scrollbar-thumb { background:rgba(128,128,128,.5); border-radius:3px; } .tm-legend.scroll::-webkit-scrollbar-track { background:rgba(128,128,128,.12); border-radius:3px; }
+.tm-lg { display:flex; align-items:center; gap:.5rem; font-size:.82rem; line-height:1.55rem; height:1.55rem; }
+.tm-lg i { width:.7rem; height:.7rem; border-radius:2px; flex:none; } .tm-lg span { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .tm-lg b { font-weight:700; }
 .tm-row .s { opacity:.65; font-size:.8rem; } .tm-h { font-weight:800; font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; opacity:.7; margin:.5rem 0 .2rem 0; }
 .dc-card.tm { padding:.5rem .7rem .05rem .7rem; margin-bottom:.45rem; cursor:help; }
 .dc-card.tm .dc-name { font-size:.92rem; } .dc-card.tm .scale { margin:.1rem 0 .3rem 0; }
@@ -193,8 +198,15 @@ def _ring():
     snap = tu.snapshot_now(pf)
     st.markdown('<div class="tm-h">Where your money is</div>', unsafe_allow_html=True)
     donut = allocation_donut(snap["by_class"])
-    donut.update_layout(height=125, margin=dict(l=0, r=0, t=0, b=0), legend=dict(orientation="h", y=-0.05, font=dict(size=11)))
+    donut.update_layout(height=120, margin=dict(l=0, r=0, t=0, b=0), showlegend=False)
+    donut.update_traces(textinfo="none")
     show_chart(donut, key="term_ring")
+    # the key under the ring: two rows or fewer sit as they are; more than two get a small scrolling list, so the box never grows
+    parts = [(k, v) for k, v in snap["by_class"].items() if v > 0.5]
+    total = sum(v for _, v in parts) or 1.0
+    rows = "".join(f'<div class="tm-lg"><i style="background:{ALLOC_COLOURS.get(k, "#b8c0cc")}"></i><span title="{k}">{SHORT_CLASS.get(k, k)}</span><b>{v / total * 100:.0f}%</b></div>'
+                   for k, v in parts)
+    st.markdown(f'<div style="padding-bottom:1rem"><div class="tm-legend{" scroll" if len(parts) > 2 else ""}">{rows}</div></div>', unsafe_allow_html=True)
 
 
 @guard()

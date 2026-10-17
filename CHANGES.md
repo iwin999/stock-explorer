@@ -429,5 +429,8 @@ The "Combined strategy reading" box had its last line pressed against the bottom
 ## New in Step 77 (a chat bubble on the dashboard)
 The assistant from the real site is now on the second site's dashboard as a small round chat button fixed in the bottom-right corner (not a tab). Clicking it opens an "Ask me anything" panel above it: a question box at the top, three starter questions on a fresh chat, the latest question and answer under the box, and follow-up buttons. It uses the same notes and the same answers as the real site's "Ask the bot" tab, never gives investment advice, and redraws only the panel when you ask something. It follows Dark mode (popover panels, including the About box's "?" notes, are now dark too).
 
+## New in Step 78 (the money ring stays tidy)
+The "Where your money is" box now draws the ring with its own small key underneath (colour, name, percentage) instead of the chart's built-in legend, which squeezed the ring and cut off labels when someone held several kinds of things. With one or two kinds both rows simply show; with more than two, the key shows two rows and scrolls for the rest, so the box stays the same size however much is bought.
+
 ## Status
 All 8 features are built.

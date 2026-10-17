@@ -227,12 +227,15 @@ def outcome_histogram(strategy_values, hold_values, strategy_name, title, x_titl
     return fig
 
 
+ALLOC_COLOURS = {"Stocks": "#1d3557", "ETFs (equity, gold, silver)": "#457b9d", "Bonds": "#2a9d8f",
+                 "Futures": "#d98e04", "Options": "#c8553d", "Cash": "#b8c0cc"}
+
+
 def allocation_donut(by_class):
     """Doughnut chart of where the money is: cash, stocks, ETFs, bonds, futures, options."""
     labels = [k for k, v in by_class.items() if v > 0.5]
     values = [by_class[k] for k in labels]
-    palette = {"Stocks": "#1d3557", "ETFs (equity, gold, silver)": "#457b9d", "Bonds": "#2a9d8f",
-               "Futures": "#d98e04", "Options": "#c8553d", "Cash": "#b8c0cc"}
+    palette = ALLOC_COLOURS
     fig = go.Figure(go.Pie(labels=labels, values=values, hole=0.55, sort=False,
                            marker=dict(colors=[palette.get(k, GREY) for k in labels]),
                            textinfo="percent", hovertemplate="%{label}: Rs %{value:,.0f}<extra></extra>"))
