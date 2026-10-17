@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from core import about, assistant_ui, carpet_ui, daily_ui, universe, market_strip, backtest as bt, fusion_ui, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
+from core import about, assistant_ui, branding, carpet_ui, daily_ui, universe, market_strip, backtest as bt, fusion_ui, companies, indicators as ind, portfolio_ui, ratios, simulation as sim, trading_ui
 from core.charts import (show as show_chart, add_fibonacci, backtest_chart, fan_chart, outlook_gauge, outcome_histogram, price_chart,
                          zoom_to_window)
 from core.formatting import format_inr
@@ -23,7 +23,7 @@ from core.signal_scales import rate_signals
 from core.ui import (company_bar, help_bubble, ratio_scale, scale_html, callout, know_how_button, metric_with_help, notice, plain_english, setup_page,
                      show_disclaimer, term_row)
 
-setup_page("Stock Explorer")
+setup_page(branding.name())
 
 # ---------- step 1: ask how much virtual money to practise with ----------
 if not trading_ui.has_account():
@@ -56,7 +56,7 @@ def run_search(query):
 
 
 # ---------- header ----------
-about.title_row("Stock Explorer")
+about.title_row()
 st.caption("Price history, key signals and a range of possible outcomes for Indian companies listed on the NSE and the BSE.")
 market_strip.render(lambda: trading_ui.snapshot_now(trading_ui._get_portfolio()), portfolio_ui.my_rank)
 trading_ui.user_bar()

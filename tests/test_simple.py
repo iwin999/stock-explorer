@@ -351,3 +351,21 @@ def test_the_buy_pop_up_has_a_company_picker_and_the_four_tabs():
         picker = [s for s in app.selectbox if s.key and s.key.startswith("pick_dlg_")][0]
         assert "TCS.NS" in picker.options or any("TCS" in o for o in picker.options)      # any listed company can be bought without closing the pop-up
         assert app.radio(key="mode_dlg").value == "Buy"
+
+
+def test_the_site_name_can_be_changed_in_one_place():
+    from core import branding
+    with mock.patch("core.branding.name", lambda: "Zenith"):
+        assert branding.apply("About Stock Explorer: Stock Explorer is a site.") == "About Zenith: Zenith is a site."
+        assert branding.unapply("what is zenith?") == "what is Stock Explorer?"
+        store, app = _app("Namer", phone=False)
+        a, b = _patches(store)
+        with a, b:
+            app.run()
+            assert not app.exception and not _errors(app)
+            text = " ".join(m.value for m in app.markdown)
+            assert "Zenith" in text and "Stock Explorer" not in text                     # the dashboard's title follows the setting
+            app.button(key="about_btn").click().run()
+            about_text = " ".join(m.value for m in app.markdown)
+            assert "Zenith" in about_text and "Stock Explorer" not in about_text          # and so does the About box
+    assert branding.name() == "Stock Explorer"                                           # with no setting, the original name is used

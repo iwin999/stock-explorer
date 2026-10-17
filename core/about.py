@@ -13,9 +13,10 @@ import os
 
 import streamlit as st
 
+from core import branding
 from core import errors as er
 
-SITE_NAME = "Stock Explorer"
+SITE_NAME = "Stock Explorer"          # the default; the name actually shown comes from core/branding.py
 
 # ---- the creator (edit here, or override with [about] in the app's secrets) ----
 CREATOR_NAME = "Freya Shah"
@@ -238,29 +239,28 @@ def _site():
     return st.session_state.get("site", "full")
 
 
-@st.dialog("About Stock Explorer", width="large")
 @er.guard()
 def _dialog():
     simple = _site() == "simple"
     st.markdown("### What this project is")
-    st.markdown(WHAT_IT_IS_SIMPLE if simple else WHAT_IT_IS)
+    st.markdown(branding.apply(WHAT_IT_IS_SIMPLE if simple else WHAT_IT_IS))
     st.markdown("### How to use it")
-    st.markdown(HOW_TO_USE_SIMPLE if simple else HOW_TO_USE)
+    st.markdown(branding.apply(HOW_TO_USE_SIMPLE if simple else HOW_TO_USE))
     st.markdown("### Limitations")
-    st.markdown(LIMITATIONS_SIMPLE if simple else LIMITATIONS)
+    st.markdown(branding.apply(LIMITATIONS_SIMPLE if simple else LIMITATIONS))
     st.markdown("### Sources and credits")
-    st.markdown(SOURCES_SIMPLE if simple else SOURCES)
+    st.markdown(branding.apply(SOURCES_SIMPLE if simple else SOURCES))
     st.markdown("### Meet the creator")
     _creator_section()
     st.markdown("### Gratitude")
-    st.markdown(gratitude_markdown())
+    st.markdown(branding.apply(gratitude_markdown()))
     st.caption("Educational project. Not investment advice. No real money is involved.")
 
 
 def icon():
     """The small circled 'i'. Clicking it opens the About page over the current page (no new tab)."""
     if st.button("i", key="about_btn", help="About this project"):
-        _dialog()
+        st.dialog(f"About {branding.name()}", width="large")(_dialog)()
 
 
 CREST_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets", "mayo-crest.png")
@@ -282,8 +282,9 @@ def _dark_changed():
     st.session_state["dark_chart"] = st.session_state["dark_site"]
 
 
-def title_row(title="Stock Explorer"):
+def title_row(title=None):
     """The page title, with the Mayo College Girls School crest beside it and the About icon at the far right."""
+    title = branding.safe() if title is None else title
     left, mid, right = st.columns([9, 2, 1])
     with left:
         st.markdown(f'<span class="about-row-marker"></span><div class="brand">{_crest_html()}<h1>{title}</h1></div>',

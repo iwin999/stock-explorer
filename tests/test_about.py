@@ -109,3 +109,18 @@ def test_the_second_site_about_leaves_out_what_only_the_real_site_has():
     for on_the_second_site in ("Search stock", "Buy, Sell, Exit all", "five strategies", "machine-learning", "Z-score"):
         assert on_the_second_site in simple
     assert "Possible outcomes" in about.HOW_TO_USE                       # the real site's About is unchanged
+
+
+def test_the_real_site_and_the_chat_helper_follow_the_site_name_setting():
+    from core import branding
+    store = acc.FileStore(tempfile.mkdtemp())
+    acc.create_account(store, "Renamer", 100000)
+    with mock.patch("core.branding.name", lambda: "Zenith"), mock.patch("core.trading_ui.get_store", lambda: store), \
+            mock.patch("core.portfolio_ui.get_store", lambda: store):
+        main = AppTest.from_file(APP, default_timeout=240)
+        main.query_params["user"] = "Renamer"
+        main.run()
+        assert not main.exception
+        text = " ".join(m.value for m in main.markdown)
+        assert "<h1>Zenith</h1>" in text and "Stock Explorer" not in text
+    assert branding.apply("What is Stock Explorer?") == "What is Stock Explorer?"             # unchanged when no new name is set

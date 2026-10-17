@@ -7,7 +7,7 @@ import streamlit as st
 from core import instruments as ins
 from core import daily_check as dc
 from core import daily_ui
-from core import about, assistant_ui, companies, terminal_ui, tour, universe
+from core import about, assistant_ui, branding, companies, terminal_ui, tour, universe
 from core import simple_words as words
 from core.charts import allocation_donut, show as show_chart, simple_line_chart
 from core.formatting import format_inr
@@ -29,7 +29,7 @@ if "dash_init" not in st.session_state:
     st.session_state.setdefault("terminal_view", True)
 st.session_state["site"] = "simple"                    # tells the About dialog which site it is on
 dashboard = bool(st.session_state.get("terminal_view"))          # the wide, one-screen Dashboard view
-st.set_page_config(page_title="Stock Explorer (simple)", layout="wide" if dashboard else "centered")
+st.set_page_config(page_title=branding.name(), layout="wide" if dashboard else "centered")
 st.markdown(STYLE_CSS, unsafe_allow_html=True)
 if st.session_state.get("dark_site"):
     st.markdown(DARK_CSS, unsafe_allow_html=True)
@@ -131,7 +131,7 @@ def span(text, kind):
 
 # ---------------- header ----------------
 with st.container(key="simplehead"):
-    st.markdown(f'<div class="brand">{about._crest_html()}<h1 style="font-size:1.9rem !important">Stock Explorer</h1></div>',
+    st.markdown(f'<div class="brand">{about._crest_html()}<h1 style="font-size:1.9rem !important">{branding.safe()}</h1></div>',
                 unsafe_allow_html=True)
     left, middle, tour_col, right = st.columns([2.6, 2.8, 1.5, 1])
     left.toggle("Dark mode", key="dark_site", on_change=about._dark_changed)

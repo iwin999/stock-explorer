@@ -438,5 +438,8 @@ The dashboard's Paper trade pop-up no longer closes after every order: it stays 
 ## New in Step 80 (a back-test for each company)
 The "Back-test" column of the strategies table now shows that company's own record instead of one number for everyone. `scripts/evaluate_company_backtests.py` replays each of the 137 saved NSE companies on its own history (about 1,000 calls per strategy) and writes `data/cmt_company_stats.json`; for each strategy it records how often an Up or Down vote was followed by a move in that direction over the next day and the next 20 days. The ML model's record per company uses only the days it was not trained on. Hovering a number gives the count of past calls and the all-company figure for comparison. A BSE listing uses its NSE twin; a company with no saved history shows the all-company average and the header says so; a strategy with fewer than 30 past calls on a company says "too few past calls to judge" rather than quoting a percentage. Re-run the script after refreshing the saved prices.
 
+## New in Step 81 (the site name in one place)
+The name shown everywhere now comes from `core/branding.py`: the page titles and browser tab, the dashboard's top bar, the About box, the chat helper's answers, and the error e-mail subject. It can be changed at the last minute without a push by adding `site_name = "..."` to the app's Secrets (DEPLOY.md has the steps), or by editing `DEFAULT_NAME`. The chat helper still understands questions that use the new name.
+
 ## Status
 All 8 features are built.

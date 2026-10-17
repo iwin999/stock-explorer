@@ -111,3 +111,14 @@ Secrets as the full site (so both use the same Supabase database).
 - Search "tata motors" works.
 - BUY a share in the Paper trading tab; refresh the page and see the account reset.
 - (If prices look old, the yellow banner will say so - that is the fallback working.)
+
+## Changing the site's name at the last minute
+The name is kept in one place. To change it without touching the code: open the app on share.streamlit.io, then the app's menu,
+**Settings**, **Secrets**, and add one line (above the `[supabase]` part):
+
+    site_name = "Your New Name"
+
+Save. The app restarts by itself (about a minute) and the new name shows in the page titles, the browser tab, the dashboard's top
+bar, the About box, the chat helper's answers and the error e-mail subject. Do this in BOTH apps (the full site and the second site)
+so they match. To change it in the code instead, edit `DEFAULT_NAME` in `core/branding.py`. The web address (`...streamlit.app`) is a
+separate setting: app menu, Settings, General, App URL.

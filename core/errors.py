@@ -71,6 +71,15 @@ def classify(exc):
     return UNEXPECTED
 
 
+def _site_name():
+    """The site's current name for the error e-mail (the plain default if anything goes wrong, so this can never fail)."""
+    try:
+        from core import branding
+        return branding.name()
+    except Exception:
+        return "Stock Explorer"
+
+
 def calm(text):
     """A quiet grey note for anything that went wrong: plain text, no red, no alarm (a hiccup is nothing to panic about)."""
     st.markdown(f'<div class="calm-note">{html.escape(str(text))}</div>', unsafe_allow_html=True)
@@ -100,7 +109,7 @@ def show(kind, reference=None, detail=None):
             st.rerun()
     else:
         ref = f"<p class='small'>Reference: <b>{reference}</b> (please quote it when you write to us)</p>" if reference else ""
-        subject = f"Stock Explorer error {reference or ''}".strip().replace(" ", "%20")
+        subject = f"{_site_name()} error {reference or ''}".strip().replace(" ", "%20")
         _card("Congratulations! You have found an error",
               "<p>You have given us a chance to improve the app by discovering something we had not seen. "
               "Please contact the admin so it can be fixed, and so that you can carry on exploring the app.</p>"

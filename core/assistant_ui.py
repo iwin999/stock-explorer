@@ -2,6 +2,7 @@
 import streamlit as st
 
 from core import assistant as ai
+from core import branding
 from core import knowledge as kb
 from core.errors import guard
 
@@ -22,10 +23,10 @@ def render(ctx):
     # ---- the conversation so far ----
     for i, message in enumerate(history):
         with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+            st.markdown(branding.apply(message["content"]))
             if message["role"] == "assistant" and i == len(history) - 1:
                 for j, title in enumerate(message.get("related", [])):
-                    if st.button(title, key=f"rel_{i}_{j}"):
+                    if st.button(branding.apply(title), key=f"rel_{i}_{j}"):
                         question = title
 
     # ---- starter questions on a fresh chat ----
@@ -33,7 +34,7 @@ def render(ctx):
         st.markdown("**Try asking:**")
         for row in (ai.STARTERS[:2], ai.STARTERS[2:]):
             for col, text in zip(st.columns(2), row):
-                if col.button(text, key=f"starter_{text}", width="stretch"):
+                if col.button(branding.apply(text), key=f"starter_{text}", width="stretch"):
                     question = text
 
     typed = st.chat_input("Ask about a term, a chart or how the app works", max_chars=ai.MAX_QUESTION_CHARS, key="chat_input")
@@ -47,7 +48,7 @@ def render(ctx):
     with st.expander("Browse all topics"):
         topics = ai.topics()
         category = st.selectbox("Topic", [c for c in kb.CATEGORY_ORDER if topics[c]], key="browse_cat")
-        title = st.selectbox("Question", topics[category], key="browse_q")
+        title = st.selectbox("Question", topics[category], key="browse_q", format_func=branding.apply)
         if st.button("Show answer", key="browse_go"):
             _reply(title, history, ctx)
             st.rerun()
@@ -60,7 +61,7 @@ def render(ctx):
 
 @guard()
 def _reply(raw_question, history, ctx):
-    question, problem = ai.clean_question(raw_question)
+    question, problem = ai.clean_question(branding.unapply(raw_question))
     if problem:
         history.append({"role": "assistant", "content": problem, "related": []})
         return
@@ -134,13 +135,13 @@ def _bubble_chat(ctx):
         _reply(question, history, ctx)
     if not history:
         for text in ai.STARTERS[:3]:
-            st.button(text, key=f"bub_starter_{text}", width="stretch", on_click=_ask_later, args=(text,))
+            st.button(branding.apply(text), key=f"bub_starter_{text}", width="stretch", on_click=_ask_later, args=(text,))
     for message in history[-2:]:                                       # only the latest question and answer, right under the box
         with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+            st.markdown(branding.apply(message["content"]))
     last = history[-1] if history else None
     if last and last["role"] == "assistant":
         for j, title in enumerate(last.get("related", [])[:3]):
-            st.button(title, key=f"bub_rel_{len(history)}_{j}", width="stretch", on_click=_ask_later, args=(title,))
+            st.button(branding.apply(title), key=f"bub_rel_{len(history)}_{j}", width="stretch", on_click=_ask_later, args=(title,))
     if history:
         st.button("Clear chat", key="bub_clear", on_click=_clear_chat)

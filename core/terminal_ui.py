@@ -8,7 +8,7 @@
 import html
 import streamlit as st
 
-from core import about, assistant_ui, company_search, companies
+from core import about, assistant_ui, branding, company_search, companies
 from core import cmt_strategies as cmt
 from core import instruments as ins
 from core import daily_check as dc
@@ -384,7 +384,7 @@ def run():
     # top bar
     with st.container(key="tm_top"):
         c_title, c_value, c_dark, c_term, c_tour, c_info = st.columns([3.0, 2.6, 1.4, 1.7, 0.9, 0.5], vertical_alignment="center")
-        c_title.markdown(f'<div class="tm-brand">{about._crest_html()}<div class="t">Stock Explorer</div></div>', unsafe_allow_html=True)
+        c_title.markdown(f'<div class="tm-brand">{about._crest_html()}<div class="t">{branding.safe()}</div></div>', unsafe_allow_html=True)
         with c_value:
             st.fragment(run_every=every)(_portfolio_value)()
         c_dark.toggle("Dark mode", key="dark_site", on_change=about._dark_changed)
