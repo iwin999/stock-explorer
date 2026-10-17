@@ -8,7 +8,7 @@
 import html
 import streamlit as st
 
-from core import about, assistant_ui, branding, company_search, companies
+from core import about, assistant_ui, branding, company_search, companies, demo
 from core import cmt_strategies as cmt
 from core import instruments as ins
 from core import daily_check as dc
@@ -317,6 +317,9 @@ def _strategies(symbol, hist, offline, name=""):
             if c5.button("Full view", key=f"sv_{i}", width="stretch"):
                 _open_full_view(row["name"], result, ml, rating)
         st.markdown(vis.learn_strip() + f'<div class="pp-foot"><b>Disclaimer.</b> {DISCLAIMER}</div>', unsafe_allow_html=True)
+    shown_view = demo.full_view_name()                  # the demo opens one strategy's Full view
+    if shown_view:
+        _open_full_view(shown_view, result, ml, rating)
 
 
 @guard()
@@ -379,6 +382,7 @@ def _order_tabs(mode, symbol, name, price, offline):
 
 # ---------------- the page ----------------
 def _start_tour():
+    demo.stop()                                          # a running demo and the tour do not mix
     tour.start(lambda page: None, "dash")
 
 
@@ -390,6 +394,7 @@ def _finish_tour():
 
 
 def run():
+    demo.apply()                                         # a self-playing demo, if one is running, sets the company and chart controls first
     pf = tu._get_portfolio()
     tu.housekeeping()
     tu.show_flash()
@@ -400,12 +405,14 @@ def run():
 
     # top bar
     with st.container(key="tm_top"):
-        c_title, c_value, c_dark, c_term, c_tour, c_info = st.columns([3.0, 2.6, 1.4, 1.7, 0.9, 0.5], vertical_alignment="center")
+        c_title, c_value, c_dark, c_term, c_demo, c_tour, c_info = st.columns([2.7, 2.4, 1.3, 1.6, 0.95, 0.85, 0.5], vertical_alignment="center")
         c_title.markdown(f'<div class="tm-brand">{about._crest_html()}<div class="t">{branding.safe()}</div></div>', unsafe_allow_html=True)
         with c_value:
             st.fragment(run_every=every)(_portfolio_value)()
         c_dark.toggle("Dark mode", key="dark_site", on_change=about._dark_changed)
         c_term.toggle("Dashboard view", key="terminal_view", on_change=switched)
+        c_demo.button("Demo", key="demo_btn_top", on_click=demo.start, help="Plays a short demo by itself: it searches a company, changes the chart, "
+                      "opens a strategy and makes a practice buy, with a caption and a voice. Touch the screen to stop it.")
         c_tour.button("Tour", key="tour_btn_top", on_click=_start_tour, help="A quick guided tour of this screen, one part at a time.")
         with c_info:
             about.icon()
@@ -447,6 +454,7 @@ def run():
             st.fragment(price_panel.render)(hist, symbol, name, header=False, height=520, explain=False, compact=True)    # its own controls redraw only the chart
 
         price = float(live_quote(symbol)["price"]) if (not offline and live_quote(symbol)) else float(hist["Close"].iloc[-1])
+        demo.after_price(symbol, price)                  # the demo's practice buy, when it is that step
         with st.container(key="tm_trade"):
             t_label, b1, b2, b3 = st.columns([3.2, 1, 1, 1.1], vertical_alignment="center")
             owned = pf.holdings.get(symbol, {}).get("quantity", 0)
@@ -479,4 +487,5 @@ def run():
     assistant_ui.bubble({"company": name, "symbol": symbol, "last_close": float(hist["Close"].iloc[-1]), "signals": [],
                          "portfolio": {"cash": pf.balance, "holdings": {s_: h["quantity"] for s_, h in pf.holdings.items()},
                                        "derivatives": len(pf.derivatives)}, "fusion": None})
+    demo.render(dark=bool(st.session_state.get("dark_site")))
     tour.render(lambda page: None, _finish_tour, dark=bool(st.session_state.get("dark_site")))

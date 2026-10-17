@@ -382,3 +382,27 @@ def test_a_change_that_rounds_to_zero_is_grey_and_unsigned_everywhere():
         app.run()
         board = " ".join(m.value for m in app.markdown if "tm-row" in m.value)
         assert "+0.00%" not in board and "-0.00%" not in board
+
+
+def test_the_demo_plays_through_every_step_without_touching_the_visitors_account():
+    from core import demo
+    store, app = _app("RealPerson", phone=False)
+    a, b = _patches(store)
+    with a, b, mock.patch("core.trading_ui.price_of", lambda s, fb=None: 1000.0):
+        app.run()
+        assert not app.exception and not _errors(app)
+        before = acc.load_account(store, "RealPerson").to_dict() if hasattr(acc.load_account(store, "RealPerson"), "to_dict") else None
+        app.button(key="demo_btn_top").click().run()
+        assert app.session_state["demo_on"] is True and not app.exception
+        for tick in range(len(demo.STEPS) * 2):                                   # two trips round the loop: two different companies
+            app.session_state["demo_tick"] = tick
+            app.run()
+            assert not app.exception and not _errors(app), tick
+            text = " ".join(m.value for m in app.markdown)
+            assert "demo-say" in text and f"step {tick % len(demo.STEPS) + 1} of {len(demo.STEPS)}" in text
+        assert app.session_state["portfolio"].name == "Demo" and app.session_state["portfolio"].holdings   # the practice buy happened, on the pretend account
+        app.button(key="demo_stop").click().run()                                 # a touch stops it
+        assert not app.exception and "demo_on" not in app.session_state
+        assert app.session_state["portfolio"].name == "RealPerson" and not app.session_state["portfolio"].holdings
+        saved = acc.load_account(store, "RealPerson")
+        assert saved.name == "RealPerson" and not saved.holdings and saved.balance == 100000.0       # nothing was saved for the visitor

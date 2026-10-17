@@ -453,5 +453,8 @@ Supertrend is not in the CMT curriculum, so the dashboard's indicator panel now 
 ## New in Step 85 (Supertrend removed everywhere)
 Supertrend is gone from the whole project, including the real site's Daily check, where On-Balance Volume now takes its place in the list of indicators shown for context (its gauge, reading and hover text). The Supertrend calculation itself was deleted, and the captions that listed it now list On-Balance Volume.
 
+## New in Step 86 (a self-playing demo)
+A **Demo** button in the dashboard's top bar plays a loop that drives the real screen by itself: it searches a company, switches Day, Week and Month, turns on the Fibonacci lines, shows four charts, lights up the indicators, the dial and the strategies, opens a strategy's Full view, makes a practice buy and shows the holdings change, points at the leaderboard and the chat button, then carries on with another company. Every step has a large plain-words caption and, with the Voice switch on, is read aloud by the browser's own voice. It works on a throwaway pretend account that is never saved, and the visitor's own account, company and chart settings are put back when it stops. The first touch, click or key press stops it (the touch listener lives in the main page, because a listener created inside Streamlit's small helper frame stops working when the frame is replaced). It starts only from the button; automatic start after idle time was left out on request. `core/demo.py` holds the script of steps.
+
 ## Status
 All 8 features are built.

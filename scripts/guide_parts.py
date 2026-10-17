@@ -172,8 +172,9 @@ def screen_map_svg():
          box(8, 8, 684, 38, "#fff"),
          '<text x="40" y="31" font-size="11" font-weight="700" fill="#1d3557">Site name</text>',
          '<text x="214" y="31" font-size="10.5" fill="#1d3557">Portfolio value  Rs 1,00,000</text>',
-         '<text x="410" y="31" font-size="9.5" fill="#6b7785">Dark  ·  Dashboard view</text>',
+         '<text x="368" y="31" font-size="9.5" fill="#6b7785">Dark · Dashboard view</text>',
          box(588, 15, 44, 22, "#fff"), '<text x="610" y="30" font-size="9.5" text-anchor="middle" fill="#1d3557">Tour</text>',
+         box(522, 15, 44, 22, "#fff"), '<text x="544" y="30" font-size="9.5" text-anchor="middle" fill="#1d3557">Demo</text>',
          '<circle cx="678" cy="26" r="11" fill="#fff" stroke="#1d3557"/><text x="678" y="30" font-size="11" font-style="italic" font-weight="700" text-anchor="middle" fill="#1d3557">i</text>',
          box(8, 56, 150, 74), '<text x="18" y="72" font-size="8" font-weight="700" fill="#6b7785">WHAT YOU HOLD</text>',
          box(8, 136, 150, 84), '<text x="18" y="152" font-size="8" font-weight="700" fill="#6b7785">YOUR MONEY</text>',
@@ -202,7 +203,7 @@ def screen_map_svg():
           '<text x="40" y="444" font-size="8.5" fill="#6b7785">Fusion stage, Dow Theory, Relative strength, Wyckoff, Fibonacci, ML model</text>',
           '<circle cx="662" cy="434" r="17" fill="#3f74e6" stroke="#b9ccf6" stroke-width="4"/>',
           '<circle cx="655" cy="434" r="2.3" fill="#fff"/><circle cx="662" cy="434" r="2.3" fill="#fff"/><circle cx="669" cy="434" r="2.3" fill="#fff"/>']
-    s += [num(22, 27, 1), num(200, 27, 2), num(402, 27, 3), num(574, 27, 4), num(652, 26, 5),
+    s += [num(22, 27, 1), num(200, 27, 2), num(352, 27, 3), num(577, 27, 4), num(652, 26, 5),
           num(144, 70, 6), num(144, 150, 7), num(144, 240, 8), num(144, 320, 9),
           num(500, 69, 10), num(500, 120, 11), num(500, 152, 12), num(182, 326, 13),
           num(676, 70, 14), num(22, 404, 15), num(636, 420, 16)]

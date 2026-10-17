@@ -49,13 +49,16 @@ def _workspace(hist, symbol, height=None):
     short = symbol.replace(".NS", "").replace(".BO", "")
     with st.container(key="tm_chartbar"):
         c_layout, c_tf, c_period, c_fib, c_dark = st.columns([2.75, 2.7, 2.35, 1.55, 1.15], vertical_alignment="center")
-        layout = c_layout.segmented_control("Charts", ["1 chart", "2 charts", "4 charts"], default="1 chart", key="mtf_layout",
+        st.session_state.setdefault("mtf_layout", "1 chart")                     # set here (not as a widget default) so the demo can drive it
+        st.session_state.setdefault("mtf_tf", "Daily")
+        st.session_state.setdefault("period_seg", "1 year")
+        layout = c_layout.segmented_control("Charts", ["1 chart", "2 charts", "4 charts"], key="mtf_layout",
                                             label_visibility="collapsed", format_func=lambda x: x[0], help="How many charts to show: 1, 2 or 4") or "1 chart"
         count = {"1 chart": 1, "2 charts": 2, "4 charts": 4}[layout]
         if count == 1:
-            tf = c_tf.segmented_control("Timeframe", mc.TIMEFRAMES, default="Daily", key="mtf_tf", label_visibility="collapsed",
+            tf = c_tf.segmented_control("Timeframe", mc.TIMEFRAMES, key="mtf_tf", label_visibility="collapsed",
                                         format_func={"Daily": "Day", "Weekly": "Week", "Monthly": "Month"}.get) or "Daily"
-            period = c_period.segmented_control("Period", list(PERIODS), default="1 year", key="period_seg", label_visibility="collapsed",
+            period = c_period.segmented_control("Period", list(PERIODS), key="period_seg", label_visibility="collapsed",
                                                 format_func=SHORT.get) or "1 year"
         else:
             c_tf.caption("Pick each chart's view above it")

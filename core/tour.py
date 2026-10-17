@@ -43,7 +43,7 @@ STEPS = [
 DASH_STEPS = [
     {"target": "tm_top", "card": "bottom", "title": "Your practice money",
      "text": "The top bar shows what your practice portfolio is worth. Dark mode changes the colours. Dashboard view switches between this "
-             "wide screen and a simpler phone-style layout. The i has the full story of the project."},
+             "wide screen and a simpler phone-style layout. Demo plays a short demo by itself. The i has the full story of the project."},
     {"target": "tm_search", "card": "bottom", "title": "Find any company",
      "text": "Type a company name, even with a small spelling slip, and press Enter. Or click the box to browse the list."},
     {"target": "tm_chartarea", "card": "bottom", "title": "The price chart",

@@ -220,7 +220,7 @@ def page7():
   <tr><td>1</td><td>Site name and crest</td><td>The school crest and the name of the site.</td></tr>
   <tr><td>2</td><td>Portfolio value</td><td>Everything you own, in rupees, with the percent gained or lost since you started. Grey 0.00% means no change yet.</td></tr>
   <tr><td>3</td><td>Dark mode and Dashboard view</td><td>Dark mode changes the colours. Dashboard view switches between this wide screen and a simpler phone-style layout.</td></tr>
-  <tr><td>4</td><td>Tour</td><td>A guided walk through each part of the screen, one step at a time (10 steps).</td></tr>
+  <tr><td>4</td><td>Demo and Tour</td><td><b>Demo</b> plays a short demo by itself: it searches a company, changes the chart, opens a strategy and makes a practice buy, with a big caption and a spoken voice. Touch the screen to stop it. <b>Tour</b> is a guided walk through each part, one step at a time (10 steps).</td></tr>
   <tr><td>5</td><td>The i button</td><td>Opens the About box: what the project is, its limits, credits and the creator.</td></tr>
   <tr><td>6</td><td>Bought and Sold</td><td>What you hold with profit or loss on each, and your last six sales.</td></tr>
   <tr><td>7</td><td>Where your money is</td><td>A ring showing how your money splits between stocks, ETFs, bonds, futures, options and cash. With more than two kinds, the key under it scrolls.</td></tr>

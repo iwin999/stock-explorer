@@ -99,6 +99,8 @@ def _get_portfolio():
 
 def _save(pf):
     """Save the account. A failure is remembered and shown as a banner instead of crashing."""
+    if st.session_state.get("demo_on"):            # the demo's pretend account is never saved
+        return
     try:
         acc.save_account(get_store(), pf)
         st.session_state.pop("save_error", None)

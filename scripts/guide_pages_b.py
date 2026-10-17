@@ -167,6 +167,7 @@ def page14():
       <li><b>Ask.</b> Use the round chat button for any word you do not know.</li>
     </ol></div>
   <div class="topic"><h3>Handy things to know</h3><ul>
+    <li><b>Demo:</b> press the Demo button and the screen runs itself, with captions and a voice. Use it when nobody is at the screen. Touch the screen to take over.</li>
     <li><b>Tour:</b> the Tour button walks through every part of the screen in 10 steps.</li>
     <li><b>Dark mode:</b> good for a dim room or a projector.</li>
     <li><b>Dashboard view:</b> off gives the simple phone-style layout.</li>
