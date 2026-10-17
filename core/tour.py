@@ -65,6 +65,9 @@ DASH_STEPS = [
     {"target": "tm_strat", "card": "top", "title": "The strategies behind the reading",
      "text": "Five methods from the CMT curriculum and a machine-learning model, each with its vote and how it did in back-tests. Click Full "
              "view to see a chart and a plain explanation of what it is doing. They describe; they do not recommend."},
+    {"target": "ask_bubble", "card": "top", "title": "Ask me anything",
+     "text": "This round chat button stays in the corner whatever you are doing. Click it and type a question, or pick one of the starters: what "
+             "an indicator means, how a strategy works, or how to use this screen. It explains and teaches; it does not give investment advice."},
 ]
 
 
@@ -82,8 +85,9 @@ def target_css(target, dark=False):
     """CSS that lifts one box above the dark layer and outlines it."""
     accent = _accent(dark)
     box = "#1e222d" if dark else "#ffffff"
-    position = "" if target == "bottomnav" else "position: relative;"
-    return (f".st-key-{target} {{ {position} z-index: 1000 !important; background: {box} !important; border-radius: 14px;"
+    position = "" if target in ("bottomnav", "ask_bubble") else "position: relative;"          # these stay fixed to the screen
+    radius = "50%" if target == "ask_bubble" else "14px"
+    return (f".st-key-{target} {{ {position} z-index: 1000 !important; background: {box} !important; border-radius: {radius};"
             f" box-shadow: 0 0 0 3px {accent}, 0 0 0 200vmax rgba(0,0,0,0.72) !important; }}")
 
 

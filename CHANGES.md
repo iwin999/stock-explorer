@@ -441,5 +441,8 @@ The "Back-test" column of the strategies table now shows that company's own reco
 ## New in Step 81 (the site name in one place)
 The name shown everywhere now comes from `core/branding.py`: the page titles and browser tab, the dashboard's top bar, the About box, the chat helper's answers, and the error e-mail subject. It can be changed at the last minute without a push by adding `site_name = "..."` to the app's Secrets (DEPLOY.md has the steps), or by editing `DEFAULT_NAME`. The chat helper still understands questions that use the new name.
 
+## New in Step 82 (the tour covers the chat bubble)
+The dashboard tour has a tenth and last step that lights up the round chat button and explains it ("Ask me anything").
+
 ## Status
 All 8 features are built.
