@@ -21,7 +21,7 @@ import time
 import streamlit as st
 import streamlit.components.v1 as components
 
-from core import companies, tour
+from core import companies
 from core.formatting import format_inr
 from core.trading import Portfolio
 
@@ -34,37 +34,37 @@ NORMAL = {"mtf_layout": "1 chart", "mtf_tf": "Daily", "period_seg": "1 year", "s
 
 STEPS = [
     {"say": "Welcome! This is a practice stock market. The prices are real, but the money is pretend, so nobody can lose anything.",
-     "set": dict(NORMAL), "target": "tm_top", "side": "below"},
+     "set": dict(NORMAL), "target": {"sel": ".tm-value"}, "side": "below"},
     {"say": "First we pick a company. You can type any company name in this box. Let us look at {name}.",
-     "set": {"company": "{symbol}"}, "target": "tm_search", "side": "below"},
+     "set": {"company": "{symbol}"}, "target": {"sel": ".st-key-tm_search [data-testid=\"stSelectbox\"]"}, "side": "below"},
     {"say": "This is its price chart. Each bar is one day. A green bar means the price went up that day, and a red bar means it went down.",
-     "set": {"mtf_tf": "Daily"}, "target": "tm_chartarea", "side": "inside_bottom"},
+     "set": {"mtf_tf": "Daily"}, "target": {"sel": ".st-key-tm_chartarea [data-testid=\"stPlotlyChart\"]"}, "side": "inside_bottom"},
     {"say": "Now we zoom out. Each bar is one whole week. The ups and downs look smoother.",
-     "set": {"mtf_tf": "Weekly"}, "target": "tm_chartarea", "side": "inside_bottom"},
+     "set": {"mtf_tf": "Weekly"}, "target": {"sel": ".st-key-tm_chartbar button", "text": "^Week$"}, "side": "below"},
     {"say": "Zoom out again. Now each bar is one month. This is the big picture of where the price has been heading.",
-     "set": {"mtf_tf": "Monthly"}, "target": "tm_chartarea", "side": "inside_bottom"},
+     "set": {"mtf_tf": "Monthly"}, "target": {"sel": ".st-key-tm_chartbar button", "text": "^Month$"}, "side": "below"},
     {"say": "Back to days. We switched on the Fibonacci lines. They mark places where a price often pauses, like a ball resting on a staircase.",
-     "set": {"mtf_tf": "Daily", "show_fib": True}, "target": "tm_chartarea", "side": "inside_bottom"},
+     "set": {"mtf_tf": "Daily", "show_fib": True}, "target": {"sel": ".st-key-tm_chartbar [data-testid=\"stCheckbox\"]", "text": "Fibonacci"}, "side": "below"},
     {"say": "We can look at four charts at once, each in a different timeframe, so the big picture and the small details sit side by side.",
-     "set": {"show_fib": False, "mtf_layout": "4 charts"}, "target": "tm_chartarea", "side": "inside_bottom"},
+     "set": {"show_fib": False, "mtf_layout": "4 charts"}, "target": {"sel": ".st-key-tm_chartbar button", "text": "^4$"}, "side": "below"},
     {"say": "Back to one chart. These six gauges read the chart for us. Red leans down, green leans up, and the pointer shows where it stands.",
-     "set": {"mtf_layout": "1 chart"}, "target": "tm_ind", "side": "left"},
+     "set": {"mtf_layout": "1 chart"}, "target": {"key": "tm_ind"}, "side": "left"},
     {"say": "This dial adds up the votes of five strategies from a professional exam. It says whether the reading leans up or down. It is a clue, not a promise.",
-     "set": {}, "target": "tm_baro", "side": "right"},
+     "set": {}, "target": {"key": "tm_baro"}, "side": "right"},
     {"say": "Here are the five strategies and a machine-learning model, each with its vote. In our tests they were right about half the time, the same as a coin toss, and we say so honestly.",
-     "set": {}, "target": "tm_strat", "side": "above"},
+     "set": {}, "target": {"key": "tm_strat"}, "side": "above"},
     {"say": "Let us open one. This is Dow Theory. It looks for higher highs and higher lows, like climbing a staircase.",
      "set": {}, "target": None, "full_view": "Dow Theory", "side": "bottom"},
     {"say": "Time to practise! We buy some shares of {name} with pretend money.",
-     "set": {}, "target": "tm_trade", "buy": True, "side": "above"},
+     "set": {}, "target": {"sel": ".st-key-tm_trade button", "text": "^Buy$"}, "buy": True, "side": "above"},
     {"say": "Look! The list of what we hold, the money ring and the portfolio value have all updated. This is how you follow your practice.",
-     "set": {}, "target": "tm_lists", "side": "right"},
+     "set": {}, "target": {"key": "tm_lists"}, "side": "right"},
     {"say": "The leaderboard ranks everyone by how much their money has grown, so even a small portfolio can win.",
-     "set": {}, "target": "tm_board", "side": "right"},
+     "set": {}, "target": {"key": "tm_board"}, "side": "right"},
     {"say": "If you meet a word you do not know, tap this round button and ask the helper. It explains in simple words.",
-     "set": {}, "target": "ask_bubble", "side": "left"},
+     "set": {}, "target": {"sel": ".st-key-ask_bubble [data-testid=\"stPopoverButton\"]"}, "side": "left"},
     {"say": "That is the demo. Touch the screen to try it yourself, or press Tour for a step by step walk through. We will keep playing until you do.",
-     "set": {}, "target": "tm_top", "side": "below"},
+     "set": {}, "target": {"sel": ".st-key-tour_btn_top button"}, "side": "below"},
 ]
 
 CSS = """<style>
@@ -224,33 +224,60 @@ def full_view_name():
 # version first. Written as plain text so the same function can be tested on its own.
 PARENT_JS = """
 (function () {
+  window.__demoClear = function () {
+    var hole = document.getElementById('demo-hole');
+    if (hole) { hole.remove(); }
+    clearInterval(window.__demoPlaceTimer);
+  };
   if (!window.__demoWatch) {
     window.__demoWatch = true;
     ['mousedown', 'keydown', 'touchstart', 'wheel'].forEach(function (ev) {
       document.addEventListener(ev, function () {
         if (!window.__demoOn || Date.now() - window.__demoSince < 1500) { return; }
         var btn = document.querySelector('.st-key-demo_stop button');
-        if (btn) { window.__demoOn = false; try { window.speechSynthesis.cancel(); } catch (e) {} btn.click(); }
+        if (btn) { window.__demoOn = false; window.__demoClear(); try { window.speechSynthesis.cancel(); } catch (e) {} btn.click(); }
       }, true);
     });
   }
   if (!window.__demoPlace) {
-    // puts the caption card beside the part of the screen it talks about, with an arrow pointing at it; it keeps checking for a couple
-    // of seconds so it follows the page while it scrolls into view
-    window.__demoPlace = function (target, side) {
+    // Finds the exact thing a step talks about (a key, or a CSS selector plus the text it must contain), rings just that thing and dims
+    // everything else, and puts the caption card beside it with an arrow pointing at it. It keeps checking for a few seconds and on
+    // every scroll, so it follows the page while it scrolls into view.
+    window.__demoPlace = function (spec, side) {
+      function find() {
+        if (!spec) { return null; }
+        var list = spec.key ? document.querySelectorAll('.st-key-' + spec.key) : document.querySelectorAll(spec.sel), re = spec.text ? new RegExp(spec.text, 'i') : null;
+        for (var i = 0; i < list.length; i++) {
+          if (!re || re.test((list[i].textContent || '').trim())) { return list[i]; }
+        }
+        return null;
+      }
+      var scrolled = false;
       function place() {
-        var card = document.querySelector('.st-key-demo_card');
+        var card = document.querySelector('.st-key-demo_card'), hole = document.getElementById('demo-hole'), t = find();
         if (!card) { return; }
-        var t = target ? document.querySelector('.st-key-' + target) : null;
         ['arrow-up', 'arrow-down', 'arrow-left', 'arrow-right'].forEach(function (c) { card.classList.remove(c); });
         if (!t || side === 'bottom') {
+          if (hole) { hole.remove(); }
           card.classList.remove('callout');
           card.style.left = '50%'; card.style.top = 'auto'; card.style.bottom = '1.1rem'; card.style.transform = 'translateX(-50%)';
           return;
         }
+        var vw = window.innerWidth, vh = window.innerHeight, r0 = t.getBoundingClientRect();
+        if (!scrolled) {                                                          // bring it into view once, gently
+          scrolled = true;
+          if (r0.top < 90 || r0.bottom > vh - 90) { try { t.scrollIntoView({block: 'center', behavior: 'smooth'}); } catch (e) {} }
+        }
+        var pad = 6, r = {left: r0.left - pad, top: r0.top - pad, right: r0.right + pad, bottom: r0.bottom + pad};
+        if (!hole) {
+          hole = document.createElement('div'); hole.id = 'demo-hole';
+          hole.style.cssText = 'position:fixed;pointer-events:none;z-index:2147482000;box-shadow:0 0 0 3px #8fa8d4, 0 0 0 9999px rgba(0,0,0,0.68);';
+          document.body.appendChild(hole);
+        }
+        hole.style.left = r.left + 'px'; hole.style.top = r.top + 'px'; hole.style.width = (r.right - r.left) + 'px'; hole.style.height = (r.bottom - r.top) + 'px';
+        var br = window.getComputedStyle(t).borderRadius; hole.style.borderRadius = (br && br !== '0px') ? br : '10px';
         card.classList.add('callout');
-        var vw = window.innerWidth, vh = window.innerHeight, gap = 20, margin = 10, r = t.getBoundingClientRect();
-        var w = card.offsetWidth, h = card.offsetHeight;
+        var w = card.offsetWidth, h = card.offsetHeight, gap = 20, margin = 10;
         var rt = Math.max(r.top, 0), rb = Math.min(r.bottom, vh), rl = Math.max(r.left, 0), rr = Math.min(r.right, vw);
         var cx = (rl + rr) / 2, cy = (rt + rb) / 2, x, y, arrow = null;
         if (side === 'below') { x = cx - w / 2; y = rb + gap; arrow = 'up'; }
@@ -269,7 +296,7 @@ PARENT_JS = """
       var n = 0;
       clearInterval(window.__demoPlaceTimer);
       if (window.__demoPlaceOnScroll) { window.removeEventListener('scroll', window.__demoPlaceOnScroll, true); }
-      window.__demoPlaceOnScroll = place;                                                          // and again whenever the page moves
+      window.__demoPlaceOnScroll = place;
       window.addEventListener('scroll', place, true);
       window.addEventListener('resize', place);
       window.__demoPlaceTimer = setInterval(function () { place(); if (++n > 60) { clearInterval(window.__demoPlaceTimer); } }, 80);
@@ -335,7 +362,7 @@ def _voice_script(text, speak, target=None, side="bottom"):
 
 
 _QUIET = """<script>
-try { var P = window.parent; P.__demoOn = false; P.speechSynthesis.cancel(); } catch (e) {}
+try { var P = window.parent; P.__demoOn = false; if (P.__demoClear) { P.__demoClear(); } P.speechSynthesis.cancel(); } catch (e) {}
 </script>"""
 
 
@@ -362,10 +389,7 @@ def render(dark=False):
     loop, index = _loop_and_step()
     step = current_step()
     text = say_text()
-    css = CSS
-    if step["target"]:
-        css += "<style>" + tour.target_css(step["target"], dark) + "</style>"
-    st.markdown(css, unsafe_allow_html=True)
+    st.markdown(CSS, unsafe_allow_html=True)
     with st.container(key="demo_card"):
         st.markdown(f'<div class="demo-badge">Demo · pretend account · step {index + 1} of {len(STEPS)}</div>'
                     f'<div class="demo-say">{text}</div>', unsafe_allow_html=True)
@@ -374,8 +398,6 @@ def render(dark=False):
         voice_col.toggle("Voice", key="demo_voice", value=True)
         hint_col.markdown('<div class="demo-hint">Touch the screen at any time to take over.</div>', unsafe_allow_html=True)
     components.html(_voice_script(text, st.session_state.get("demo_voice", True), step["target"], step.get("side", "bottom")), height=0)
-    if step["target"]:
-        tour.scroll_script(step["target"])
     if st.session_state.get("demo_stamp_tick") != tick:          # note when this step went on screen
         st.session_state["demo_stamp_tick"] = tick
         st.session_state["demo_stamp_time"] = time.time()
