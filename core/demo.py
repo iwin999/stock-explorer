@@ -224,11 +224,21 @@ def full_view_name():
 # version first. Written as plain text so the same function can be tested on its own.
 PARENT_JS = """
 (function () {
+  function hush() { try { window.speechSynthesis.cancel(); } catch (e) {} }
   window.__demoClear = function () {
     var hole = document.getElementById('demo-hole');
     if (hole) { hole.remove(); }
     clearInterval(window.__demoPlaceTimer);
+    clearTimeout(window.__demoSayTimer);                    // a sentence that was about to start must not start after the demo has stopped
+    hush();
   };
+  if (!window.__demoHushSet) {
+    window.__demoHushSet = true;
+    // the voice must never outlive the page: silence it when the tab is closed, when the page is left or reloaded, and when the tab is
+    // hidden (switching to another tab)
+    ['pagehide', 'beforeunload', 'unload'].forEach(function (ev) { window.addEventListener(ev, hush); });
+    document.addEventListener('visibilitychange', function () { if (document.hidden) { hush(); } });
+  }
   if (!window.__demoWatch) {
     window.__demoWatch = true;
     ['mousedown', 'keydown', 'touchstart', 'wheel'].forEach(function (ev) {
@@ -346,6 +356,7 @@ def _voice_script(text, speak, target=None, side="bottom"):
     if (P.__demoPlace) { P.__demoPlace(%s, %s); }
     var text = %s;
     function say() {
+      if (!P.__demoOn || P.document.hidden) { return; }                            // stopped, or the tab is in the background: stay quiet
       var u = new P.SpeechSynthesisUtterance(text), v = pickVoice(P.speechSynthesis.getVoices());
       if (v) { u.voice = v; u.lang = v.lang; } else { u.lang = 'en-GB'; }
       u.rate = 0.97;
@@ -354,7 +365,8 @@ def _voice_script(text, speak, target=None, side="bottom"):
       P.speechSynthesis.speak(u);
     }
     if (%s && P.speechSynthesis) {
-      if (P.speechSynthesis.getVoices().length) { say(); } else { setTimeout(say, 700); }      // some browsers load their voices a moment late
+      clearTimeout(P.__demoSayTimer);
+      if (P.speechSynthesis.getVoices().length) { say(); } else { P.__demoSayTimer = setTimeout(say, 700); }      // some browsers load their voices a moment late
     }
   } catch (e) {}
 })();
