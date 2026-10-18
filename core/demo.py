@@ -34,37 +34,37 @@ NORMAL = {"mtf_layout": "1 chart", "mtf_tf": "Daily", "period_seg": "1 year", "s
 
 STEPS = [
     {"say": "Welcome! This is a practice stock market. The prices are real, but the money is pretend, so nobody can lose anything.",
-     "set": dict(NORMAL), "target": "tm_top"},
+     "set": dict(NORMAL), "target": "tm_top", "side": "below"},
     {"say": "First we pick a company. You can type any company name in this box. Let us look at {name}.",
-     "set": {"company": "{symbol}"}, "target": "tm_search"},
+     "set": {"company": "{symbol}"}, "target": "tm_search", "side": "below"},
     {"say": "This is its price chart. Each bar is one day. A green bar means the price went up that day, and a red bar means it went down.",
-     "set": {"mtf_tf": "Daily"}, "target": "tm_chartarea"},
+     "set": {"mtf_tf": "Daily"}, "target": "tm_chartarea", "side": "inside_bottom"},
     {"say": "Now we zoom out. Each bar is one whole week. The ups and downs look smoother.",
-     "set": {"mtf_tf": "Weekly"}, "target": "tm_chartarea"},
+     "set": {"mtf_tf": "Weekly"}, "target": "tm_chartarea", "side": "inside_bottom"},
     {"say": "Zoom out again. Now each bar is one month. This is the big picture of where the price has been heading.",
-     "set": {"mtf_tf": "Monthly"}, "target": "tm_chartarea"},
+     "set": {"mtf_tf": "Monthly"}, "target": "tm_chartarea", "side": "inside_bottom"},
     {"say": "Back to days. We switched on the Fibonacci lines. They mark places where a price often pauses, like a ball resting on a staircase.",
-     "set": {"mtf_tf": "Daily", "show_fib": True}, "target": "tm_chartarea"},
+     "set": {"mtf_tf": "Daily", "show_fib": True}, "target": "tm_chartarea", "side": "inside_bottom"},
     {"say": "We can look at four charts at once, each in a different timeframe, so the big picture and the small details sit side by side.",
-     "set": {"show_fib": False, "mtf_layout": "4 charts"}, "target": "tm_chartarea"},
+     "set": {"show_fib": False, "mtf_layout": "4 charts"}, "target": "tm_chartarea", "side": "inside_bottom"},
     {"say": "Back to one chart. These six gauges read the chart for us. Red leans down, green leans up, and the pointer shows where it stands.",
-     "set": {"mtf_layout": "1 chart"}, "target": "tm_ind"},
+     "set": {"mtf_layout": "1 chart"}, "target": "tm_ind", "side": "left"},
     {"say": "This dial adds up the votes of five strategies from a professional exam. It says whether the reading leans up or down. It is a clue, not a promise.",
-     "set": {}, "target": "tm_baro"},
+     "set": {}, "target": "tm_baro", "side": "right"},
     {"say": "Here are the five strategies and a machine-learning model, each with its vote. In our tests they were right about half the time, the same as a coin toss, and we say so honestly.",
-     "set": {}, "target": "tm_strat"},
+     "set": {}, "target": "tm_strat", "side": "above"},
     {"say": "Let us open one. This is Dow Theory. It looks for higher highs and higher lows, like climbing a staircase.",
-     "set": {}, "target": None, "full_view": "Dow Theory"},
+     "set": {}, "target": None, "full_view": "Dow Theory", "side": "bottom"},
     {"say": "Time to practise! We buy some shares of {name} with pretend money.",
-     "set": {}, "target": "tm_trade", "buy": True},
+     "set": {}, "target": "tm_trade", "buy": True, "side": "above"},
     {"say": "Look! The list of what we hold, the money ring and the portfolio value have all updated. This is how you follow your practice.",
-     "set": {}, "target": "tm_lists"},
+     "set": {}, "target": "tm_lists", "side": "right"},
     {"say": "The leaderboard ranks everyone by how much their money has grown, so even a small portfolio can win.",
-     "set": {}, "target": "tm_board"},
+     "set": {}, "target": "tm_board", "side": "right"},
     {"say": "If you meet a word you do not know, tap this round button and ask the helper. It explains in simple words.",
-     "set": {}, "target": "ask_bubble"},
+     "set": {}, "target": "ask_bubble", "side": "left"},
     {"say": "That is the demo. Touch the screen to try it yourself, or press Tour for a step by step walk through. We will keep playing until you do.",
-     "set": {}, "target": "tm_top"},
+     "set": {}, "target": "tm_top", "side": "below"},
 ]
 
 CSS = """<style>
@@ -83,6 +83,20 @@ CSS = """<style>
 .st-key-demo_card [data-testid="stToggle"] label:has(input:checked) > div:not([data-testid="stWidgetLabel"]) { background: #6f9bff !important; }
 .st-key-demo_card [data-testid="stCaptionContainer"] { color: #ffffff; }
 .st-key-demo_dots { margin-top: .1rem; }
+.st-key-demo_card.callout { width: min(92vw, 440px); }
+.st-key-demo_card.callout .demo-say { font-size: 1.28rem; }
+.st-key-demo_card.callout .demo-hint { display: none; }
+.st-key-demo_card.callout [data-testid="stColumn"]:nth-child(3) { display: none !important; }
+.st-key-demo_card.callout [data-testid="stColumn"]:nth-child(-n+2) { flex: 1 1 45% !important; width: auto !important; min-width: 0 !important; }
+.st-key-demo_card[class*="arrow-"]::before, .st-key-demo_card[class*="arrow-"]::after { content: ""; position: absolute; width: 0; height: 0; border: solid transparent; }
+.st-key-demo_card.arrow-up::before { top: -15px; left: var(--ao, 50%); transform: translateX(-50%); border-width: 0 13px 15px 13px; border-bottom-color: #8fa8d4; }
+.st-key-demo_card.arrow-up::after { top: -11px; left: var(--ao, 50%); transform: translateX(-50%); border-width: 0 11px 13px 11px; border-bottom-color: #1d3557; }
+.st-key-demo_card.arrow-down::before { bottom: -15px; left: var(--ao, 50%); transform: translateX(-50%); border-width: 15px 13px 0 13px; border-top-color: #8fa8d4; }
+.st-key-demo_card.arrow-down::after { bottom: -11px; left: var(--ao, 50%); transform: translateX(-50%); border-width: 13px 11px 0 11px; border-top-color: #1d3557; }
+.st-key-demo_card.arrow-left::before { left: -15px; top: var(--ao, 50%); transform: translateY(-50%); border-width: 13px 15px 13px 0; border-right-color: #8fa8d4; }
+.st-key-demo_card.arrow-left::after { left: -11px; top: var(--ao, 50%); transform: translateY(-50%); border-width: 11px 13px 11px 0; border-right-color: #1d3557; }
+.st-key-demo_card.arrow-right::before { right: -15px; top: var(--ao, 50%); transform: translateY(-50%); border-width: 13px 0 13px 15px; border-left-color: #8fa8d4; }
+.st-key-demo_card.arrow-right::after { right: -11px; top: var(--ao, 50%); transform: translateY(-50%); border-width: 11px 0 11px 13px; border-left-color: #1d3557; }
 body:has(.st-key-demo_card) .st-key-ask_bubble [data-testid="stPopoverButton"] { animation-duration: 1.6s; }
 </style>"""
 
@@ -208,6 +222,63 @@ def full_view_name():
 # Picks the voice: a female American or British English one if the device has it (Samantha, Serena, Zira, Hazel, Google UK English
 # Female and so on), never a male voice, an Indian-English one or any other language; the best-sounding (enhanced, premium or natural)
 # version first. Written as plain text so the same function can be tested on its own.
+PARENT_JS = """
+(function () {
+  if (!window.__demoWatch) {
+    window.__demoWatch = true;
+    ['mousedown', 'keydown', 'touchstart', 'wheel'].forEach(function (ev) {
+      document.addEventListener(ev, function () {
+        if (!window.__demoOn || Date.now() - window.__demoSince < 1500) { return; }
+        var btn = document.querySelector('.st-key-demo_stop button');
+        if (btn) { window.__demoOn = false; try { window.speechSynthesis.cancel(); } catch (e) {} btn.click(); }
+      }, true);
+    });
+  }
+  if (!window.__demoPlace) {
+    // puts the caption card beside the part of the screen it talks about, with an arrow pointing at it; it keeps checking for a couple
+    // of seconds so it follows the page while it scrolls into view
+    window.__demoPlace = function (target, side) {
+      function place() {
+        var card = document.querySelector('.st-key-demo_card');
+        if (!card) { return; }
+        var t = target ? document.querySelector('.st-key-' + target) : null;
+        ['arrow-up', 'arrow-down', 'arrow-left', 'arrow-right'].forEach(function (c) { card.classList.remove(c); });
+        if (!t || side === 'bottom') {
+          card.classList.remove('callout');
+          card.style.left = '50%'; card.style.top = 'auto'; card.style.bottom = '1.1rem'; card.style.transform = 'translateX(-50%)';
+          return;
+        }
+        card.classList.add('callout');
+        var vw = window.innerWidth, vh = window.innerHeight, gap = 20, margin = 10, r = t.getBoundingClientRect();
+        var w = card.offsetWidth, h = card.offsetHeight;
+        var rt = Math.max(r.top, 0), rb = Math.min(r.bottom, vh), rl = Math.max(r.left, 0), rr = Math.min(r.right, vw);
+        var cx = (rl + rr) / 2, cy = (rt + rb) / 2, x, y, arrow = null;
+        if (side === 'below') { x = cx - w / 2; y = rb + gap; arrow = 'up'; }
+        else if (side === 'above') { x = cx - w / 2; y = rt - h - gap; arrow = 'down'; }
+        else if (side === 'left') { x = rl - w - gap; y = cy - h / 2; arrow = 'right'; }
+        else if (side === 'right') { x = rr + gap; y = cy - h / 2; arrow = 'left'; }
+        else { x = cx - w / 2; y = rb - h - gap; }
+        x = Math.min(Math.max(margin, x), vw - w - margin); y = Math.min(Math.max(margin, y), vh - h - margin);
+        card.style.left = x + 'px'; card.style.top = y + 'px'; card.style.bottom = 'auto'; card.style.transform = 'none';
+        if (arrow) {
+          card.classList.add('arrow-' + arrow);
+          var along = (arrow === 'up' || arrow === 'down') ? Math.min(Math.max(28, cx - x), w - 28) : Math.min(Math.max(28, cy - y), h - 28);
+          card.style.setProperty('--ao', along + 'px');
+        }
+      }
+      var n = 0;
+      clearInterval(window.__demoPlaceTimer);
+      if (window.__demoPlaceOnScroll) { window.removeEventListener('scroll', window.__demoPlaceOnScroll, true); }
+      window.__demoPlaceOnScroll = place;                                                          // and again whenever the page moves
+      window.addEventListener('scroll', place, true);
+      window.addEventListener('resize', place);
+      window.__demoPlaceTimer = setInterval(function () { place(); if (++n > 60) { clearInterval(window.__demoPlaceTimer); } }, 80);
+      place();
+    };
+  }
+})();
+"""
+
 PICK_VOICE_JS = """
 function pickVoice(voices) {
   var FEMALE = /female|samantha|serena|karen|zira|hazel|susan|moira|victoria|kate|allison|ava|jenny|aria|libby|sonia|emma|amy|joanna|salli|kendra|kimberly|ivy|nicole|olivia|stephanie|tessa|fiona|ellen|catherine|zoe|nova|jane|michelle|natasha/i;
@@ -229,27 +300,23 @@ function pickVoice(voices) {
 """
 
 
-def _voice_script(text, speak):
-    """Speaks the caption (when the voice is on) and stops the demo at the first real touch, click or key press."""
+def _voice_script(text, speak, target=None, side="bottom"):
+    """Starts the step in the main page: puts the caption card beside the part being described, speaks the caption (when the voice is on),
+    and keeps watching for a real touch, click or key press, which stops the demo."""
     return """<script>
 %s
 (function () {
   var P = window.parent;
   try {
-    if (!P.__demoWatch) {
-      // the listener is planted in the main page (not in this small frame, which Streamlit replaces at every step; a listener that
-      // belongs to a removed frame stops working)
+    if (!P.__demoWatch || !P.__demoPlace) {
+      // the helpers are planted in the main page (not in this small frame, which Streamlit replaces at every step; a listener or a
+      // function that belongs to a removed frame stops working)
       var s = P.document.createElement('script');
-      s.textContent = "(function () { if (window.__demoWatch) { return; } window.__demoWatch = true;"
-        + " ['mousedown', 'keydown', 'touchstart', 'wheel'].forEach(function (ev) {"
-        + "   document.addEventListener(ev, function () {"
-        + "     if (!window.__demoOn || Date.now() - window.__demoSince < 1500) { return; }"
-        + "     var btn = document.querySelector('.st-key-demo_stop button');"
-        + "     if (btn) { window.__demoOn = false; try { window.speechSynthesis.cancel(); } catch (e) {} btn.click(); }"
-        + "   }, true); }); })();";
+      s.textContent = %s;
       P.document.head.appendChild(s);
     }
     if (!P.__demoOn) { P.__demoOn = true; P.__demoSince = Date.now(); }
+    if (P.__demoPlace) { P.__demoPlace(%s, %s); }
     var text = %s;
     function say() {
       var u = new P.SpeechSynthesisUtterance(text), v = pickVoice(P.speechSynthesis.getVoices());
@@ -264,7 +331,7 @@ def _voice_script(text, speak):
     }
   } catch (e) {}
 })();
-</script>""" % (PICK_VOICE_JS, json.dumps(text), "true" if speak else "false")
+</script>""" % (PICK_VOICE_JS, json.dumps(PARENT_JS), json.dumps(target), json.dumps(side), json.dumps(text), "true" if speak else "false")
 
 
 _QUIET = """<script>
@@ -306,7 +373,7 @@ def render(dark=False):
         stop_col.button("Stop demo", key="demo_stop", on_click=stop, width="stretch")
         voice_col.toggle("Voice", key="demo_voice", value=True)
         hint_col.markdown('<div class="demo-hint">Touch the screen at any time to take over.</div>', unsafe_allow_html=True)
-    components.html(_voice_script(text, st.session_state.get("demo_voice", True)), height=0)
+    components.html(_voice_script(text, st.session_state.get("demo_voice", True), step["target"], step.get("side", "bottom")), height=0)
     if step["target"]:
         tour.scroll_script(step["target"])
     if st.session_state.get("demo_stamp_tick") != tick:          # note when this step went on screen
