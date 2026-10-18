@@ -5,7 +5,7 @@ candles, turns on the Fibonacci lines, shows four charts at once, lights up the 
 strategy's Full view, makes a practice buy, and points at the chat button, with a big plain-words caption (and, if switched on, a spoken
 voice) for every step. Then it carries on with another company until somebody touches the screen, which stops it at once.
 
-The setting DEMO_SPEED (an environment variable, 1 by default; 0.35 plays about three times faster) is only for testing.
+The settings DEMO_SPEED (an environment variable, 1 by default; 0.35 plays about three times faster) and DEMO_START_STEP (0 by default) are only for testing.
 
 Nothing the demo does touches a visitor's own portfolio: it works on a throwaway pretend account that is never saved, and the visitor's
 own account, company and chart settings are put back exactly as they were when it stops.
@@ -41,7 +41,7 @@ STEPS = [
      "set": {"company": "{symbol}"}, "target": {"sel": ".st-key-tm_search [data-testid=\"stSelectbox\"]", "fallback": "tm_search"}, "side": "below"},
     {"title": "How to read the price chart",
      "say": "Each bar is one day of trading. The thick part runs from the day's opening price to its closing price. Green means the price closed higher than it opened, red means lower. The thin lines show the highest and lowest price of the day. The bars underneath show volume, which is how many shares changed hands.",
-     "set": {"mtf_tf": "Daily"}, "target": {"sel": ".st-key-tm_chartarea [data-testid=\"stPlotlyChart\"]", "fallback": "tm_chartarea"}, "side": "inside_bottom"},
+     "set": {"mtf_tf": "Daily"}, "target": {"sel": ".st-key-tm_chartarea [data-testid=\"stPlotlyChart\"]", "fallback": "tm_chartarea", "parts": [{"x": 0.72, "y": 0.1, "w": 0.26, "h": 0.5}, {"x": 0.76, "y": 0.15, "w": 0.22, "h": 0.32}]}, "side": "left"},
     {"title": "Zooming out: weeks",
      "say": "Choosing Week turns every bar into a whole week. The small daily wiggles fade away, so the direction of the trend is much easier to see. Analysts look at several timeframes because the same price can look calm in one and wild in another.",
      "set": {"mtf_tf": "Weekly"}, "target": {"sel": ".st-key-tm_chartbar button", "text": "^Week$", "fallback": "tm_chartbar"}, "side": "below"},
@@ -62,7 +62,7 @@ STEPS = [
      "set": {}, "target": {"key": "tm_baro"}, "side": "right"},
     {"title": "Five strategies and a model",
      "say": "Fusion stage, Dow Theory, relative strength, Wyckoff and Fibonacci are methods from the professional CMT curriculum. The ML model is an estimate a computer learned from old prices. The last column is an honest test of how often each one was right on this company's own history. Around 50 percent means no better than a coin toss, and we show that on purpose.",
-     "set": {}, "target": {"key": "tm_strat"}, "side": "above"},
+     "set": {}, "target": {"key": "tm_strat", "parts": [{"x": 0, "y": 0, "w": 1, "h": 0.5}, {"x": 0, "y": 0, "w": 1, "h": 0.3}]}, "side": "above"},
     {"title": "Inside a strategy: Dow Theory",
      "say": "Each strategy has a full view. Dow Theory looks at the swing points of the price, the peaks and the dips. If every peak and every dip is higher than the one before, the trend is up, like climbing stairs. If both keep getting lower, the trend is down. The triangles mark those swing points.",
      "set": {}, "target": None, "full_view": "Dow Theory", "side": "bottom"},
@@ -179,7 +179,7 @@ def start():
     st.session_state["demo_saved"] = {k: st.session_state.get(k, MISSING) for k in CHART_KEYS}
     st.session_state["demo_real_pf"] = st.session_state.get("portfolio")
     st.session_state["portfolio"] = _fresh_portfolio()
-    st.session_state["demo_tick"] = 0
+    st.session_state["demo_tick"] = int(os.environ.get("DEMO_START_STEP", "0") or 0)           # 0 normally; only for testing a later step
     st.session_state["demo_applied"] = None
     st.session_state["demo_on"] = True
     st.session_state["demo_voice_cancel"] = False
@@ -316,45 +316,82 @@ def _voice_script(text, speak, target=None, side="bottom"):
       }
       return spec.fallback ? D.querySelector('.st-key-' + spec.fallback) : null;
     }
+    var narrow = false, roomScrolled = false;
+    function scroller(el) {                                                     // the nearest part of the page that scrolls
+      for (var e = el.parentElement; e; e = e.parentElement) {
+        var o = P.getComputedStyle(e).overflowY;
+        if ((o === 'auto' || o === 'scroll') && e.scrollHeight > e.clientHeight + 4) { return e; }
+      }
+      return D.scrollingElement;
+    }
+    // where a card of size w x h can go so that it sits completely outside the ring R (a gap away from it) and inside the screen
+    function spot(side, R, w, h, vw, vh) {
+      var gap = 22, m = 10, cx = (Math.max(R.left, 0) + Math.min(R.right, vw)) / 2, cy = (Math.max(R.top, 0) + Math.min(R.bottom, vh)) / 2, x, y, fits;
+      function clamp(v, lo, hi) { return Math.min(Math.max(v, lo), Math.max(lo, hi)); }
+      if (side === 'below') { x = clamp(cx - w / 2, m, vw - w - m); y = R.bottom + gap; fits = y + h <= vh - m; }
+      else if (side === 'above') { x = clamp(cx - w / 2, m, vw - w - m); y = R.top - gap - h; fits = y >= m; }
+      else if (side === 'right') { x = R.right + gap; y = clamp(cy - h / 2, m, vh - h - m); fits = x + w <= vw - m; }
+      else { x = R.left - gap - w; y = clamp(cy - h / 2, m, vh - h - m); fits = x >= m; }
+      return {side: side, x: x, y: y, fits: fits, cx: cx, cy: cy};
+    }
     function place() {
       var card = D.querySelector('.st-key-demo_card'), hole = D.getElementById('demo-hole'), t = find();
       if (!card) { return; }
       ['arrow-up', 'arrow-down', 'arrow-left', 'arrow-right'].forEach(function (c) { card.classList.remove(c); });
       if (!t || side === 'bottom') {
         if (hole) { hole.remove(); }
-        card.classList.remove('callout');
+        card.classList.remove('callout'); card.style.width = '';
         card.style.left = '50%%'; card.style.top = 'auto'; card.style.bottom = '1.1rem'; card.style.transform = 'translateX(-50%%)';
         return;
       }
-      var vw = P.innerWidth, vh = P.innerHeight, r0 = t.getBoundingClientRect();
-      if (!scrolled) {                                                          // bring it into view once, gently
+      var vw = P.innerWidth, vh = P.innerHeight, r0 = t.getBoundingClientRect(), pad = 6;
+      card.classList.add('callout');
+      card.style.width = narrow ? '350px' : '';
+      var w = card.offsetWidth, h = card.offsetHeight;
+      // the ring: the whole thing if the card can sit beside it, otherwise the most telling part of it (for something very big)
+      var rects = [{left: r0.left - pad, top: r0.top - pad, right: r0.right + pad, bottom: r0.bottom + pad}];
+      (spec.parts || []).forEach(function (q) {
+        rects.push({left: r0.left + q.x * r0.width - pad, top: r0.top + q.y * r0.height - pad, right: r0.left + (q.x + q.w) * r0.width + pad, bottom: r0.top + (q.y + q.h) * r0.height + pad});
+      });
+      if (!scrolled) {                                                          // bring the smallest ring into view once
         scrolled = true;
-        if (r0.top < 90 || r0.bottom > vh - 90) { try { t.scrollIntoView({block: 'center', behavior: 'smooth'}); } catch (e) {} }
+        var Rs = rects[rects.length - 1];
+        if (Rs.top < 60 || Rs.bottom > vh - 60) {
+          var mid = (Rs.top + Rs.bottom) / 2;
+          try { scroller(t).scrollBy({top: (Rs.bottom - Rs.top) > vh - 180 ? Rs.top - 90 : mid - vh / 2, behavior: D.hidden ? 'auto' : 'smooth'}); } catch (e) {}
+        }
       }
-      var pad = 6, r = {left: r0.left - pad, top: r0.top - pad, right: r0.right + pad, bottom: r0.bottom + pad};
+      var order = [side === 'inside_bottom' ? 'below' : side].concat(['below', 'above', 'right', 'left']), seen = {}, choice = null, R = null;
+      order = order.filter(function (s2) { if (seen[s2]) { return false; } seen[s2] = 1; return true; });
+      for (var ri = 0; ri < rects.length && !choice; ri++) {
+        for (var oi = 0; oi < order.length; oi++) {
+          var c = spot(order[oi], rects[ri], w, h, vw, vh);
+          if (c.fits) { choice = c; R = rects[ri]; break; }
+        }
+      }
+      if (!choice) {
+        // no room beside it: first try scrolling the page a little to make room above or below it, then a narrower card
+        if (!roomScrolled && rects[0].right > rects[0].left) {
+          roomScrolled = true;
+          var sc = scroller(t), room = h + 22 + 14, R0 = rects[rects.length - 1], delta = 0;
+          if (side === 'above' || side === 'left') { delta = R0.top - room; } else { delta = R0.bottom - (vh - room); }
+          try { sc.scrollBy({top: delta, behavior: D.hidden ? 'auto' : 'smooth'}); } catch (e) {}
+        } else if (!narrow) { narrow = true; }
+        R = rects[rects.length - 1];
+        choice = spot(order[0], R, w, h, vw, vh);              // last resort for this tick: the preferred side, even if tight
+      }
       if (!hole) {
         hole = D.createElement('div'); hole.id = 'demo-hole';
         hole.style.cssText = 'position:fixed;pointer-events:none;z-index:2147482000;box-shadow:0 0 0 3px #8fa8d4, 0 0 0 9999px rgba(0,0,0,0.68);';
         D.body.appendChild(hole);
       }
-      hole.style.left = r.left + 'px'; hole.style.top = r.top + 'px'; hole.style.width = (r.right - r.left) + 'px'; hole.style.height = (r.bottom - r.top) + 'px';
+      hole.style.left = R.left + 'px'; hole.style.top = R.top + 'px'; hole.style.width = (R.right - R.left) + 'px'; hole.style.height = (R.bottom - R.top) + 'px';
       var br = P.getComputedStyle(t).borderRadius; hole.style.borderRadius = (br && br !== '0px') ? br : '10px';
-      card.classList.add('callout');
-      var w = card.offsetWidth, h = card.offsetHeight, gap = 20, margin = 10;
-      var rt = Math.max(r.top, 0), rb = Math.min(r.bottom, vh), rl = Math.max(r.left, 0), rr = Math.min(r.right, vw);
-      var cx = (rl + rr) / 2, cy = (rt + rb) / 2, x, y, arrow = null;
-      if (side === 'below') { x = cx - w / 2; y = rb + gap; arrow = 'up'; }
-      else if (side === 'above') { x = cx - w / 2; y = rt - h - gap; arrow = 'down'; }
-      else if (side === 'left') { x = rl - w - gap; y = cy - h / 2; arrow = 'right'; }
-      else if (side === 'right') { x = rr + gap; y = cy - h / 2; arrow = 'left'; }
-      else { x = cx - w / 2; y = rb - h - gap; }
-      x = Math.min(Math.max(margin, x), vw - w - margin); y = Math.min(Math.max(margin, y), vh - h - margin);
-      card.style.left = x + 'px'; card.style.top = y + 'px'; card.style.bottom = 'auto'; card.style.transform = 'none';
-      if (arrow) {
-        card.classList.add('arrow-' + arrow);
-        var along = (arrow === 'up' || arrow === 'down') ? Math.min(Math.max(28, cx - x), w - 28) : Math.min(Math.max(28, cy - y), h - 28);
-        card.style.setProperty('--ao', along + 'px');
-      }
+      card.style.left = choice.x + 'px'; card.style.top = choice.y + 'px'; card.style.bottom = 'auto'; card.style.transform = 'none';
+      var arrow = {below: 'up', above: 'down', right: 'left', left: 'right'}[choice.side];
+      card.classList.add('arrow-' + arrow);
+      var along = (arrow === 'up' || arrow === 'down') ? Math.min(Math.max(28, choice.cx - choice.x), w - 28) : Math.min(Math.max(28, choice.cy - choice.y), h - 28);
+      card.style.setProperty('--ao', along + 'px');
     }
     timer = setInterval(place, 120);                                            // follows the page for as long as the step lasts
     place();
