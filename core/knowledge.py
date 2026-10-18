@@ -84,8 +84,8 @@ MANUAL = [
       ["will my portfolio be saved", "how do i come back later", "how do i open my portfolio again", "returning user",
        "can i check my portfolio later", "is my portfolio saved", "how do i log in again", "i closed the page what now",
        "how do i see my portfolio at the end", "come back and check my portfolio"],
-      "Yes. Your portfolio is saved under the name you chose. To come back, open the site, choose 'Returning user', pick "
-      "your name and click 'Open my portfolio'. If you refresh the page, you stay signed in."),
+      "Yes. Your portfolio is saved under the name you chose. To come back, open the site, choose 'Returning user', type "
+      "your name (names are not listed, so remember it) and click 'Open my portfolio'. If you refresh the page, you stay signed in."),
     E("switch_user", USING, "How do I switch user or start a new account?",
       ["how do i switch user", "how do i log out", "how do i make a new account", "can another person use this",
        "how do i create a new user", "change user", "sign out", "different name"],

@@ -75,7 +75,7 @@ futures and options. Nothing here is real money, and nothing here is investment 
 
 HOW_TO_USE = """\
 1. **Start:** choose a name and an amount of virtual money. Your portfolio is saved under your name, so you can come back later \
-(choose *Returning user*).
+(choose *Returning user* and type your name).
 2. **Pick a company** with the two boxes at the top.
 3. **Overview:** the price chart, four key signals, and risk-and-return numbers.
 4. **Possible outcomes:** thousands of simulated futures and what each trading rule would have done in them.
@@ -135,7 +135,7 @@ real money, and nothing here is investment advice."""
 
 HOW_TO_USE_SIMPLE = """\
 1. **Start:** choose a name and an amount of virtual money. Your portfolio is saved under your name, so you can come back later \
-(choose *Returning user*).
+(choose *Returning user* and type your name).
 2. **Search stock:** type a company name (a small spelling slip is fine) and press Enter.
 3. **Chart:** show 1, 2 or 4 charts, each in daily, weekly or monthly candles, with optional Fibonacci levels.
 4. **Buy, Sell, Exit all:** practise trading with virtual money from the bar under the chart.

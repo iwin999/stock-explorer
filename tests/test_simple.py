@@ -406,3 +406,34 @@ def test_the_demo_plays_through_every_step_without_touching_the_visitors_account
         assert app.session_state["portfolio"].name == "RealPerson" and not app.session_state["portfolio"].holdings
         saved = acc.load_account(store, "RealPerson")
         assert saved.name == "RealPerson" and not saved.holdings and saved.balance == 100000.0       # nothing was saved for the visitor
+
+
+def test_a_returning_user_must_type_their_name_and_no_list_of_names_is_shown():
+    from core import trading_ui as tu
+    names = ["Freya", "Fiona", "Meera", "Freyaa"]
+    store = acc.FileStore(tempfile.mkdtemp())
+    for n in names:
+        acc.create_account(store, n, 100000)
+    app = AppTest.from_file(APP, default_timeout=240)
+    a, b = _patches(store)
+    with a, b:
+        app.run()
+        app.radio(key="gate_mode").set_value("Returning user").run()
+        assert not app.exception
+
+        def visible():
+            everything = [m.value for m in app.markdown] + [c.value for c in app.caption]
+            everything += [o for r in app.radio for o in r.options] + [o for s in app.selectbox for o in s.options]
+            return " ".join(everything)
+        assert not any(n in visible() for n in names)                                  # nothing is listed before they type
+        app.text_input(key="gate_find").set_value("fr").run()                          # two letters are not enough
+        assert not any(n in visible() for n in names)
+        app.text_input(key="gate_find").set_value("fre").run()                         # three letters: only the matching names appear
+        assert "Freya" in visible() and "Freyaa" in visible() and "Meera" not in visible() and "Fiona" not in visible()
+        app.text_input(key="gate_find").set_value("zzz").run()
+        assert not any(n in visible() for n in names) and not app.exception            # no match, no names, no error
+        app.text_input(key="gate_find").set_value("freya").run()                       # the exact name is picked for them, and opens
+        [x for x in app.button if x.key == "gate_open"][0].click().run()
+        assert not app.exception and app.session_state["portfolio"].name == "Freya"
+    assert tu.matching_names(names, "ME") == [] and tu.matching_names(names, "mee") == ["Meera"]
+    assert tu.matching_names(["Aaa1", "Aaa2", "Aaa3", "Aaa4", "Aaa5", "Aaa6", "Aaa7"], "aaa") == ["Aaa1", "Aaa2", "Aaa3", "Aaa4", "Aaa5"]   # never a long list

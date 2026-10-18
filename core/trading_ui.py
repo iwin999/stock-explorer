@@ -126,6 +126,21 @@ def _sign_out():
 
 
 # ---------------- first screen ----------------
+MIN_LETTERS_TO_SEARCH = 3        # a returning visitor sees no names until they have typed this many letters of their own
+MAX_MATCHES_SHOWN = 5
+
+
+def matching_names(names, typed):
+    """The saved names that contain what was typed (ignoring capitals), at most MAX_MATCHES_SHOWN, and none at all until enough letters
+    have been typed. This keeps the full list of names out of sight."""
+    text = (typed or "").strip().casefold()
+    if len(text) < MIN_LETTERS_TO_SEARCH:
+        return []
+    found = [n for n in names if text in n.casefold()]
+    found.sort(key=lambda n: (n.casefold() != text, not n.casefold().startswith(text), n.casefold()))       # an exact match first, then the ones that start with it
+    return found[:MAX_MATCHES_SHOWN]
+
+
 def capital_gate():
     """Choose a name and starting capital, or open an existing account."""
     store = get_store()
@@ -163,17 +178,29 @@ def capital_gate():
         if not names:
             st.info("There are no saved portfolios yet. Choose “New user” to create one.")
         else:
-            pick = st.selectbox("Choose your name (type to search)", names, key="gate_pick")
-            if st.button("Open my portfolio", type="primary", key="gate_open"):
-                try:
-                    pf = acc.load_account(store, pick)
-                    if pf is None:
-                        calm("That portfolio could not be found.")
-                    else:
-                        _sign_in(pf)
-                        st.rerun()
-                except acc.StorageError as e:
-                    calm(str(e))
+            # Names are not listed: you have to remember yours and type it. Only once you have typed a few letters do the names that
+            # match appear (and only a handful), so nobody can browse everyone's portfolios.
+            typed = st.text_input("Type your name", max_chars=24, key="gate_find", placeholder="The name you used last time")
+            matches = matching_names(names, typed)
+            if len(typed.strip()) < MIN_LETTERS_TO_SEARCH:
+                st.caption(f"Type at least {MIN_LETTERS_TO_SEARCH} letters of your name and the matching names will appear here.")
+            elif not matches:
+                st.caption("No name like that was found. Check the spelling, or choose “New user” to start a new portfolio.")
+            else:
+                exact = [m for m in matches if m.casefold() == typed.strip().casefold()]
+                pick = st.radio("Is it one of these?", matches, index=0 if exact else None, key=f"gate_pick_{typed.strip().casefold()}")
+                if len(matches) == MAX_MATCHES_SHOWN:
+                    st.caption("If yours is not here, type a little more of it to narrow the list.")
+                if st.button("Open my portfolio", type="primary", key="gate_open", disabled=pick is None):
+                    try:
+                        pf = acc.load_account(store, pick)
+                        if pf is None:
+                            calm("That portfolio could not be found.")
+                        else:
+                            _sign_in(pf)
+                            st.rerun()
+                    except acc.StorageError as e:
+                        calm(str(e))
     st.caption(f"Portfolios are saved in: {store.label}.")
     show_disclaimer()
 
