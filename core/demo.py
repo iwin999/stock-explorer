@@ -205,9 +205,34 @@ def full_view_name():
 
 
 # ---------------- drawing ----------------
+# Picks the voice: a female American or British English one if the device has it (Samantha, Serena, Zira, Hazel, Google UK English
+# Female and so on), never a male voice, an Indian-English one or any other language; the best-sounding (enhanced, premium or natural)
+# version first. Written as plain text so the same function can be tested on its own.
+PICK_VOICE_JS = """
+function pickVoice(voices) {
+  var FEMALE = /female|samantha|serena|karen|zira|hazel|susan|moira|victoria|kate|allison|ava|jenny|aria|libby|sonia|emma|amy|joanna|salli|kendra|kimberly|ivy|nicole|olivia|stephanie|tessa|fiona|ellen|catherine|zoe|nova|jane|michelle|natasha/i;
+  var MALE = /\\bmale\\b|daniel|alex\\b|fred|tom\\b|oliver|david|mark\\b|george|ryan|guy\\b|james|arthur|gordon|rishi|thomas|matthew|brian|eric|christopher|roger|steffan|aaron|junior|bruce|ralph|albert|lee\\b|evan|liam|noah|william/i;
+  var best = null, bestScore = -1;
+  (voices || []).forEach(function (v) {
+    var lang = (v.lang || '').replace('_', '-').toLowerCase(), name = v.name || '';
+    if (lang.indexOf('en') !== 0 || lang === 'en-in') { return; }
+    if (MALE.test(name) && !/female/i.test(name)) { return; }
+    var score = 1;
+    if (lang === 'en-us' || lang === 'en-gb') { score += 6; }
+    if (FEMALE.test(name)) { score += 10; }
+    if (/enhanced|premium|natural|neural|online/i.test(name)) { score += 3; }
+    if (v.localService === false && /google/i.test(name)) { score += 1; }
+    if (score > bestScore) { best = v; bestScore = score; }
+  });
+  return best;
+}
+"""
+
+
 def _voice_script(text, speak):
     """Speaks the caption (when the voice is on) and stops the demo at the first real touch, click or key press."""
     return """<script>
+%s
 (function () {
   var P = window.parent;
   try {
@@ -226,17 +251,20 @@ def _voice_script(text, speak):
     }
     if (!P.__demoOn) { P.__demoOn = true; P.__demoSince = Date.now(); }
     var text = %s;
-    if (%s && P.speechSynthesis) {
+    function say() {
+      var u = new P.SpeechSynthesisUtterance(text), v = pickVoice(P.speechSynthesis.getVoices());
+      if (v) { u.voice = v; u.lang = v.lang; } else { u.lang = 'en-GB'; }
+      u.rate = 0.97;
+      u.pitch = 1.0;
       P.speechSynthesis.cancel();
-      var u = new P.SpeechSynthesisUtterance(text), voices = P.speechSynthesis.getVoices();
-      var v = voices.filter(function (x) { return /en[-_]IN/i.test(x.lang); })[0] || voices.filter(function (x) { return /^en/i.test(x.lang); })[0];
-      if (v) { u.voice = v; }
-      u.rate = 0.95;
       P.speechSynthesis.speak(u);
+    }
+    if (%s && P.speechSynthesis) {
+      if (P.speechSynthesis.getVoices().length) { say(); } else { setTimeout(say, 700); }      // some browsers load their voices a moment late
     }
   } catch (e) {}
 })();
-</script>""" % (json.dumps(text), "true" if speak else "false")
+</script>""" % (PICK_VOICE_JS, json.dumps(text), "true" if speak else "false")
 
 
 _QUIET = """<script>
