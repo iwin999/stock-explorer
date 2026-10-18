@@ -10,64 +10,90 @@ import streamlit.components.v1 as components
 # page = which page the step is on; target = the box lit up (a st.container key); card = where the card sits.
 STEPS = [
     {"page": "Home", "target": "tour_search", "card": "bottom", "title": "Find any company",
-     "text": "Type the name of a company here, like Tata, Reliance or Infosys, then press Enter. Or tap the box to see a list. "
-             "Tapping a company opens its page."},
+     "text": "Type the name of a company, such as Tata, Reliance or Infosys, then press Enter. A small spelling slip is fine, and the closest "
+             "matches are listed best first. You can also tap the box to browse the list. Tapping a company opens its page, with its price "
+             "chart and readings."},
     {"page": "Home", "target": "tour_summary", "card": "bottom", "title": "Your practice money",
-     "text": "This is your pretend portfolio. Green means you are up, red means you are down. Nothing here is real money, so "
-             "you can learn without any risk."},
+     "text": "This is your pretend portfolio: what your cash and everything you own is worth, and how much you have gained or lost since you "
+             "started. Green means you are up and red means you are down. The prices are real but the money is not, so nobody can lose "
+             "anything while they learn."},
     {"page": "Home", "target": "tour_picks", "card": "top", "title": "Popular companies",
-     "text": "Not sure where to start? These are well-known companies and how they moved today. Tap one to look at it."},
+     "text": "Not sure where to start? These are well-known companies, with how their price moved today. Tap one to open it. Looking at a few "
+             "different companies is the quickest way to see how prices behave."},
     {"page": "Company", "target": "tour_chart", "card": "bottom", "title": "The price over time",
-     "text": "This line shows what the price did. Change 1 month, 6 months or 1 year with the buttons. A line going up "
-             "means the price rose."},
+     "text": "This line is the history of the price. Use the buttons to look at 1 month, 6 months or 1 year. A line that climbs means the "
+             "price rose over that time, and a line that falls means it dropped. Zooming out shows the bigger trend, and zooming in shows "
+             "the recent moves."},
     {"page": "Company", "target": "tour_verdict", "card": "bottom", "title": "How is it doing?",
-     "text": "A few plain words about the company: is the price climbing or falling, is it calm or jumpy. It describes the "
-             "past. It does not predict the future."},
+     "text": "A few plain sentences about the company: is the price climbing or falling, and is it calm or jumpy. They are worked out from past "
+             "prices, so they describe what has already happened. They cannot tell you what happens next."},
     {"page": "Company", "target": "tour_trade", "card": "top", "title": "Buy or sell",
-     "text": "Choose Buy or Sell, pick how much money, and press the button. You will see exactly what happens before you "
-             "confirm. It uses practice money only."},
+     "text": "Choose Buy or Sell, pick how much money to use, and press the button. Before you confirm, the page tells you exactly how many "
+             "shares you would get and what it costs. It uses practice money only, and you can sell later to see how you did."},
     {"page": "Portfolio", "target": "tour_holdings", "card": "bottom", "title": "What you own",
-     "text": "Everything you have bought is listed here, with your gain or loss. Tap Sell next to anything to sell it."},
+     "text": "Every share you have bought is listed here, with how many you hold, what you paid on average, and your profit or loss on it. Tap "
+             "Sell next to anything to sell it. Your gain or loss changes as the price moves."},
     {"page": "Portfolio", "target": "tour_leader", "card": "top", "title": "The leaderboard",
-     "text": "See how everyone is doing. It ranks by percentage gain, so a smart small portfolio can beat a big one."},
+     "text": "See how everyone is doing. People are ranked by percentage gain, which is how much their money has grown since they started, so "
+             "a smart small portfolio can beat a big one."},
     {"page": "Learn", "target": "tour_bot", "card": "top", "title": "Ask anything",
-     "text": "Stuck on a word like 'dividend' or 'volatility'? Ask the helper. It explains in simple words, and you can "
-             "change how simple it should be."},
+     "text": "Stuck on a word like dividend or volatility? Ask the helper. It explains in simple words, and you can change how simple it "
+             "should be, from very simple to adult language. It only teaches; it never gives investment advice."},
     {"page": "Home", "target": "bottomnav", "card": "top", "title": "The menu",
-     "text": "These four buttons take you around: Home, Company, Portfolio and Learn. You can take this tour again from "
-             "the Learn page. Enjoy!"},
+     "text": "These four buttons take you around: Home, Company, Portfolio and Learn. You can take this tour again from the Learn page. "
+             "Enjoy!"},
 ]
 
 
 # The tour of the wide dashboard layout: the same idea, with the dashboard's own parts.
 DASH_STEPS = [
     {"target": "tm_top", "card": "bottom", "title": "Your practice money",
-     "text": "The top bar shows what your practice portfolio is worth. Dark mode changes the colours. Dashboard view switches between this "
-             "wide screen and a simpler phone-style layout. Demo plays a short demo by itself. The i has the full story of the project."},
+     "text": "The top bar shows what your practice portfolio is worth right now, with the percentage you have gained or lost since you "
+             "started. Nothing here is real money. Dark mode changes the colours for a dim room. Dashboard view switches between this wide "
+             "screen and a simpler phone-style layout. Demo plays a self-running demonstration, Tour is this walk-through, and the i opens "
+             "the full story of the project."},
     {"target": "tm_search", "card": "bottom", "title": "Find any company",
-     "text": "Type a company name, even with a small spelling slip, and press Enter. Or click the box to browse the list."},
+     "text": "Every company listed on the NSE and the BSE is in this box. Type a name, a small spelling slip is fine, and press Enter to see "
+             "the closest matches, or click the box to browse the list. The whole screen then switches to that company: its price chart, its "
+             "indicators and its strategy readings."},
     {"target": "tm_chartarea", "card": "bottom", "title": "The price chart",
-     "text": "Each candle is one day, week or month. Show 1, 2 or 4 charts side by side, choose Day, Week or Month, and how far back to look. "
-             "Fibonacci adds lines where prices often pause. The Dark switch darkens just the charts."},
+     "text": "Each candle is one day, week or month of trading. Its body runs from the opening to the closing price, green when the price rose "
+             "and red when it fell, and the thin lines show the highest and lowest prices. The bars underneath are volume, how many shares "
+             "changed hands. Choose 1, 2 or 4 charts side by side, Day, Week or Month candles, and how far back to look. Fibonacci draws the "
+             "levels where prices often pause, and the Dark switch darkens just the charts."},
     {"target": "tm_trade", "card": "top", "title": "Buy, Sell and Exit all",
-     "text": "Practise trading with virtual money. Buy opens a form for shares, ETFs and bonds, futures and options. Sell works once you hold "
-             "something, and Exit all sells everything. Nothing here is real money."},
-    {"target": "tm_ind", "card": "bottom", "title": "Six popular indicators",
-     "text": "Each gauge shows where one well-known measure stands, from red (leans down) to green (leans up). Hover over a name for a "
-             "plain-words explanation."},
+     "text": "These buttons let you practise trading with virtual money at real prices. Buy opens a form where you choose a share, an ETF or "
+             "bond, a future or an option, and how many to buy. The form stays open after each order, so you can place the next one. Sell "
+             "works once you hold something, and Exit all sells everything at once. Nothing is charged and nothing is real."},
+    {"target": "tm_ind", "card": "bottom", "title": "Six indicators",
+     "text": "Each gauge answers one question about the chart: how fast the price has moved (RSI), whether momentum is building (MACD), how "
+             "strong the trend is (ADX), how stretched the price is (Z-score), whether volume is backing the move (On-Balance Volume), and "
+             "where the price sits in its usual range (Bollinger band). Red leans down, green leans up, and the pointer shows where it "
+             "stands. Hover over a name for a plain-words explanation. They are clues, and they can disagree."},
     {"target": "tm_baro", "card": "top", "title": "The combined strategy reading",
-     "text": "The dial combines five strategies from the CMT curriculum into one picture. Needle on the left means most of them read down, "
-             "on the right most read up."},
+     "text": "Five strategies from the CMT curriculum each vote Up, Down or Neutral for this company, and the dial adds up the votes. A "
+             "needle on the left means most of them read down, on the right most read up, and in the middle they disagree. It describes "
+             "what the charts show today. It is not a forecast."},
     {"target": "tm_lists", "card": "top", "title": "What you hold",
-     "text": "The shares and other things you have bought and sold, with your profit or loss on each."},
+     "text": "Everything you have bought, and the recent sales you have made. For each holding you see how many shares you own and your profit "
+             "or loss on it, in rupees and in percent. The ring below splits your money between shares, ETFs, bonds, futures, options and "
+             "cash."},
     {"target": "tm_board", "card": "top", "title": "The leaderboard",
-     "text": "See how everyone is doing. It ranks by percentage return since they started, so a small portfolio can beat a big one."},
+     "text": "Everyone is ranked by percentage return, which is how much their money has grown since they started, so a small portfolio can "
+             "beat a big one. The board shows the top four and where you stand among everyone. It refreshes every half minute."},
     {"target": "tm_strat", "card": "top", "title": "The strategies behind the reading",
-     "text": "Five methods from the CMT curriculum and a machine-learning model, each with its vote and how it did in back-tests. Click Full "
-             "view to see a chart and a plain explanation of what it is doing. They describe; they do not recommend."},
+     "text": "Five methods from the CMT curriculum (Fusion stage, Dow Theory, relative strength, Wyckoff and Fibonacci) and a machine-learning "
+             "model, each with its vote. The last column says how often each one was right on this company's own history, which is usually "
+             "about half the time, no better than a coin toss, and we say so honestly. Click Full view for a chart and a plain explanation "
+             "of what a strategy is doing. They describe; they do not recommend."},
     {"target": "ask_bubble", "card": "top", "title": "Ask me anything",
-     "text": "This round chat button stays in the corner whatever you are doing. Click it and type a question, or pick one of the starters: what "
-             "an indicator means, how a strategy works, or how to use this screen. It explains and teaches; it does not give investment advice."},
+     "text": "This round chat button stays in the corner whatever you are doing. Click it and type a question, or pick a starter: what an "
+             "indicator means, how a strategy works, how to use this screen. It answers from notes written for this site, in simple words, "
+             "or in adult language if you ask. It teaches, and it never gives investment advice."},
+    {"target": "guide_btn", "card": "top", "title": "Read the guide",
+     "text": "This small document button above the chat button opens the presenter's guide, a PDF that explains every part of this screen twice: "
+             "once in simple words with an everyday example, and once in proper finance language. It starts from what a share is and builds "
+             "up, so anyone can read it from the beginning. It opens in a new tab, so you do not lose your place here."},
 ]
 
 
@@ -85,8 +111,8 @@ def target_css(target, dark=False):
     """CSS that lifts one box above the dark layer and outlines it."""
     accent = _accent(dark)
     box = "#1e222d" if dark else "#ffffff"
-    position = "" if target in ("bottomnav", "ask_bubble") else "position: relative;"          # these stay fixed to the screen
-    radius = "50%" if target == "ask_bubble" else "14px"
+    position = "" if target in ("bottomnav", "ask_bubble", "guide_btn") else "position: relative;"          # these stay fixed to the screen
+    radius = "50%" if target in ("ask_bubble", "guide_btn") else "14px"
     return (f".st-key-{target} {{ {position} z-index: 1000 !important; background: {box} !important; border-radius: {radius};"
             f" box-shadow: 0 0 0 3px {accent}, 0 0 0 200vmax rgba(0,0,0,0.72) !important; }}")
 

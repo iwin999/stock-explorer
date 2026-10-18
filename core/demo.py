@@ -14,6 +14,7 @@ How it fits in: terminal_ui.run() calls apply() before it draws anything (so the
 after_price() once the price is known (for the practice buy), full_view_name() when it draws the strategies table, and render() at the
 end (the caption card, the spotlight, the timer that moves to the next step, and the voice).
 """
+import copy
 import json
 import os
 import time
@@ -28,6 +29,7 @@ from core.trading import Portfolio
 MISSING = "__missing__"
 COMPANIES = ["RELIANCE.NS", "TCS.NS", "INFY.NS", "ITC.NS"]        # one per trip round the loop
 CHART_KEYS = ["company", "mtf_layout", "mtf_tf", "period_seg", "show_fib", "dark_chart"]     # widget settings the demo changes and puts back
+SPEEDS = ["0.75×", "1×", "1.25×", "1.5×", "2×"]                    # like a video's playback speed
 PRACTICE_BUY = 10000.0                                              # rupees of pretend money spent in the demo buy
 
 NORMAL = {"mtf_layout": "1 chart", "mtf_tf": "Daily", "period_seg": "1 year", "show_fib": False}
@@ -75,12 +77,18 @@ STEPS = [
     {"title": "Who is doing best",
      "say": "Everyone is ranked by percentage return, which is how much their money has grown since they started. That is why a small portfolio can beat a big one. The board shows the top four and where you stand among everyone.",
      "set": {}, "target": {"key": "tm_board"}, "side": "right"},
-    {"title": "Ask anything",
-     "say": "If you meet a word you do not know, such as RSI or futures, tap this round button and ask. The helper explains in simple words, or in adult language if you ask for it. It teaches, and it never gives investment advice.",
-     "set": {}, "target": {"sel": ".st-key-ask_bubble [data-testid=\"stPopoverButton\"]", "fallback": "ask_bubble"}, "side": "left"},
+    {"title": "Meet the helper",
+     "say": "If you meet a word you do not know, such as RSI or futures, there is a helper for that. It is this round chat button, and it stays in the corner whatever you are doing. It answers from notes written for this site, in simple words or in adult language, and it never gives investment advice. Let us try it.",
+     "set": {}, "target": {"sel": ".st-key-ask_bubble [data-testid=\"stPopoverButton\"]", "fallback": "ask_bubble"}, "act": "close_chat", "side": "left"},
+    {"title": "Asking the helper a question",
+     "say": "We open the helper and type a question: what does the RSI number mean? Watch it being typed, then the Ask button is pressed. The helper looks the question up in its notes.",
+     "set": {}, "target": {"sel": "[data-testid=\"stPopoverBody\"]", "fallback": "ask_bubble"}, "act": "ask", "question": "What does the RSI number mean?", "side": "left"},
+    {"title": "Reading the answer",
+     "say": "Here is the answer, in plain words. It explains what RSI is, how it is worked out and how to read it. Under the answer it offers related questions to follow up, and you can ask for a simpler or a more detailed explanation. Everything it says comes from notes written for this site.",
+     "set": {}, "target": {"sel": "[data-testid=\"stPopoverBody\"]", "fallback": "ask_bubble"}, "act": "open_chat", "side": "left"},
     {"title": "Now it is your turn",
      "say": "That was the demo. Touch the screen to try it yourself. The Tour button walks you through every part of the screen one step at a time, and the Demo button plays this again. We keep playing until you touch the screen.",
-     "set": {}, "target": {"sel": ".st-key-tour_btn_top button", "fallback": "tm_top"}, "side": "below"},
+     "set": {}, "target": {"sel": ".st-key-tour_btn_top button", "fallback": "tm_top"}, "act": "close_chat", "side": "below"},
 ]
 
 CSS = """<style>
@@ -104,8 +112,12 @@ CSS = """<style>
 .st-key-demo_card.callout .demo-title { font-size: 1.3rem; }
 .st-key-demo_card.callout .demo-say { font-size: 1.02rem; }
 .st-key-demo_card.callout .demo-hint { display: none; }
-.st-key-demo_card.callout [data-testid="stColumn"]:nth-child(3) { display: none !important; }
-.st-key-demo_card.callout [data-testid="stColumn"]:nth-child(-n+2) { flex: 1 1 45% !important; width: auto !important; min-width: 0 !important; }
+.st-key-demo_card .demo-hint { margin-top: .35rem; }
+.st-key-demo_card [data-testid="stColumn"] { min-width: 0 !important; }
+.st-key-demo_card [data-testid="stButtonGroup"] { gap: .2rem; flex-wrap: nowrap; }
+.st-key-demo_card [data-testid="stButtonGroup"] button { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.35); padding: .15rem .5rem; min-height: 2rem; }
+.st-key-demo_card [data-testid="stButtonGroup"] button p { font-size: .85rem; }
+.st-key-demo_card [data-testid="stButtonGroup"] button[data-selected="true"], .st-key-demo_card [data-testid="stButtonGroup"] button[aria-checked="true"] { background: #6f9bff; border-color: #6f9bff; }
 .st-key-demo_card[class*="arrow-"]::before, .st-key-demo_card[class*="arrow-"]::after { content: ""; position: absolute; width: 0; height: 0; border: solid transparent; }
 .st-key-demo_card.arrow-up::before { top: -15px; left: var(--ao, 50%); transform: translateX(-50%); border-width: 0 13px 15px 13px; border-bottom-color: #8fa8d4; }
 .st-key-demo_card.arrow-up::after { top: -11px; left: var(--ao, 50%); transform: translateX(-50%); border-width: 0 11px 13px 11px; border-bottom-color: #1d3557; }
@@ -159,10 +171,19 @@ def spoken_text():
     return f"{title_text()}. {say_text()}"
 
 
+def rate():
+    """The playback speed the visitor chose (1 is normal, 2 is twice as fast)."""
+    chosen = st.session_state.get("demo_speed") or "1×"
+    try:
+        return float(str(chosen).replace("×", ""))
+    except ValueError:
+        return 1.0
+
+
 def seconds_for(text):
-    """How long a step stays on screen: long enough to read (and to hear) its caption."""
-    speed = float(os.environ.get("DEMO_SPEED", "1") or 1)                 # 1 normally; a smaller number plays faster (for testing)
-    return max(7.0, len(text) / 13.0 + 3.5) * speed
+    """How long a step stays on screen: long enough to read (and to hear) its caption, shorter when the visitor has sped it up."""
+    test_speed = float(os.environ.get("DEMO_SPEED", "1") or 1)               # 1 normally; a smaller number plays faster (for testing)
+    return max(7.0, len(text) / 13.0 + 3.5) * test_speed / rate()
 
 
 def _fresh_portfolio():
@@ -179,6 +200,8 @@ def start():
     st.session_state["demo_saved"] = {k: st.session_state.get(k, MISSING) for k in CHART_KEYS}
     st.session_state["demo_real_pf"] = st.session_state.get("portfolio")
     st.session_state["portfolio"] = _fresh_portfolio()
+    st.session_state["demo_real_chat"] = copy.deepcopy(st.session_state.get("chat", []))          # the demo asks the helper a question; the visitor's own chat comes back after
+    st.session_state["chat"] = []
     st.session_state["demo_tick"] = int(os.environ.get("DEMO_START_STEP", "0") or 0)           # 0 normally; only for testing a later step
     st.session_state["demo_applied"] = None
     st.session_state["demo_on"] = True
@@ -197,6 +220,7 @@ def stop():
     real = st.session_state.pop("demo_real_pf", None)
     if real is not None:
         st.session_state["portfolio"] = real
+    st.session_state["chat"] = st.session_state.pop("demo_real_chat", [])
     for key in ("demo_on", "demo_saved", "demo_tick", "demo_applied", "demo_bought", "demo_stamp_tick", "demo_stamp_time"):
         st.session_state.pop(key, None)
     st.session_state.pop("flash", None)
@@ -218,6 +242,7 @@ def apply():
     loop, index = _loop_and_step()
     if index == 0:
         st.session_state["portfolio"] = _fresh_portfolio()                           # every trip round starts with a clean pretend account
+        st.session_state["chat"] = []                                                # and a fresh chat
     symbol = current_symbol()
     for key, value in STEPS[index]["set"].items():
         st.session_state[key] = symbol if value == "{symbol}" else value
@@ -273,33 +298,38 @@ function pickVoice(voices) {
 """
 
 
-def _voice_script(text, speak, target=None, side="bottom"):
+def _voice_script(text, speak, target=None, side="bottom", speed=1.0, act=None, question=""):
     """The script of one step. It lives in this step's own small frame and does everything from there (no code is planted in the main
     page, which some sites forbid): it rings just the thing the step talks about and dims the rest, puts the caption card beside it with an
-    arrow, speaks the caption, and watches for a real touch, click or key press, which stops the demo. Streamlit swaps in a new frame at
-    every step, and the new one first removes the old one's listeners, so only one set is ever active."""
-    return """<script>
-%s
+    arrow, speaks the caption, carries out the step's action (opening the chat helper, typing a question into it), and watches for a real
+    touch, click or key press, which stops the demo. Streamlit swaps in a new frame at every step, and the new one first removes the old
+    one's listeners, so only one set is ever active."""
+    template = """<script>
+__PICK__
 (function () {
   var P = window.parent, D = P.document;
   try {
-    var spec = %s, side = %s, text = %s, speak = %s, timer = null, sayTimer = null, handlers = [], scrolled = false;
+    var spec = __SPEC__, side = __SIDE__, text = __TEXT__, speak = __SPEAK__, speed = __SPEED__, action = __ACT__, question = __QUESTION__;
+    var timer = null, sayTimer = null, actTimers = [], handlers = [], scrolled = false;
     function hush() { try { P.speechSynthesis.cancel(); } catch (e) {} }
     (P.__demoHandlers || []).forEach(function (h) { try { h[0].removeEventListener(h[1], h[2], h[3]); } catch (e) {} });
     P.__demoHandlers = handlers;
     function on(target, ev, fn, capture) { target.addEventListener(ev, fn, capture); handlers.push([target, ev, fn, capture]); }
+    function later(fn, ms) { actTimers.push(setTimeout(fn, ms)); }
     function clearAll() {
       var hole = D.getElementById('demo-hole');
       if (hole) { hole.remove(); }
-      clearInterval(timer); clearTimeout(sayTimer);
+      clearInterval(timer); clearTimeout(sayTimer); actTimers.forEach(clearTimeout);
       hush();
     }
     if (!P.__demoOn) { P.__demoOn = true; P.__demoSince = Date.now(); }
 
-    // a real touch, click or key press stops the demo; the voice also stops when the tab is closed, left or hidden
+    // a real touch, click or key press on the page stops the demo (but not one on the demo's own card, where the speed and the voice are
+    // changed); the voice also stops when the tab is closed, left or hidden
     ['mousedown', 'keydown', 'touchstart', 'wheel'].forEach(function (ev) {
-      on(D, ev, function () {
-        if (!P.__demoOn || Date.now() - P.__demoSince < 1500) { return; }
+      on(D, ev, function (e) {
+        if (!P.__demoOn || Date.now() - P.__demoSince < 1500 || (e && e.isTrusted === false)) { return; }
+        if (e && e.target && e.target.closest && e.target.closest('.st-key-demo_card')) { return; }
         var btn = D.querySelector('.st-key-demo_stop button');
         if (btn) { P.__demoOn = false; clearAll(); btn.click(); }
       }, true);
@@ -396,6 +426,32 @@ def _voice_script(text, speak, target=None, side="bottom"):
     timer = setInterval(place, 120);                                            // follows the page for as long as the step lasts
     place();
 
+    // what the step does on the screen: open the chat helper, or open it and type a question into it and press Ask
+    function bubble() { return D.querySelector('.st-key-ask_bubble [data-testid="stPopoverButton"]'); }
+    function isOpen() { var b = bubble(); return !!b && b.getAttribute('aria-expanded') === 'true'; }
+    function openChat() { var b = bubble(); if (b && !isOpen()) { b.click(); } }
+    function closeChat() { var b = bubble(); if (b && isOpen()) { b.click(); } }
+    function typeQuestion() {
+      var input = D.querySelector('[data-testid="stPopoverBody"] input[type="text"]');
+      if (!input) { later(typeQuestion, 400); return; }
+      var setter = Object.getOwnPropertyDescriptor(P.HTMLInputElement.prototype, 'value').set, i = 0;
+      input.focus();
+      (function next() {
+        if (!P.__demoOn) { return; }
+        i++;
+        setter.call(input, question.slice(0, i));
+        input.dispatchEvent(new P.Event('input', {bubbles: true}));
+        if (i < question.length) { later(next, 70 / speed); return; }
+        later(function () {
+          var ask = Array.prototype.filter.call(D.querySelectorAll('[data-testid="stPopoverBody"] button'), function (b) { return /^Ask$/.test((b.textContent || '').trim()); })[0];
+          if (ask) { ask.click(); }
+        }, 600 / speed);
+      })();
+    }
+    if (action === 'close_chat') { later(closeChat, 300); }
+    else if (action === 'open_chat') { later(openChat, 300); }
+    else if (action === 'ask') { later(function () { openChat(); later(typeQuestion, 900); }, 1500 / speed); }
+
     // the voice: a browser loads its list of voices a little late (sometimes a few seconds), and speaking before then would use the
     // browser's default voice, so wait until the list is there
     function say() {
@@ -409,7 +465,7 @@ def _voice_script(text, speak, target=None, side="bottom"):
         if (!part) { return; }
         var u = new P.SpeechSynthesisUtterance(part);
         if (v) { u.voice = v; u.lang = v.lang; } else { u.lang = 'en-GB'; }
-        u.rate = 0.97;
+        u.rate = Math.min(2, 0.97 * speed);
         u.pitch = 1.0;
         P.speechSynthesis.speak(u);
       });
@@ -420,7 +476,10 @@ def _voice_script(text, speak, target=None, side="bottom"):
     if (speak && P.speechSynthesis) { P.speechSynthesis.getVoices(); whenVoicesReady(0); }
   } catch (e) {}
 })();
-</script>""" % (PICK_VOICE_JS, json.dumps(target), json.dumps(side), json.dumps(text), "true" if speak else "false")
+</script>"""
+    return (template.replace("__PICK__", PICK_VOICE_JS).replace("__SPEC__", json.dumps(target)).replace("__SIDE__", json.dumps(side))
+            .replace("__TEXT__", json.dumps(text)).replace("__SPEAK__", "true" if speak else "false").replace("__SPEED__", json.dumps(float(speed)))
+            .replace("__ACT__", json.dumps(act)).replace("__QUESTION__", json.dumps(question)).replace("%%", "%"))
 
 
 _QUIET = """<script>
@@ -462,11 +521,13 @@ def render(dark=False):
     with st.container(key="demo_card"):
         st.markdown(f'<div class="demo-badge">Demo · pretend account · step {index + 1} of {len(STEPS)}</div>'
                     f'<div class="demo-title">{title_text()}</div><div class="demo-say">{say_text()}</div>', unsafe_allow_html=True)
-        stop_col, voice_col, hint_col = st.columns([1.2, 1.1, 3.2], vertical_alignment="center")
+        stop_col, voice_col, speed_col = st.columns([1.15, 0.95, 2.6], vertical_alignment="center")
         stop_col.button("Stop demo", key="demo_stop", on_click=stop, width="stretch")
         voice_col.toggle("Voice", key="demo_voice", value=True)
-        hint_col.markdown('<div class="demo-hint">Touch the screen at any time to take over.</div>', unsafe_allow_html=True)
-    components.html(_voice_script(text, st.session_state.get("demo_voice", True), step["target"], step.get("side", "bottom")), height=0)
+        speed_col.segmented_control("Speed", SPEEDS, default="1×", key="demo_speed", label_visibility="collapsed", help="Playback speed, like a video's")
+        st.markdown('<div class="demo-hint">Touch the screen at any time to take over.</div>', unsafe_allow_html=True)
+    components.html(_voice_script(text, st.session_state.get("demo_voice", True), step["target"], step.get("side", "bottom"), rate(),
+                                  step.get("act"), step.get("question", "")), height=0)
     if st.session_state.get("demo_stamp_tick") != tick:          # note when this step went on screen
         st.session_state["demo_stamp_tick"] = tick
         st.session_state["demo_stamp_time"] = time.time()

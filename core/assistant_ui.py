@@ -75,7 +75,12 @@ def _reply(raw_question, history, ctx):
 
 # ---------------- the small chat bubble (bottom corner of the dashboard) ----------------
 BUBBLE_CSS = """<style>
-body:has([data-testid="stDialog"]) .st-key-ask_bubble { display: none !important; }     /* out of the way while a pop-up is open */
+body:has([data-testid="stDialog"]) .st-key-ask_bubble, body:has([data-testid="stDialog"]) .st-key-guide_btn { display: none !important; }
+.st-key-guide_btn { position: fixed !important; right: 0.95rem; bottom: 8.4rem; z-index: 990; width: auto !important; }
+.st-key-guide_btn a.guide-link { display: flex; align-items: center; justify-content: center; width: 2.9rem; height: 2.9rem; border-radius: 50%; background: #ffffff;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.28), 0 0 0 1px rgba(60,100,200,0.18); transition: transform .15s ease, box-shadow .15s ease; text-decoration: none; }
+.st-key-guide_btn a.guide-link:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.32), 0 0 0 2px rgba(66,133,244,0.5); }
+.st-key-guide_btn svg { width: 1.55rem; height: 1.55rem; display: block; }     /* out of the way while a pop-up is open */
 .st-key-ask_bubble { position: fixed !important; right: 0.6rem; bottom: 3.7rem; z-index: 990; width: auto !important; }     /* at the right edge, above Streamlit's Manage app bar; stays put while the page scrolls */
 .st-key-ask_bubble [data-testid="stPopoverButton"] { width: 3.6rem; height: 3.6rem; min-height: 3.6rem; padding: 0 !important; border-radius: 50%;
     background: radial-gradient(circle at 35% 28%, #6f9bff 0%, #3f74e6 55%, #2f5fcf 100%) !important; border: none !important;
@@ -103,9 +108,19 @@ body:has([data-testid="stDialog"]) .st-key-ask_bubble { display: none !important
 </style>"""
 
 
+GUIDE_ICON = ('<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 3h19l11 11v29a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" fill="#4285f4"/>'
+              '<path d="M29 3l11 11H31a2 2 0 0 1-2-2z" fill="#a8c7fa"/>'
+              '<rect x="14" y="22" width="20" height="3" rx="1.5" fill="#ffffff"/><rect x="14" y="29" width="20" height="3" rx="1.5" fill="#ffffff"/>'
+              '<rect x="14" y="36" width="13" height="3" rx="1.5" fill="#ffffff"/></svg>')
+
+
 def bubble(ctx):
-    """A round chat button fixed to the bottom-right corner. Click it and an 'Ask me anything' panel opens above it."""
+    """A round chat button fixed to the bottom-right corner. Click it and an 'Ask me anything' panel opens above it. Above it sits a
+    small document button that opens the presenter's guide (a PDF) in a new tab."""
     st.markdown(BUBBLE_CSS, unsafe_allow_html=True)
+    with st.container(key="guide_btn"):
+        st.markdown(f'<a class="guide-link" href="{branding.guide_url()}" target="_blank" rel="noopener" '
+                    f'title="Read the presenter\'s guide (PDF)" aria-label="Read the presenter\'s guide (PDF)">{GUIDE_ICON}</a>', unsafe_allow_html=True)
     with st.container(key="ask_bubble"):
         with st.popover("AI", help="Ask me anything"):
             _bubble_chat(ctx)

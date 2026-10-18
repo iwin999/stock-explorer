@@ -18,6 +18,7 @@ import streamlit as st
 DEFAULT_NAME = "Stock Explorer"
 WRITTEN_AS = "Stock Explorer"            # how the name is spelled inside the long texts in the code (do not change)
 MAX_LENGTH = 40
+GUIDE_URL = "https://cdn.jsdelivr.net/gh/iwin999/stock-explorer@main/docs/Presenter-Guide.pdf"       # the presenter's guide (the PDF in the repository)
 
 
 def name():
@@ -29,6 +30,16 @@ def name():
         pass
     value = str(value or os.environ.get("SITE_NAME") or DEFAULT_NAME).strip()[:MAX_LENGTH]
     return value or DEFAULT_NAME
+
+
+def guide_url():
+    """Where the presenter's guide PDF can be read: the 'guide_url' secret, else GUIDE_URL."""
+    value = None
+    try:
+        value = st.secrets.get("guide_url")
+    except Exception:
+        pass
+    return str(value or os.environ.get("GUIDE_URL") or GUIDE_URL).strip()
 
 
 def safe():

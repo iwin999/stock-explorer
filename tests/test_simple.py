@@ -449,3 +449,40 @@ def test_the_demo_captions_explain_and_the_script_needs_no_code_planted_in_the_p
     assert "createElement('script')" not in script and "%s" not in script and "pickVoice" in script   # runs in its own frame, nothing planted
     assert "Week" in script and "tm_chartbar" in script                                                 # the exact button, and its bigger box as a fallback
     assert demo.seconds_for(demo.STEPS[0]["say"]) >= 10                                                 # long enough to read and to hear
+
+
+def test_the_demo_speed_the_chat_steps_and_the_guide_button():
+    from core import demo, branding
+    store, app = _app("Speedy", phone=False)
+    a, b = _patches(store)
+    with a, b:
+        app.session_state["chat"] = [{"role": "user", "content": "my own question"}, {"role": "assistant", "content": "my own answer", "related": []}]
+        app.run()
+        assert not app.exception and not _errors(app)
+        page = " ".join(m.value for m in app.markdown)
+        assert 'class="guide-link"' in page and branding.guide_url() in page                         # the document button above the chat bubble
+        app.button(key="demo_btn_top").click().run()
+        assert app.session_state["chat"] == []                                                      # the demo starts with its own empty chat
+        slow = demo.seconds_for("x" * 300)
+        app.session_state["demo_speed"] = "2×"
+        app.run()
+        assert not app.exception
+        assert [s["act"] for s in demo.STEPS if s.get("act")] == ["close_chat", "ask", "open_chat", "close_chat"]   # it tries the helper by itself near the end
+        for tick in range(len(demo.STEPS)):
+            app.session_state["demo_tick"] = tick
+            app.run()
+            assert not app.exception and not _errors(app), tick
+        app.button(key="demo_stop").click().run()
+        assert not app.exception and app.session_state["chat"][0]["content"] == "my own question"   # the visitor's own chat is back
+    assert demo.SPEEDS == ["0.75×", "1×", "1.25×", "1.5×", "2×"]
+    assert slow > 0
+
+
+def test_the_speed_choice_changes_how_long_a_step_stays():
+    import streamlit as st
+    from core import demo
+    with mock.patch.object(st, "session_state", {"demo_speed": "2×"}):
+        fast = demo.seconds_for("x" * 300)
+    with mock.patch.object(st, "session_state", {"demo_speed": "0.75×"}):
+        slow = demo.seconds_for("x" * 300)
+    assert fast < slow and abs(slow / fast - (2 / 0.75)) < 0.01

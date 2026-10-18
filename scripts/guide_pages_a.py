@@ -220,7 +220,7 @@ def page7():
   <tr><td>1</td><td>Site name and crest</td><td>The school crest and the name of the site.</td></tr>
   <tr><td>2</td><td>Portfolio value</td><td>Everything you own, in rupees, with the percent gained or lost since you started. Grey 0.00% means no change yet.</td></tr>
   <tr><td>3</td><td>Dark mode and Dashboard view</td><td>Dark mode changes the colours. Dashboard view switches between this wide screen and a simpler phone-style layout.</td></tr>
-  <tr><td>4</td><td>Demo and Tour</td><td><b>Demo</b> plays a short demo by itself: it searches a company, changes the chart, opens a strategy and makes a practice buy, with a big caption and a spoken voice. Touch the screen to stop it. <b>Tour</b> is a guided walk through each part, one step at a time (10 steps).</td></tr>
+  <tr><td>4</td><td>Demo and Tour</td><td><b>Demo</b> plays a short demo by itself: it searches a company, changes the chart, opens a strategy and makes a practice buy, with a big caption and a spoken voice, and you can change its speed like a video. Touch the screen to stop it. <b>Tour</b> is a guided walk through each part, one step at a time (11 steps).</td></tr>
   <tr><td>5</td><td>The i button</td><td>Opens the About box: what the project is, its limits, credits and the creator.</td></tr>
   <tr><td>6</td><td>Bought and Sold</td><td>What you hold with profit or loss on each, and your last six sales.</td></tr>
   <tr><td>7</td><td>Where your money is</td><td>A ring showing how your money splits between stocks, ETFs, bonds, futures, options and cash. With more than two kinds, the key under it scrolls.</td></tr>
@@ -232,7 +232,7 @@ def page7():
   <tr><td>13</td><td>Buy, Sell, Exit all</td><td>Buy opens the order pop-up. Sell works once you hold something. Exit all sells everything at once; your starting money is not reset.</td></tr>
   <tr><td>14</td><td>Indicators</td><td>Six gauges that read the chart ([[pgr:p9:p10]]). Hover over the small i beside a name for a description.</td></tr>
   <tr><td>15</td><td>The strategies table</td><td>Five CMT strategies and an ML model, each with its vote and its back-test. A Full view button opens a chart and a plain explanation.</td></tr>
-  <tr><td>16</td><td>The round chat button</td><td>Stays in the corner while you scroll. It opens 'Ask me anything', a helper that explains words and how the app works.</td></tr>
+  <tr><td>16</td><td>The round chat button</td><td>Stays in the corner while you scroll. It opens 'Ask me anything', a helper that explains words and how the app works. The small blue document button above it opens this guide.</td></tr>
   </tbody></table>
   <div class="foot"><span>{{SITE}}: Presenter's guide</span><span>Part 2 of 4</span><span>7</span></div>
 </div>"""
