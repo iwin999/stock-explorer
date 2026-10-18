@@ -437,3 +437,15 @@ def test_a_returning_user_must_type_their_name_and_no_list_of_names_is_shown():
         assert not app.exception and app.session_state["portfolio"].name == "Freya"
     assert tu.matching_names(names, "ME") == [] and tu.matching_names(names, "mee") == ["Meera"]
     assert tu.matching_names(["Aaa1", "Aaa2", "Aaa3", "Aaa4", "Aaa5", "Aaa6", "Aaa7"], "aaa") == ["Aaa1", "Aaa2", "Aaa3", "Aaa4", "Aaa5"]   # never a long list
+
+
+def test_the_demo_captions_explain_and_the_script_needs_no_code_planted_in_the_page():
+    from core import demo
+    for step in demo.STEPS:
+        assert len(step["title"]) >= 8 and len(step["say"]) >= 150, step["title"]          # a real explanation, not a one-liner
+        target = step["target"]
+        assert target is None or target.get("key") or target.get("sel")
+    script = demo._voice_script("Title. Some words.", True, demo.STEPS[3]["target"], "below")
+    assert "createElement('script')" not in script and "%s" not in script and "pickVoice" in script   # runs in its own frame, nothing planted
+    assert "Week" in script and "tm_chartbar" in script                                                 # the exact button, and its bigger box as a fallback
+    assert demo.seconds_for(demo.STEPS[0]["say"]) >= 10                                                 # long enough to read and to hear
