@@ -1,7 +1,7 @@
-"""Is the visitor on a phone or a tablet? (Decided once, from the browser's own name, so one link can open the right layout.)"""
-import streamlit as st
+"""Is the visitor on a phone? (Decided once, from the browser's own name, so one link can open the right layout.)
 
-PHONE_WORDS = ("iphone", "ipod", "ipad", "android", "mobile", "tablet", "silk", "kindle")
+Only phones get the simple one-column layout. Tablets and iPads are big enough for the wide Dashboard, so they get it, like computers."""
+import streamlit as st
 
 
 def user_agent():
@@ -12,8 +12,11 @@ def user_agent():
         return ""
 
 
-def on_phone_or_tablet(agent=None):
-    """True when the browser says it is a phone or a tablet. An iPad that asks for the desktop site cannot be told apart from a Mac,
-    and when the browser cannot be read at all the answer is False, which gives the wide Dashboard."""
+def on_phone(agent=None):
+    """True when the browser says it is a phone: an iPhone or iPod, or an Android browser that says "Mobile" (Android tablets do not).
+    An iPad's name also says "Mobile", so tablets are ruled out first. When the browser cannot be read the answer is False, which gives
+    the wide Dashboard."""
     agent = user_agent() if agent is None else agent.lower()
-    return any(word in agent for word in PHONE_WORDS)
+    if "ipad" in agent or "tablet" in agent:
+        return False
+    return any(word in agent for word in ("iphone", "ipod", "mobile"))

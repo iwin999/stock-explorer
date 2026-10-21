@@ -488,18 +488,19 @@ def test_the_speed_choice_changes_how_long_a_step_stays():
     assert fast < slow and abs(slow / fast - (2 / 0.75)) < 0.01
 
 
-# ---------------- one link for phones and computers ----------------
+# ---------------- one link for phones and computers (tablets get the Dashboard) ----------------
 def test_the_browsers_name_decides_which_layout_opens():
     from core import device
     phones = ["Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1",
               "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36",
-              "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148",
-              "Mozilla/5.0 (Linux; Android 13; SM-X700) AppleWebKit/537.36 Chrome/120 Safari/537.36"]      # an Android tablet has no "Mobile"
-    computers = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36 Edg/120",
-                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/17.0 Safari/605.1.15", "", None]
-    assert all(device.on_phone_or_tablet(a) for a in phones[:3])
-    assert not any(device.on_phone_or_tablet(a or "") for a in computers)
-    assert device.on_phone_or_tablet("Mozilla/5.0 (Linux; Android 13; SM-X700 Tablet)")
+              "Mozilla/5.0 (iPod touch; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148"]
+    others = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36 Edg/120",
+              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/17.0 Safari/605.1.15",
+              "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148",          # an iPad says "Mobile" too
+              "Mozilla/5.0 (Linux; Android 13; SM-X700) AppleWebKit/537.36 Chrome/120 Safari/537.36",        # an Android tablet does not
+              "Mozilla/5.0 (Linux; Android 13; SM-X700 Tablet) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36", "", None]
+    assert all(device.on_phone(a) for a in phones)
+    assert not any(device.on_phone(a or "") for a in others)
 
 
 def test_a_phone_opens_the_simple_layout_and_a_computer_the_dashboard():
@@ -511,7 +512,7 @@ def test_a_phone_opens_the_simple_layout_and_a_computer_the_dashboard():
         app = AppTest.from_file(APP, default_timeout=240)
         app.query_params["user"] = "Detect"
         a, b = _patches(store)
-        with a, b, mock.patch("core.device.on_phone_or_tablet", lambda agent=None: phone):
+        with a, b, mock.patch("core.device.on_phone", lambda agent=None: phone):
             app.run()
             assert not app.exception
             assert app.session_state["terminal_view"] is expected

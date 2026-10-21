@@ -22,11 +22,11 @@ PAGES = ["Home", "Company", "Portfolio", "Learn"]
 POPULAR = ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS", "INFY.NS", "ITC.NS", "SBIN.NS"]
 
 # One link for everyone: a computer opens straight into the wide one-screen Dashboard (laptop or exhibition display), in the normal
-# light look (Dark mode is one click away); a phone or tablet opens the simple one-column layout. This is decided once, from the
+# light look (Dark mode is one click away); a phone opens the simple one-column layout (tablets and iPads get the Dashboard like computers). This is decided once, from the
 # browser's own name on the first visit, and the "Dashboard view" switch lets anyone change it.
 if "dash_init" not in st.session_state:
     st.session_state["dash_init"] = True
-    st.session_state.setdefault("terminal_view", not device.on_phone_or_tablet())
+    st.session_state.setdefault("terminal_view", not device.on_phone())
 st.session_state["site"] = "simple"                    # tells the About dialog which site it is on
 dashboard = bool(st.session_state.get("terminal_view"))          # the wide, one-screen Dashboard view
 st.set_page_config(page_title=branding.name(), layout="wide" if dashboard else "centered")

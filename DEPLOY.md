@@ -87,7 +87,7 @@ Please keep it to a first name: the site is public.
 ## The simple site (second link, for phones and the QR code)
 The repository holds two sites that share the same code, accounts and leaderboard:
 - **Full site:** main file `app.py` (everything, including the CMT Level III tools).
-- **Second site (exhibition display):** main file `simple.py`. One link serves everyone: a computer opens straight into the wide one-screen Dashboard (light look; Dark mode is one click away; holdings on the left, chart in the middle, indicators on the right), and a phone or tablet opens the simple one-column layout, chosen once from the browser's own name (`core/device.py`). The "Dashboard view" switch changes it afterwards. An iPad that asks for the desktop site looks like a Mac and gets the Dashboard.
+- **Second site (exhibition display):** main file `simple.py`. One link serves everyone: a computer opens straight into the wide one-screen Dashboard (light look; Dark mode is one click away; holdings on the left, chart in the middle, indicators on the right), and a phone opens the simple one-column layout, chosen once from the browser's own name (`core/device.py`); tablets and iPads get the Dashboard like computers. The "Dashboard view" switch changes it afterwards.
 
 Both sites can share ONE Supabase database (paste the same Secrets into both). The second site keeps its accounts under their own
 prefix (`s2:`), so the two sites never see each other's accounts or leaderboard, and nothing extra has to be set up in Supabase.
