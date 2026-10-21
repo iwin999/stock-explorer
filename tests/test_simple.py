@@ -486,3 +486,34 @@ def test_the_speed_choice_changes_how_long_a_step_stays():
     with mock.patch.object(st, "session_state", {"demo_speed": "0.75×"}):
         slow = demo.seconds_for("x" * 300)
     assert fast < slow and abs(slow / fast - (2 / 0.75)) < 0.01
+
+
+# ---------------- one link for phones and computers ----------------
+def test_the_browsers_name_decides_which_layout_opens():
+    from core import device
+    phones = ["Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1",
+              "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36",
+              "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148",
+              "Mozilla/5.0 (Linux; Android 13; SM-X700) AppleWebKit/537.36 Chrome/120 Safari/537.36"]      # an Android tablet has no "Mobile"
+    computers = ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36 Edg/120",
+                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/17.0 Safari/605.1.15", "", None]
+    assert all(device.on_phone_or_tablet(a) for a in phones[:3])
+    assert not any(device.on_phone_or_tablet(a or "") for a in computers)
+    assert device.on_phone_or_tablet("Mozilla/5.0 (Linux; Android 13; SM-X700 Tablet)")
+
+
+def test_a_phone_opens_the_simple_layout_and_a_computer_the_dashboard():
+    for phone, expected in ((True, False), (False, True)):
+        store = acc.FileStore(tempfile.mkdtemp())
+        pf = acc.create_account(store, "Detect", 100000)
+        pf.tour_seen = True
+        acc.save_account(store, pf)
+        app = AppTest.from_file(APP, default_timeout=240)
+        app.query_params["user"] = "Detect"
+        a, b = _patches(store)
+        with a, b, mock.patch("core.device.on_phone_or_tablet", lambda agent=None: phone):
+            app.run()
+            assert not app.exception
+            assert app.session_state["terminal_view"] is expected
+            app.toggle(key="terminal_view").set_value(not expected).run()          # the switch still changes it afterwards
+            assert not app.exception and app.session_state["terminal_view"] is (not expected)

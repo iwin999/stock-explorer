@@ -7,7 +7,7 @@ import streamlit as st
 from core import instruments as ins
 from core import daily_check as dc
 from core import daily_ui
-from core import about, assistant_ui, branding, companies, terminal_ui, tour, universe
+from core import about, assistant_ui, branding, companies, device, terminal_ui, tour, universe
 from core import simple_words as words
 from core.charts import allocation_donut, show as show_chart, simple_line_chart
 from core.formatting import format_inr
@@ -21,16 +21,24 @@ from core import trading_ui as tu
 PAGES = ["Home", "Company", "Portfolio", "Learn"]
 POPULAR = ["RELIANCE.NS", "TCS.NS", "HDFCBANK.NS", "INFY.NS", "ITC.NS", "SBIN.NS"]
 
-# The second site opens straight into the wide one-screen Dashboard (laptop or exhibition display), in the normal light look
-# (Dark mode is one click away). The phone layout
-# is still in the code behind the "Dashboard view" switch, but it is on hold for now.
+# One link for everyone: a computer opens straight into the wide one-screen Dashboard (laptop or exhibition display), in the normal
+# light look (Dark mode is one click away); a phone or tablet opens the simple one-column layout. This is decided once, from the
+# browser's own name on the first visit, and the "Dashboard view" switch lets anyone change it.
 if "dash_init" not in st.session_state:
     st.session_state["dash_init"] = True
-    st.session_state.setdefault("terminal_view", True)
+    st.session_state.setdefault("terminal_view", not device.on_phone_or_tablet())
 st.session_state["site"] = "simple"                    # tells the About dialog which site it is on
 dashboard = bool(st.session_state.get("terminal_view"))          # the wide, one-screen Dashboard view
 st.set_page_config(page_title=branding.name(), layout="wide" if dashboard else "centered")
 st.markdown(STYLE_CSS, unsafe_allow_html=True)
+st.markdown("""<style>
+@media (max-width: 640px) {      /* the welcome screen's title row: on a phone the title gets its own line, with the switch and the i under it */
+  .stApp [data-testid="stMain"] [data-testid="stHorizontalBlock"]:has(.about-row-marker) { flex-wrap: wrap !important; row-gap: .4rem; }
+  .stApp [data-testid="stMain"] [data-testid="stHorizontalBlock"]:has(.about-row-marker) > [data-testid="stColumn"]:nth-child(1) { flex: 1 1 100% !important; }
+  .stApp [data-testid="stMain"] [data-testid="stHorizontalBlock"]:has(.about-row-marker) > [data-testid="stColumn"]:nth-child(2) { flex: 1 1 auto !important; }
+  .stApp [data-testid="stMain"] [data-testid="stHorizontalBlock"]:has(.about-row-marker) > [data-testid="stColumn"]:nth-child(3) { flex: 0 0 3rem !important; }
+}
+</style>""", unsafe_allow_html=True)
 if st.session_state.get("dark_site"):
     st.markdown(DARK_CSS, unsafe_allow_html=True)
 if not dashboard:
@@ -54,6 +62,13 @@ if not dashboard:
     .st-key-bottomnav [role="radiogroup"] p { font-weight: 600; text-align: center; font-size: 1rem !important; margin: 0; }
     .st-key-simplehead [data-testid="stHorizontalBlock"] { flex-wrap: nowrap !important; align-items: center; }
     .st-key-simplehead [data-testid="stColumn"] { min-width: 0 !important; }
+    @media (max-width: 640px) {      /* a phone: the two switches share the first line, the Tour button and the i the second, so no label is cut short */
+      .stApp .st-key-simplehead [data-testid="stHorizontalBlock"] { flex-wrap: wrap !important; row-gap: 0.3rem; }
+      .stApp .st-key-simplehead [data-testid="stColumn"]:nth-child(1) { flex: 1 1 38% !important; }
+      .stApp .st-key-simplehead [data-testid="stColumn"]:nth-child(2) { flex: 1 1 56% !important; }
+      .stApp .st-key-simplehead [data-testid="stColumn"]:nth-child(3) { flex: 1 1 calc(100% - 4.4rem) !important; }
+      .stApp .st-key-simplehead [data-testid="stColumn"]:nth-child(4) { flex: 0 0 3.2rem !important; }
+    }
     .st-key-bottomnav [data-testid="stWidgetLabel"] { display: none; }
     </style>""", unsafe_allow_html=True)
     if st.session_state.get("dark_site"):
