@@ -465,5 +465,8 @@ The dashboard tour's steps (11 on the dashboard layout, 10 on the phone layout) 
 ## New in Step 89 (one link for phones and computers)
 The second site now chooses its layout by itself on the first visit, from the browser's own name (`core/device.py`): a phone (an iPhone, or an Android browser that says "Mobile") opens the simple one-column layout, and a computer, a tablet or an iPad opens the wide Dashboard, as before. The "Dashboard view" switch still changes it afterwards. A browser that cannot be read gets the Dashboard. Two phone-layout slips found while checking it were fixed: the welcome screen's title was squeezed into a column one letter wide, and the switches and Tour button in the header had their labels cut short; both now wrap onto their own lines on a narrow screen (for the second site only). The presenter's guide and DEPLOY.md say so.
 
+## New in Step 90 (the chat button and the guide button on the phone layout)
+The phone layout of the second site now has the same round "Ask me anything" chat button and the document-style guide button as the Dashboard, fixed in the right-hand corner on every page and raised above the bottom menu so they do not cover it. The phone tour gained two steps for them (12 steps now). The Learn page keeps its full-page helper too.
+
 ## Status
 All 8 features are built.

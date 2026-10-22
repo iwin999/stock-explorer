@@ -518,3 +518,18 @@ def test_a_phone_opens_the_simple_layout_and_a_computer_the_dashboard():
             assert app.session_state["terminal_view"] is expected
             app.toggle(key="terminal_view").set_value(not expected).run()          # the switch still changes it afterwards
             assert not app.exception and app.session_state["terminal_view"] is (not expected)
+
+
+def test_the_phone_layout_has_the_chat_button_and_the_guide_button_too():
+    store, app = _app("Phoney")
+    a, b = _patches(store)
+    with a, b:
+        app.run()
+        assert not app.exception and not _errors(app)
+        assert any("guide-link" in m.value for m in app.markdown), "the guide button should be on the phone layout"
+        assert any(".st-key-ask_bubble" in m.value for m in app.markdown), "the chat button's style should be on the phone layout"
+        for page in ("Company", "Portfolio", "Learn", "Home"):
+            app.radio(key="spage").set_value(page).run()
+            assert not app.exception and not _errors(app), page
+            assert any("guide-link" in m.value for m in app.markdown), page
+        assert [s["target"] for s in tour.STEPS if s["target"] in ("ask_bubble", "guide_btn")] == ["ask_bubble", "guide_btn"]

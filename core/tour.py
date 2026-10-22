@@ -39,6 +39,14 @@ STEPS = [
     {"page": "Learn", "target": "tour_bot", "card": "top", "title": "Ask anything",
      "text": "Stuck on a word like dividend or volatility? Ask the helper. It explains in simple words, and you can change how simple it "
              "should be, from very simple to adult language. It only teaches; it never gives investment advice."},
+    {"page": "Home", "target": "ask_bubble", "card": "top", "title": "Ask me anything",
+     "text": "This round chat button stays in the corner on every page. Tap it and type a question, or pick a starter: what a word means, "
+             "how a chart works, how to use the site. It answers from notes written for this site, in simple words, and it never gives "
+             "investment advice."},
+    {"page": "Home", "target": "guide_btn", "card": "top", "title": "Read the guide",
+     "text": "This small document button above the chat button opens the presenter's guide, a PDF that explains every part of the site twice: "
+             "once in simple words with an everyday example, and once in proper finance language. It opens in a new tab, so you do not "
+             "lose your place here."},
     {"page": "Home", "target": "bottomnav", "card": "top", "title": "The menu",
      "text": "These four buttons take you around: Home, Company, Portfolio and Learn. You can take this tour again from the Learn page. "
              "Enjoy!"},

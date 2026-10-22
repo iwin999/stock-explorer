@@ -70,6 +70,8 @@ if not dashboard:
       .stApp .st-key-simplehead [data-testid="stColumn"]:nth-child(4) { flex: 0 0 3.2rem !important; }
     }
     .st-key-bottomnav [data-testid="stWidgetLabel"] { display: none; }
+    .stApp .st-key-ask_bubble { bottom: 5.5rem !important; }      /* the round chat button and the guide button sit above the bottom menu */
+    .stApp .st-key-guide_btn { bottom: 9.8rem !important; }
     </style>""", unsafe_allow_html=True)
     if st.session_state.get("dark_site"):
         st.markdown("<style>.card { border-color: #2a2e39; } .st-key-bottomnav { background: #131722; border-top-color: #2a2e39; }"
@@ -415,6 +417,10 @@ def learn():
 # ---------------- draw the chosen page ----------------
 {"Home": home, "Company": company, "Portfolio": portfolio, "Learn": learn}[page]()
 show_disclaimer()
+assistant_ui.bubble({"company": companies.NAME_BY_SYMBOL.get(st.session_state.get("scompany") or POPULAR[0], ""),      # the same round chat button and guide button as the Dashboard
+                     "symbol": st.session_state.get("scompany") or POPULAR[0], "last_close": None, "signals": [],
+                     "portfolio": {"cash": pf.balance, "holdings": {s_: h["quantity"] for s_, h in pf.holdings.items()},
+                                   "derivatives": len(pf.derivatives)}, "fusion": None})
 
 with st.container(key="bottomnav"):
     st.radio("Menu", PAGES, horizontal=True, key="spage", label_visibility="collapsed")
